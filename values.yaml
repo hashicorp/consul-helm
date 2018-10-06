@@ -40,7 +40,14 @@ server:
   # the attached volume. storageClass is the class of storage which defaults
   # to null (the Kube cluster will pick the default).
   storage: 10Gi
-  storageClass: null
+  storageClass: consul
+
+  # provisioner determines the dynamic volume provisioner used by a cloud provider
+  # type is a cloud provider unique value of the type of volume to create
+  # provisionerEnabled will enable the StorageClass to be created.
+  provisioner: # e.g. kubernetes.io/aws-ebs
+  type: # e.g. gp2
+  provisionerEnabled: #"-"
 
   # connect will enable Connect on all the servers, initializing a CA
   # for Connect-related connections. Other customizations can be done
