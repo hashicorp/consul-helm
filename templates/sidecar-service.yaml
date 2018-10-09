@@ -1,0 +1,20 @@
+{{- if (or (and (ne (.Values.server.prometheusSidecar.enabled | toString) "-") .Values.server.prometheusSidecar.enabled) (and (eq (.Values.server.prometheusSidecar.enabled | toString) "-") .Values.global.enabled)) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "consul.fullname" . }}-exporter
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    app: {{ template "consul.name" . }}
+    release: "{{ .Release.Name }}"
+    component: server
+  ports:
+    - name: http-metrics
+      port: 9107
+      targetPort: 9107
+{{- end }}

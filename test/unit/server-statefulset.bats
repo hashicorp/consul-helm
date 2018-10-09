@@ -198,6 +198,20 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# prometheusSidecar
+
+@test "server/StatefulSet: enable promethuesSidecar" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'server.prometheusSidecar.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[1].image' | tee /dev/stderr)
+  [ "${actual}" = "prom/consul-exporter:v0.4.0" ]
+}
+
+
+#--------------------------------------------------------------------
 # updateStrategy
 
 @test "server/StatefulSet: no storageClass on claim by default" {
@@ -219,4 +233,3 @@ load _helpers
       yq -r '.spec.volumeClaimTemplates[0].spec.storageClassName' | tee /dev/stderr)
   [ "${actual}" = "foo" ]
 }
-
