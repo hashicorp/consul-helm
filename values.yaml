@@ -43,6 +43,10 @@ global:
   # If using Consul Enterprise namespaces, must be >= 0.12.
   imageK8S: "hashicorp/consul-k8s:0.12.0"
 
+  # imageExtInit refers to the image used for initializing the consul server pods
+  # when you enable external access. This can be overridden per component below.
+  imageExtInit: "lwolf/kubectl_deployer:1.13.0"
+
   # datacenter is the name of the datacenter that the agents should register
   # as. This can't be changed once the Consul cluster is up and running
   # since Consul doesn't support an automatic way to change this value
@@ -138,6 +142,19 @@ server:
   enterpriseLicense:
     secretName: null
     secretKey: null
+  # Set to true to create an external LoadBalancer for each consul server to enable
+  # communication with another consul cluster in a multi-datacenter environment.
+  # Because kubernetes does not allow the LoadBalancer service type to have mixed
+  # protocols, the external service will only enable communication via TCP.
+  external:
+    enabled: false
+
+    # Set what image is used to initialize the consul server pods.
+    # The image set in global.imageExtInit will be used if not set here.
+    image: null
+
+    # Provide annotations for your cloud provider to correctly create the LoadBalancer.
+    annotations: {}
 
   # storage and storageClass are the settings for configuring stateful
   # storage for the server pods. storage should be set to the disk size of

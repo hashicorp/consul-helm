@@ -323,6 +323,30 @@ load _helpers
       yq -r '.spec.template.spec.priorityClassName' | tee /dev/stderr)
   [ "${actual}" = "testing" ]
 }
+#--------------------------------------------------------------------
+# externalService
+
+@test "server/StatefulSet: enabled initContainer with server.external.enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'server.enabled=true' \
+      --set 'server.external.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.initContainers | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
+}
+
+@test "server/StatefulSet: disable initContainer with server.external.enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'server.enabled=true' \
+      --set 'server.external.enabled=false' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.initContainers | length' | tee /dev/stderr)
+  [ "${actual}" = "0" ]
+}
 
 #--------------------------------------------------------------------
 # annotations

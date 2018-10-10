@@ -16,6 +16,15 @@ rules:
   - {{ template "consul.fullname" . }}-server
   verbs:
   - use
+- apiGroups: [""]
+  resources:
+    - pods
+    - services
+  verbs:
+    - get
+    - list
+    - update
+    - patch
 {{- else }}
 rules: []
 {{- end }}

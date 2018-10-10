@@ -1,5 +1,6 @@
 # StatefulSet to run the actual Consul server cluster.
 {{- if (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) }}
+{{- $externalEnabled := (or (and (ne (.Values.server.external.enabled | toString) "-") .Values.server.external.enabled) (and (eq (.Values.server.external.enabled | toString) "-") .Values.global.enabled)) }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -66,6 +67,10 @@ spec:
           secret:
             secretName: {{ template "consul.fullname" . }}-server-cert
         {{- end }}
+        {{- if $externalEnabled }}
+        - name: tmp
+          emptydir: {}
+        {{- end }}
         {{- range .Values.server.extraVolumes }}
         - name: userconfig-{{ .name }}
           {{ .type }}:
@@ -77,6 +82,29 @@ spec:
         {{- end }}
       {{- if .Values.server.priorityClassName }}
       priorityClassName: {{ .Values.server.priorityClassName | quote }}
+      {{- end }}
+      {{- if $externalEnabled }}
+      initContainers:
+        - name: init-ext
+          image: "{{ default .Values.global.imageExtInit .Values.server.external.image }}"
+          command:
+            - "/bin/sh"
+            - "-ec"
+            - |
+              kubectl label pods ${NAME} --namespace ${NAMESPACE} pod=${NAME}
+              kubectl get svc ${NAME}-external --namespace ${NAMESPACE} -o jsonpath='{.status.loadBalancer.ingress[0].ip}' | tee /consul/tmp/external_ip
+          env:
+            - name: NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          volumeMounts:
+            - name: tmp
+              mountPath: /consul/tmp
       {{- end }}
       containers:
         - name: consul
@@ -109,9 +137,21 @@ spec:
             - "-ec"
             - |
               CONSUL_FULLNAME="{{template "consul.fullname" . }}"
-
+              {{- if $externalEnabled }}
+              if [ -f /consul/tmp/external_ip ]; then
+                EXTERNAL_IP="$(cat /consul/tmp/external_ip)"
+              else
+                echo "Could not find file with external IP info"
+                exit 1
+              fi
+              EXTERNAL_IP="$(cat /consul/tmp/external_ip)"
+              echo "Will set advertise-wan to ${EXTERNAL_IP}"
+              {{- end }}
               exec /bin/consul agent \
                 -advertise="${POD_IP}" \
+                {{- if $externalEnabled }}
+                -advertise-wan="${EXTERNAL_IP}" \
+                {{- end }}
                 -bind=0.0.0.0 \
                 -bootstrap-expect={{ .Values.server.bootstrapExpect }} \
                 {{- if .Values.global.tls.enabled }}
@@ -163,6 +203,10 @@ spec:
             - name: tls-server-cert
               mountPath: /consul/tls/server
               readOnly: true
+            {{- end }}
+            {{- if $externalEnabled }}
+            - name: tmp
+              mountPath: /consul/tmp
             {{- end }}
             {{- range .Values.server.extraVolumes }}
             - name: userconfig-{{ .name }}
