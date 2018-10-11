@@ -142,6 +142,10 @@ spec:
                   grep -E '".+"'
           resources:
 {{ toYaml .Values.client.resources | indent 12 }}
+    {{- if .Values.client.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.client.nodeSelector | indent 8 }}
+    {{- end }}
     {{- if .Values.client.tolerations }}
       tolerations:
 {{ toYaml .Values.client.tolerations | indent 8 }}

@@ -56,6 +56,10 @@ spec:
                 -k8s-service-prefix="{{ .Values.syncCatalog.k8sPrefix}}" \
                 {{- end }}
                 -k8s-write-namespace=${NAMESPACE}
+    {{- if .Values.syncCatalog.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.syncCatalog.nodeSelector | indent 8 }}
+    {{- end }}
     {{- if .Values.syncCatalog.tolerations }}
       tolerations:
 {{ toYaml .Values.syncCatalog.tolerations | indent 8 }}

@@ -151,6 +151,10 @@ spec:
             periodSeconds: 3
             successThreshold: 1
             timeoutSeconds: 5
+    {{- if .Values.server.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.server.nodeSelector | indent 8 }}
+    {{- end }}
     {{- if .Values.server.tolerations }}
       tolerations:
 {{ toYaml .Values.server.tolerations | indent 8 }}
