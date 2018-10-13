@@ -151,6 +151,15 @@ spec:
             periodSeconds: 3
             successThreshold: 1
             timeoutSeconds: 5
+        {{- if (or (and (ne (.Values.server.prometheusSidecar.enabled | toString) "-") .Values.server.prometheusSidecar.enabled) (and (eq (.Values.server.prometheusSidecar.enabled | toString) "-") .Values.global.enabled)) }}
+        - name: consul-exporter
+          image: {{ default .Values.server.prometheusSidecar.image }}
+          args:
+          - --consul.server=localhost:8500
+          ports:
+          - containerPort: 9107
+            name: http-monitoring
+        {{- end }}
   volumeClaimTemplates:
     - metadata:
         name: data
