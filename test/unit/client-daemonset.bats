@@ -73,6 +73,38 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# hostNetwork 
+
+@test "client/DaemonSet: hostNetwork default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.hostNetwork' | tee /dev/stderr)
+  [ "${actual}" = null ]
+}
+
+@test "client/DaemonSet: hostNetwork enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'client.hostNetwork.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.hostNetwork' | tee /dev/stderr)
+  [ "${actual}" = true ]
+}
+
+@test "client/DaemonSet: dnsPolicy set to ClusterFirstWithHostNet" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'client.hostNetwork.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.dnsPolicy' | tee /dev/stderr)
+  [ "${actual}" = "ClusterFirstWithHostNet" ]
+}
+
+#--------------------------------------------------------------------
 # grpc
 
 @test "client/DaemonSet: grpc is disabled by default" {
