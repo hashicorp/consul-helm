@@ -146,11 +146,11 @@ spec:
                 - |
                   curl http://127.0.0.1:8500/v1/status/leader 2>/dev/null | \
                   grep -E '".+"'
-            failureThreshold: 2
-            initialDelaySeconds: 5
-            periodSeconds: 3
-            successThreshold: 1
-            timeoutSeconds: 5
+            failureThreshold: {{ .Values.server.readinessProbe.failureTreshold }}
+            initialDelaySeconds: {{ .Values.server.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.server.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.server.readinessProbe.successTreshold }}
+            timeoutSeconds: {{ .Values.server.readinessProbe.timeoutSeconds }}
   volumeClaimTemplates:
     - metadata:
         name: data
