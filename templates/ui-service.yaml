@@ -13,6 +13,10 @@ metadata:
     chart: {{ template "consul.chart" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
+  {{- if .Values.ui.service.annotations }}
+  annotations:
+  {{ toYaml .Values.ui.service.annotations | indent 2 }}
+  {{- end }}
 spec:
   selector:
     app: {{ template "consul.name" . }}
