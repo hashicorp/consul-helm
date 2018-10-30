@@ -47,6 +47,8 @@ spec:
                   component: server
               topologyKey: kubernetes.io/hostname
       terminationGracePeriodSeconds: 10
+      serviceAccount: {{ template "consul.fullname" . }}-server
+      serviceAccountName: {{ template "consul.fullname" . }}-server
       securityContext:
         fsGroup: 1000
       volumes:

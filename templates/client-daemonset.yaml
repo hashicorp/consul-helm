@@ -29,6 +29,9 @@ spec:
         "consul.hashicorp.com/connect-inject": "false"
     spec:
       terminationGracePeriodSeconds: 10
+      serviceAccount: {{ template "consul.fullname" . }}
+      serviceAccountName: {{ template "consul.fullname" . }}
+      securityContext: {}
 
       # Consul agents require a directory for data, even clients. The data
       # is okay to be wiped though if the Pod is removed, so just use an
