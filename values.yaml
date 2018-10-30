@@ -79,6 +79,21 @@ server:
     #   name: my-secret
     #   load: false # if true, will add to `-config-dir` to load by Consul
 
+  readinessProbe:
+    failureThreshold: 2
+    initialDelaySeconds: 5
+    periodSeconds: 3
+    successThreshold: 1
+    timeoutSeconds: 5
+
+# Tolerations for pod assignment
+# Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+# Node labels for pod assignment
+# Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  nodeSelector: {}
+
 # Client, when enabled, configures Consul clients to run on every node
 # within the Kube cluster. The current deployment model follows a traditional
 # DC where a single agent is deployed per node.
@@ -109,6 +124,14 @@ client:
     #   name: my-secret
     #   load: false # if true, will add to `-config-dir` to load by Consul
 
+  # Tolerations for pod assignment
+  # Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  # Node labels for pod assignment
+  # Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  nodeSelector: {}
+
 # Configuration for DNS configuration within the Kubernetes cluster.
 # This creates a service that routes to all agents (client or server)
 # for serving DNS requests. This DOES NOT automatically configure kube-dns
@@ -133,6 +156,23 @@ ui:
   service:
     enabled: true
     type: null
+    externalPort: 80
+    ## External IP addresses of service
+    ## Default: nil
+    ##
+    # externalIPs:
+    # - 192.168.0.1
+    #
+    ## LoadBalancer IP if service.type is LoadBalancer
+    ## Default: nil
+    ##
+    # loadBalancerIP: 10.2.2.2
+    loadBalancerIP: {}
+    loadBalancerSourceRanges: {}
+    # Define annotations to utilize AWS Load balancers according to https://docs.aws.amazon.com/eks/latest/userguide/load-balancing.html
+    # annotations:
+    # service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+    # cloud.google.com/load-balancer-type: "Internal"
 
 # syncCatalog will run the catalog sync process to sync K8S with Consul
 # services. This can run bidirectional (default) or unidirectionally (Consul
@@ -162,6 +202,14 @@ syncCatalog:
   # with Kubernetes. For example "consul-" will register all services
   # prepended with "consul-".
   k8sPrefix: null
+
+  # Tolerations for pod assignment
+  # Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  # Node labels for pod assignment
+  # Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  nodeSelector: {}
 
 # ConnectInject will enable the automatic Connect sidecar injector.
 connectInject:
@@ -203,3 +251,10 @@ connectInject:
     # defaults but can be customized if necessary.
     certName: tls.crt
     keyName: tls.key
+  # Tolerations for pod assignment
+  # Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  # Node labels for pod assignment
+  # Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  nodeSelector: {}

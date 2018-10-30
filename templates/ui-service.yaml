@@ -13,6 +13,11 @@ metadata:
     chart: {{ template "consul.chart" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
+  name: {{ template "consul.name" .}}
+  {{- if .Values.ui.service.annotations }}
+  annotations:
+  {{ toYaml .Values.ui.service.annotations | indent 2  }}
+  {{- end }}
 spec:
   selector:
     app: {{ template "consul.name" . }}
@@ -20,9 +25,21 @@ spec:
     component: server
   ports:
     - name: http
-      port: 80
+      port: {{ .Values.ui.externalPort }}
       targetPort: 8500
   {{- if .Values.ui.service.type }}
   type: {{ .Values.ui.service.type }}
+  {{- end }}
+  {{- if .Values.ui.loadBalancerIP }}
+  loadBalancerIP: "{{ .Values.ui.loadBalancerIP }}"
+  {{- end }}
+  {{if .Values.ui.loadBalancerSourceRanges}}
+  loadBalancerSourceRanges:
+    {{range $rangeList := .Values.ui.loadBalancerSourceRanges}}
+    - {{ $rangeList }}
+  {{- end }}
+  {{- if .Values.ui.externalIPs }}
+  externalIPs:
+  {{ toYaml .Values.ui.externalIPs | indent 4 }}
   {{- end }}
 {{- end }}
