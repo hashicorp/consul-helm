@@ -23,4 +23,19 @@ spec:
     app: {{ template "consul.name" . }}
     release: "{{ .Release.Name }}"
     hasDNS: "true"
+  {{- if .Values.dns.service.type }}
+  type: {{ .Values.dns.service.type }}
+  {- end }}
+  {{- if .Values.dns.loadBalancerIP }}
+  loadBalancerIP: "{{ .Values.ui.loadBalancerIP }}"
+  {{- end }}
+  {{if .Values.dns.loadBalancerSourceRanges}}
+  loadBalancerSourceRanges:
+    {{range $rangeList := .Values.dns.loadBalancerSourceRanges}}
+    - {{ $rangeList }}
+  {{- end }}
+  {{- if .Values.dns.externalIPs }}
+  externalIPs:
+  {{ toYaml .Values.dns.externalIPs | indent 4 }}
+  {{- end }}
 {{- end }}

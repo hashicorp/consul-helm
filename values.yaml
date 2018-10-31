@@ -141,6 +141,30 @@ client:
 dns:
   enabled: "-"
 
+  # True if you want to create a Service entry for the Consul DNS.
+  #
+  # serviceType can be used to control the type of service created. For
+  # example, setting this to "LoadBalancer" will create an external load
+  # balancer (for supported K8S installations) to access the DNS.
+  service:
+    type: null
+    ## External IP addresses of service
+    ## Default: nil
+    ##
+    # externalIPs:
+    # - 192.168.0.1
+    #
+    ## LoadBalancer IP if service.type is LoadBalancer
+    ## Default: nil
+    ##
+    # loadBalancerIP: 10.2.2.2
+    loadBalancerIP: {}
+    loadBalancerSourceRanges: {}
+    # Define annotations to utilize AWS Load balancers according to https://docs.aws.amazon.com/eks/latest/userguide/load-balancing.html
+    # annotations:
+    # service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+    # cloud.google.com/load-balancer-type: "Internal"
+
 ui:
   # True if you want to enable the Consul UI. The UI will run only
   # on the server nodes. This makes UI access via the service below (if
