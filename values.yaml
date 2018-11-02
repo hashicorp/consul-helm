@@ -133,9 +133,8 @@ ui:
   service:
     enabled: true
     type: null
-    # Define annotations to utilize AWS Load balancers according to https://docs.aws.amazon.com/eks/latest/userguide/load-balancing.html
+    # Provide annotations for Consul's ui service, such as utilizing cloud load balancers if service is of type LoadBalancer
     annotations: null
-        # service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
 
 # syncCatalog will run the catalog sync process to sync K8S with Consul
 # services. This can run bidirectional (default) or unidirectionally (Consul
