@@ -21,7 +21,7 @@ global:
   # imageK8S is the name (and tag) of the consul-k8s Docker image that
   # is used for functionality such as the catalog sync. This can be overridden
   # per component below.
-  imageK8S: "hashicorp/consul-k8s:0.2.0"
+  imageK8S: "hashicorp/consul-k8s:0.2.1"
 
   # Datacenter is the name of the datacenter that the agents should register
   # as. This shouldn't be changed once the Consul cluster is up and running
@@ -210,6 +210,7 @@ syncCatalog:
   # True if you want to enable the catalog sync. "-" for default.
   enabled: false
   image: null
+  default: true # true will sync by default, otherwise requires annotation
 
   # Enabling rbac will create cluster roles and cluster role bindings to
   # allow the syncCatalog service to communicate with the kubernetes api
