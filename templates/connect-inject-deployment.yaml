@@ -44,7 +44,6 @@ spec:
 
               consul-k8s inject-connect \
                 -default-inject={{ .Values.connectInject.default }} \
-                -consul-image="{{ default .Values.global.image .Values.connectInject.imageConsul }}" \
                 {{ if .Values.connectInject.imageEnvoy -}}
                 -envoy-image="{{ .Values.connectInject.imageEnvoy }}" \
                 {{ end -}}
