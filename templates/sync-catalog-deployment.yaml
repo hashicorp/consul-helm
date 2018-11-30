@@ -28,7 +28,6 @@ spec:
       annotations:
         "consul.hashicorp.com/connect-inject": "false"
     spec:
-      securityContext: {}
       {{- if $rbacEnabled }}
       serviceAccountName: {{ template "consul.fullname" . }}-sync-catalog
       {{- end }}
