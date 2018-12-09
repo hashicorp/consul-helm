@@ -50,6 +50,11 @@ spec:
             {{- end }}
         {{- end }}
 
+      {{- if .Values.client.hostNetwork.enabled }}
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      {{- end }}
+
       containers:
         - name: consul
           image: "{{ default .Values.global.image .Values.client.image }}"
