@@ -66,6 +66,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
             - name: NAMESPACE
               valueFrom:
                 fieldRef:
@@ -78,6 +82,7 @@ spec:
 
               exec /bin/consul agent \
                 -advertise="${POD_IP}" \
+                -advertise-wan="${NODE_IP}" \
                 -bind=0.0.0.0 \
                 -bootstrap-expect={{ .Values.server.bootstrapExpect }} \
                 -client=0.0.0.0 \
@@ -122,10 +127,17 @@ spec:
               name: http
             - containerPort: 8301
               name: serflan
-            - containerPort: 8302
-              name: serfwan
-            - containerPort: 8300
-              name: server
+            - name: serfwan-tcp
+              protocol: "TCP"
+              containerPort: 8302
+              hostPort: 8302
+            - name: serfwan-udp
+              protocol: "UDP"
+              containerPort: 8302
+              hostPort: 8302
+            - name: server
+              containerPort: 8300
+              hostPort: 8300
             - containerPort: 8600
               name: dns-tcp
               protocol: "TCP"
