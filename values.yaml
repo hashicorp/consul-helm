@@ -178,6 +178,9 @@ syncCatalog:
   # Set this to false to skip syncing ClusterIP services.
   syncClusterIPServices: true
 
+  # aclRequestToken used to set CONSUL_HTTP_TOKEN environment
+  aclRequestToken: null
+
 # ConnectInject will enable the automatic Connect sidecar injector.
 connectInject:
   enabled: false
