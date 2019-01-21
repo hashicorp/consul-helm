@@ -33,10 +33,12 @@ spec:
         - name: consul-sync-catalog
           image: "{{ default .Values.global.imageK8S .Values.syncCatalog.image }}"
           env:
+{{- if not .Values.syncCatalog.useServerService }}
             - name: HOST_IP
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+{{- end }}
             - name: NAMESPACE
               valueFrom:
                 fieldRef:
@@ -46,7 +48,7 @@ spec:
             - "-ec"
             - |
               consul-k8s sync-catalog \
-                -http-addr=${HOST_IP}:8500 \
+                -http-addr={{ if .Values.syncCatalog.useServerService }}{{ template "consul.fullname" . }}-server{{ else }}${HOST_IP}{{ end }}:8500 \
                 -k8s-default-sync={{ .Values.syncCatalog.default }} \
                 {{- if (not .Values.syncCatalog.toConsul) }}
                 -to-consul=false \
