@@ -28,6 +28,10 @@ spec:
         hasDNS: "true"
       annotations:
         "consul.hashicorp.com/connect-inject": "false"
+        {{- if .Values.client.monitoring.enabled }}
+        "prometheus.io/scrape": "true"
+        "prometheus.io/port": "9102"
+        {{- end }}
     spec:
       terminationGracePeriodSeconds: 10
 
@@ -48,6 +52,14 @@ spec:
             {{- else if (eq .type "secret") }}
             secretName: {{ .name }}
             {{- end }}
+        {{- end }}
+        {{- if .Values.client.monitoring.enabled }}
+        - name: stats-exporter-mapping-config
+          configMap:
+            name: consul-statsd-mapping-config
+            items:
+            - key: exporterConfiguration
+              path: mapping-config.yaml
         {{- end }}
 
       containers:
@@ -77,6 +89,10 @@ spec:
                 -advertise="${POD_IP}" \
                 -bind=0.0.0.0 \
                 -client=0.0.0.0 \
+                {{- if .Values.client.monitoring.enabled }}
+                -hcl='telemetry { dogstatsd_addr = "localhost:8125" }' \
+                -hcl='telemetry { disable_hostname = true }' \
+                {{- end }}
                 {{- if .Values.client.grpc }}
                 -hcl="ports { grpc = 8502 }" \
                 {{- end }}
@@ -150,4 +166,18 @@ spec:
           resources:
             {{ tpl .Values.client.resources . | nindent 12 | trim }}
           {{- end }}
+        {{- if .Values.client.monitoring.enabled }}
+        - name: consul-client-statsd
+          image: prom/statsd-exporter:v0.7.0
+          ports:
+          - name: metrics
+            containerPort: 9102
+          - name: listener
+            containerPort: 8125
+          args: ["--statsd.listen-udp=:8125", "--statsd.mapping-config=/statsd-exporter/mapping-config.yaml"]
+          volumeMounts:
+          - name: stats-exporter-mapping-config
+            mountPath: /statsd-exporter/
+            readOnly: true
+        {{- end }}
 {{- end }}

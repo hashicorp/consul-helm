@@ -1,0 +1,22 @@
+{{- if or .Values.client.monitoring.enabled .Values.server.monitoring.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: consul-statsd-mapping-config
+data:
+  exporterConfiguration: |
+    ---
+    mappings:
+    - match: consul.raft.replication.heartbeat.*
+      name: consul_raft_replication_heartbeat
+      labels:
+        log: "$1"
+    - match: consul.raft.replication.appendEntries.logs.*
+      name: consul_raft_replication_appendEntries_logs
+      labels:
+        log: "$1"
+    - match: consul.raft.replication.appendEntries.rpc.*
+      name: consul_raft_replication_appendEntries_rpc
+      labels:
+        log: "$1"
+{{- end }}

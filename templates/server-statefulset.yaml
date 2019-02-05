@@ -37,6 +37,10 @@ spec:
         hasDNS: "true"
       annotations:
         "consul.hashicorp.com/connect-inject": "false"
+        {{- if .Values.server.monitoring.enabled }}
+        "prometheus.io/scrape": "true"
+        "prometheus.io/port": "9102"
+        {{- end }}
     spec:
     {{- if .Values.server.affinity }}
       affinity:
@@ -58,6 +62,16 @@ spec:
             secretName: {{ .name }}
             {{- end }}
         {{- end }}
+        {{- if .Values.server.monitoring.enabled }}
+        - name: stats-exporter-mapping-config
+          configMap:
+            name: consul-statsd-mapping-config
+            items:
+            - key: exporterConfiguration
+              path: mapping-config.yaml
+        {{- end }}
+      imagePullSecrets:
+        - name: {{ .Values.imageCredentials.name }}
       containers:
         - name: consul
           image: "{{ default .Values.global.image .Values.server.image }}"
@@ -90,6 +104,10 @@ spec:
                 -datacenter={{ .Values.global.datacenter }} \
                 -data-dir=/consul/data \
                 -domain={{ .Values.global.domain }} \
+                {{- if .Values.server.monitoring.enabled }}
+                -hcl='telemetry { dogstatsd_addr = "localhost:8125" }' \
+                -hcl='telemetry { disable_hostname = true }' \
+                {{- end }}
                 {{- if .Values.server.connect }}
                 -hcl="connect { enabled = true }" \
                 {{- end }}
@@ -151,6 +169,20 @@ spec:
           resources:
             {{ tpl .Values.server.resources . | nindent 12 | trim }}
           {{- end }}
+        {{- if .Values.server.monitoring.enabled }}
+        - name: consul-server-statsd
+          image: prom/statsd-exporter:v0.7.0
+          ports:
+          - name: metrics
+            containerPort: 9102
+          - name: listener
+            containerPort: 8125
+          args: ["--statsd.listen-udp=:8125", "--statsd.mapping-config=/statsd-exporter/mapping-config.yaml"]
+          volumeMounts:
+          - name: stats-exporter-mapping-config
+            mountPath: /statsd-exporter/
+            readOnly: true
+        {{- end }}
   volumeClaimTemplates:
     - metadata:
         name: data
