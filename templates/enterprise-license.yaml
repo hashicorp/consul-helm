@@ -38,9 +38,9 @@ spec:
             {{- if .Values.server.license.key }} 
             - "-X"
             - "PUT"
-            - "http://{{ .Release.Name }}-consul-server:8500/v1/operator/license"
+            - "http://consul-server:8500/v1/operator/license"
             - "--data" 
             - "{{ .Values.server.license.key }}"
             {{- else }}
-            - "http://{{ .Release.Name }}-consul-server:8500/v1/status/leader"
+            - "http://consul-server:8500/v1/status/leader"
             {{- end }}
