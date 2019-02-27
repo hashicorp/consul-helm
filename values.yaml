@@ -38,6 +38,15 @@ server:
   replicas: 3
   bootstrapExpect: 3 # Should <= replicas count
 
+  # extraEnvVars is a list of extra enviroment variables to set with the stateful set. These could be
+  # used to include proxy settings required for cloud auto-join feature, 
+  # in case kubernetes cluster is behind egress http proxies. Additionally, it could be used to configure
+  # custom consul parameters.
+  extraEnvironmentVars: {}
+    # http_proxy: http://localhost:3128
+    # https_proxy: http://localhost:3128
+    # no_proxy: internal.domain.com
+
   # enterpriseLicense refers to a Kubernetes secret that you have created that
   # contains your enterprise license. It is required if you are using an
   # enterprise binary. Defining it here applies it to your cluster once a leader
@@ -136,6 +145,15 @@ client:
     # - type: secret (or "configMap")
     #   name: my-secret
     #   load: false # if true, will add to `-config-dir` to load by Consul
+
+  # extraEnvVars is a list of extra enviroment variables to set with the pod. These could be
+  # used to include proxy settings required for cloud auto-join feature, 
+  # in case kubernetes cluster is behind egress http proxies. Additionally, it could be used to configure
+  # custom consul parameters.
+  extraEnvironmentVars: {}
+    # http_proxy: http://localhost:3128
+    # https_proxy: http://localhost:3128
+    # no_proxy: internal.domain.com
 
 # Configuration for DNS configuration within the Kubernetes cluster.
 # This creates a service that routes to all agents (client or server)

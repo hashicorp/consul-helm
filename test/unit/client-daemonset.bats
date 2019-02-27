@@ -220,3 +220,32 @@ load _helpers
       yq -r '.spec.template.spec.containers[0].command | map(select(test("/consul/userconfig/foo"))) | length' | tee /dev/stderr)
   [ "${actual}" = "1" ]
 }
+
+#--------------------------------------------------------------------
+# extraEnvironmentVariables
+
+@test "client/DaemonSet: custom environment variables" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'client.extraEnvironmentVars.custom_proxy=fakeproxy' \
+      --set 'client.extraEnvironmentVars.no_proxy=custom_no_proxy' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].env' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.[3].name' | tee /dev/stderr)
+  [ "${actual}" = "custom_proxy" ]
+
+  local actual=$(echo $object |
+      yq -r '.[3].value' | tee /dev/stderr)
+  [ "${actual}" = "fakeproxy" ]
+
+  local actual=$(echo $object |
+      yq -r '.[4].name' | tee /dev/stderr)
+  [ "${actual}" = "no_proxy" ]
+
+  local actual=$(echo $object |
+      yq -r '.[4].value' | tee /dev/stderr)
+  [ "${actual}" = "custom_no_proxy" ]
+}
