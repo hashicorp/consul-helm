@@ -30,7 +30,15 @@ spec:
         component: license
     spec:
       restartPolicy: Never
-
+      {{- if .Values.global.tls.enabled }}
+      volumes:
+        - name: tls-ca-cert
+          secret:
+            secretName: {{ template "consul.fullname" . }}-ca-cert
+        - name: tls-cli-cert
+          secret:
+            secretName: {{ template "consul.fullname" . }}-cli-cert
+      {{- end }}
       containers:
         - name: post-install-job
           image: "appropriate/curl"
@@ -44,7 +52,21 @@ spec:
             - "/bin/sh"
             - "-ec"
             - |
+              {{- if .Values.global.tls.enabled }}
+              curl -fsSL --cert /consul/tls/cli/tls.crt \
+                --key /consul/tls/cli/tls.key \
+                --cacert /consul/tls/ca/tls.crt \
+                -X PUT https://{{ template "consul.fullname" . }}-server:8501/v1/operator/license \
+              {{- else }}
               curl -fsSL -X PUT http://{{ template "consul.fullname" . }}-server:8500/v1/operator/license \
+              {{- end }}
                 --data ${ENTERPRISE_LICENSE}
+          {{- if .Values.global.tls.enabled }}
+          volumeMounts:
+            - name: tls-ca-cert
+              mountPath: /consul/tls/ca
+            - name: tls-cli-cert
+              mountPath: /consul/tls/cli
+          {{- end }}
 {{- end }}
 {{- end }}
