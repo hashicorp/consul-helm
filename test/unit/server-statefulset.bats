@@ -312,6 +312,28 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# tolerations
+
+@test "server/StatefulSet: tolerations not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec | .tolerations? == null' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "server/StatefulSet: tolerations can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'server.tolerations=foobar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.tolerations == "foobar"' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
 # TLS
 
 @test "server/StatefulSet: no secret volumes when TLS is disabled" {
@@ -504,5 +526,3 @@ load _helpers
       --set 'global.tls.httpsOnly=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | join(" ") | contains("ports { http = -1 }")' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
