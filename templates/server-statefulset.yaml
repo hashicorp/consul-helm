@@ -111,7 +111,8 @@ spec:
                 -hcl='ca_file = "/consul/tls/ca/tls.crt"' \
                 -hcl='cert_file = "/consul/tls/server/tls.crt"' \
                 -hcl='key_file = "/consul/tls/server/tls.key"' \
-                -hcl='verify_incoming = {{ .Values.global.tls.verifyIncoming }}' \
+                -hcl='verify_incoming_rpc = {{ .Values.global.tls.verifyIncomingRpc }}' \
+                -hcl='verify_incoming_https = {{ .Values.global.tls.verifyIncomingHttps }}' \
                 -hcl='verify_outgoing = {{ .Values.global.tls.verifyOutgoing }}' \
                 -hcl='verify_server_hostname = {{ .Values.global.tls.verifyServerHostname }}' \
                 -hcl='ports { https = 8501 }' \

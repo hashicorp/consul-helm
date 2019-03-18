@@ -55,9 +55,14 @@ global:
   tls:
     enabled: false
 
-    # If verifyIncoming is true, Consul servers will reject connections from clients
+    # If verifyIncomingRpc is true, Consul servers will reject connections from clients
     # that do not provide a TLS cert signed by the same CA.
-    verifyIncoming: true
+    verifyIncomingRpc: true
+
+    # If verifyIncomingHttps is true, Consul agents will reject connections from browsers
+    # or clients that do not provide a TLS cert signed by the same CA.
+    # Note: setting this to True may make it difficult to use the Consul UI.
+    verifyIncomingHttps: false
 
     # If verifyOutgoing is true, Consul clients and servers will only talk to 
     # other agents that can provide a TLS cert signed by the same CA.
