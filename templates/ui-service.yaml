@@ -27,7 +27,7 @@ spec:
     {{- end }}
     {{- if .Values.global.tls.enabled }}
     - name: https
-      port: 8501
+      port: 443
       targetPort: 8501
     {{- end }}
   {{- if .Values.ui.service.type }}
