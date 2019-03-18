@@ -138,7 +138,7 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
-# additionalSpec
+# TLS
 
 @test "ui/Service: no HTTPS listener when TLS is disabled" {
   cd `chart_dir`
