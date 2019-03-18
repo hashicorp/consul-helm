@@ -37,10 +37,38 @@ global:
   # chart. See https://kubernetes.io/docs/concepts/policy/pod-security-policy/
   enablePodSecurityPolicies: false
 
-  # Gossip encryption key. To disable gossip encryption, set this to null.
-  # Note: DO NOT use the provided key in production. Generate your own with
-  # "consul keygen" and paste it here.
-  gossipKey: cg8StVXbQJ0gPvMd9o7yrg==
+  # Enables TLS encryption across the cluster to verify authenticity of the 
+  # servers and clients that connect. Note: It is HIGHLY recommended that you also 
+  # enable Gossip encryption. 
+  # See https://learn.hashicorp.com/consul/advanced/day-1-operations/agent-encryption
+  tls:
+    enabled: false
+
+    # If verifyIncoming is true, Consul servers will reject connections from clients
+    # that do not provide a TLS cert signed by the same CA.
+    verifyIncoming: true
+
+    # If verifyOutgoing is true, Consul clients and servers will only talk to 
+    # other agents that can provide a TLS cert signed by the same CA.
+    verifyOutgoing: true 
+
+    # If verifyServerHostname, Consul clients and servers will require that a server's 
+    # TLS certificate provide a subjectAlternativeName field that matches the domain and
+    # datacenter names.
+    verifyServerHostname: true
+
+    # If httpsOnly is true, Consul will disable the HTTP RPC port and only accept
+    # TLS connections. Note: This means you will not be able to use the Consul CLI on 
+    # your own machine unless you extract the generated certs from Kubernetes, e.g.:
+    #
+    # kubectl get secret consul-cli-cert -o json | jq -r '.data."tls.crt"' | base64 --decode > dc1-cli-consul-0.pem
+    # kubectl get secret consul-cli-cert -o json | jq -r '.data."tls.key"' | base64 --decode > dc1-cli-consul-0-key.pem
+    # kubectl get secret consul-ca-cert -o json | jq -r '.data."tls.crt"' | base64 --decode > consul-agent-ca.pem
+    # export CONSUL_CACERT=consul-agent-ca.pem 
+    # export CONSUL_CLIENT_CERT=dc1-cli-consul-0.pem 
+    # export CONSUL_CLIENT_KEY=dc1-cli-consul-0-key.pem
+    # export CONSUL_HTTP_ADDR=https://localhost:8501
+    httpsOnly: true
 
 # Server, when enabled, configures a server cluster to run. This should
 # be disabled if you plan on connecting to a Consul cluster external to
