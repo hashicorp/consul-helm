@@ -418,6 +418,202 @@ load _helpers
       --set 'global.gossipEncryption.secretName=bar' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("encrypt")' | tee /dev/stderr)
+  [ "${actual}" == "true" ]
+}
+
+#--------------------------------------------------------------------
+# TLS
+
+@test "client/DaemonSet: no secret volumes when TLS is disabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=false' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.volumes[] | select(.secret)' | tee /dev/stderr)
+  [ "${actual}" == "" ]
+}
+
+@test "client/DaemonSet: CA volume present when TLS is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.volumes[] | select(.name == "tls-ca-cert")' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: client volume present when TLS is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.volumes[] | select(.name == "tls-client-cert")' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: no volumes mounted when TLS is disabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=false' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].volumeMounts[] | select(.secret)' | tee /dev/stderr)
+  [ "${actual}" == "" ]
+}
+
+@test "client/DaemonSet: CA volume mounted when TLS is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "tls-ca-cert")' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: Client volume mounted when TLS is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "tls-client-cert")' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: port 8500 is exposed when TLS is disabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=false' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8500)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: port 8501 is not exposed when TLS is disabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=false' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8501)' | tee /dev/stderr)
+  [ "${actual}" == "" ]
+}
+
+@test "client/DaemonSet: port 8501 is exposed when TLS is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8501)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: port 8500 is still exposed when httpsOnly is not enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.httpsOnly=false' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8500)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: port 8500 is not exposed when httpsOnly is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.httpsOnly=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8500)' | tee /dev/stderr)
+  [ "${actual}" == "" ]
+}
+
+@test "client/DaemonSet: Readiness probe URL is http when TLS is disabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=false' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("http://")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: Readiness probe port is 8500 when TLS is disabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=false' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains(":8500")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: Readiness probe URL is https when TLS is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("https://")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: Readiness probe port is 8501 when TLS is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains(":8501")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: CA certificate is specified when TLS is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("--cacert /consul/tls/ca/tls.crt")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: client certificate is specified when TLS is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("--cert /consul/tls/client/tls.crt")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: client key is specified when TLS is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("--key /consul/tls/client/tls.key")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: HTTP is disabled in agent when httpsOnly is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.httpsOnly=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | join(" ") | contains("ports { http = -1 }")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 

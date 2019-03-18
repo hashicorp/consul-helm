@@ -8,15 +8,18 @@ metadata:
     chart: {{ template "consul.chart" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-{{- if .Values.global.enablePodSecurityPolicies }}
 rules:
+{{- if .Values.global.enablePodSecurityPolicies }}
 - apiGroups: ["policy"]
   resources: ["podsecuritypolicies"]
   resourceNames:
   - {{ template "consul.fullname" . }}-server
   verbs:
   - use
-{{- else }}
-rules: []
+{{- end }}
+{{- if .Values.global.tls.enabled }}
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "watch", "list", "create", "update"]
 {{- end }}
 {{- end }}

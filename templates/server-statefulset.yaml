@@ -52,12 +52,21 @@ spec:
     {{- end }}
       terminationGracePeriodSeconds: 10
       serviceAccountName: {{ template "consul.fullname" . }}-server
+      automountServiceAccountToken: true
       securityContext:
         fsGroup: 1000
       volumes:
         - name: config
           configMap:
             name: {{ template "consul.fullname" . }}-server-config
+        {{- if .Values.global.tls.enabled }}
+        - name: tls-ca-cert
+          secret:
+            secretName: {{ template "consul.fullname" . }}-ca-cert
+        - name: tls-server-cert
+          secret:
+            secretName: {{ template "consul.fullname" . }}-server-cert
+        {{- end }}
         {{- range .Values.server.extraVolumes }}
         - name: userconfig-{{ .name }}
           {{ .type }}:
@@ -100,6 +109,19 @@ spec:
                 -advertise="${POD_IP}" \
                 -bind=0.0.0.0 \
                 -bootstrap-expect={{ .Values.server.bootstrapExpect }} \
+                {{- if .Values.global.tls.enabled }}
+                -hcl='ca_file = "/consul/tls/ca/tls.crt"' \
+                -hcl='cert_file = "/consul/tls/server/tls.crt"' \
+                -hcl='key_file = "/consul/tls/server/tls.key"' \
+                -hcl='verify_incoming_rpc = {{ .Values.global.tls.verifyIncomingRpc }}' \
+                -hcl='verify_incoming_https = {{ .Values.global.tls.verifyIncomingHttps }}' \
+                -hcl='verify_outgoing = {{ .Values.global.tls.verifyOutgoing }}' \
+                -hcl='verify_server_hostname = {{ .Values.global.tls.verifyServerHostname }}' \
+                -hcl='ports { https = 8501 }' \
+                {{- if .Values.global.tls.httpsOnly }}
+                -hcl='ports { http = -1 }' \
+                {{- end }}
+                {{- end }}
                 -client=0.0.0.0 \
                 -config-dir=/consul/config \
                 {{- range .Values.server.extraVolumes }}
@@ -128,6 +150,12 @@ spec:
               mountPath: /consul/data
             - name: config
               mountPath: /consul/config
+            {{- if .Values.global.tls.enabled }}
+            - name: tls-ca-cert
+              mountPath: /consul/tls/ca
+            - name: tls-server-cert
+              mountPath: /consul/tls/server
+            {{- end }}
             {{- range .Values.server.extraVolumes }}
             - name: userconfig-{{ .name }}
               readOnly: true
@@ -141,8 +169,14 @@ spec:
                 - -c
                 - consul leave
           ports:
+            {{- if (or (not .Values.global.tls.enabled) (not .Values.global.tls.httpsOnly)) }}
             - containerPort: 8500
               name: http
+            {{- end }}
+            {{- if .Values.global.tls.enabled }}
+            - containerPort: 8501
+              name: https
+            {{- end }}
             - containerPort: 8301
               name: serflan
             - containerPort: 8302
@@ -163,8 +197,15 @@ spec:
                 - "/bin/sh"
                 - "-ec"
                 - |
-                  curl http://127.0.0.1:8500/v1/status/leader 2>/dev/null | \
-                  grep -E '".+"'
+                  {{- if .Values.global.tls.enabled }}
+                  curl --cert /consul/tls/server/tls.crt \
+                    --key /consul/tls/server/tls.key \
+                    --cacert /consul/tls/ca/tls.crt \
+                    https://127.0.0.1:8501/v1/status/leader \
+                  {{- else }}
+                  curl http://127.0.0.1:8500/v1/status/leader \
+                  {{- end }}
+                  2>&1 | grep -E '".+"'
             failureThreshold: 2
             initialDelaySeconds: 5
             periodSeconds: 3

@@ -77,6 +77,51 @@ global:
   # Additionally requires Consul >= 1.4 and consul-k8s >= 0.10.1.
   bootstrapACLs: false
 
+  # Enables TLS encryption across the cluster to verify authenticity of the
+  # servers and clients that connect. Note: It is HIGHLY recommended that you also
+  # enable Gossip encryption.
+  # See https://learn.hashicorp.com/consul/advanced/day-1-operations/agent-encryption
+  #
+  # Note: this relies on functionality introduced with Consul 1.4.1. Make sure
+  # your global.image value is at least version 1.4.1.
+  tls:
+    enabled: false
+
+    # If verifyIncomingRpc is true, Consul servers will reject connections from clients
+    # that do not provide a TLS cert signed by the same CA.
+    verifyIncomingRpc: true
+
+    # If verifyIncomingHttps is true, Consul agents will reject connections from browsers
+    # or clients that do not provide a TLS cert signed by the same CA.
+    # Note: setting this to True may make it difficult to use the Consul UI.
+    verifyIncomingHttps: false
+
+    # If verifyOutgoing is true, Consul clients and servers will only talk to
+    # other agents that can provide a TLS cert signed by the same CA.
+    verifyOutgoing: true
+
+    # If verifyServerHostname is true, Consul clients and servers will require that a server's
+    # TLS certificate provide a subjectAlternativeName field that matches the domain and
+    # datacenter names.
+    verifyServerHostname: true
+
+    # If httpsOnly is true, Consul will disable the HTTP RPC port and only accept
+    # TLS connections. Note: This means you will not be able to use the Consul CLI on
+    # your own machine unless you extract the generated certs from Kubernetes, e.g.:
+    #
+    # kubectl get secret consul-cli-cert -o json | jq -r '.data."tls.crt"' | base64 --decode > dc1-cli-consul-0.pem
+    # kubectl get secret consul-cli-cert -o json | jq -r '.data."tls.key"' | base64 --decode > dc1-cli-consul-0-key.pem
+    # kubectl get secret consul-ca-cert -o json | jq -r '.data."tls.crt"' | base64 --decode > consul-agent-ca.pem
+    # export CONSUL_CACERT=consul-agent-ca.pem
+    # export CONSUL_CLIENT_CERT=dc1-cli-consul-0.pem
+    # export CONSUL_CLIENT_KEY=dc1-cli-consul-0-key.pem
+    # export CONSUL_HTTP_ADDR=https://localhost:8501
+    #
+    # Note: if you are using the syncCatalog or connectInject features below,
+    # do not set httpsOnly to true. This limitation will be addressed in a future 
+    # release.
+    httpsOnly: true
+
 # Server, when enabled, configures a server cluster to run. This should
 # be disabled if you plan on connecting to a Consul cluster external to
 # the Kube cluster.
