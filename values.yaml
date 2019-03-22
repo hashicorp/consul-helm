@@ -84,6 +84,10 @@ global:
     # export CONSUL_CLIENT_CERT=dc1-cli-consul-0.pem 
     # export CONSUL_CLIENT_KEY=dc1-cli-consul-0-key.pem
     # export CONSUL_HTTP_ADDR=https://localhost:8501
+    #
+    # Note: if you are using the syncCatalog or connectInject features below,
+    # do not set httpsOnly to true. This limitation will be addressed in a future 
+    # release.
     httpsOnly: true
 
 # Server, when enabled, configures a server cluster to run. This should
