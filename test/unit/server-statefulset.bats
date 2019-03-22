@@ -609,3 +609,4 @@ load _helpers
       yq '.spec.template.spec.containers[0].command | join(" ") | contains("ports { http = -1 }")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+

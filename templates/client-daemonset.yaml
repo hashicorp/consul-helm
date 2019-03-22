@@ -128,12 +128,9 @@ spec:
                 {{- end }}
                 -datacenter={{ .Values.global.datacenter }} \
                 -data-dir=/consul/data \
-<<<<<<< HEAD
                 {{- if (and .Values.global.gossipEncryption.enabled .Values.global.gossipEncryption.secretName .Values.global.gossipEncryption.secretKey) }}
                 -encrypt="${GOSSIP_KEY}" \
                 {{- end }}
-=======
->>>>>>> Revert "Support gossip encryption"
                 {{- if (.Values.client.join) and (gt (len .Values.client.join) 0) }}
                 {{- range $value := .Values.client.join }}
                 -retry-join="{{ $value }}" \
