@@ -1,0 +1,122 @@
+# Network policy for the consul server cluster
+{{- if (and .Values.global.enableNetworkPolicies (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled))) }}
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ template "consul.fullname" . }}-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    component: server
+spec:
+  policyTypes:
+    - Ingress
+    - Egress
+  podSelector:
+    matchLabels:
+      app: {{ template "consul.name" . }}
+      release: {{ .Release.Name }}
+      component: server
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: server
+        {{- if (and .Values.global.enableNetworkPolicies (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)))}}
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: client
+        {{- end }}
+        {{- if .Values.networkPolicies.additionalClientSelectors }}
+        {{ .Values.networkPolicies.additionalClientSelectors | toYaml | nindent 8 | trim}}
+        {{- end }}
+        {{- if .Values.networkPolicies.additionalServerSelectors }}
+        {{ .Values.networkPolicies.additionalServerSelectors | toYaml | nindent 8 | trim }}
+        {{- end }}
+      ports:
+        # consul gossip
+        - protocol: TCP
+          port: 8301
+        - protocol: UDP
+          port: 8301
+        # rpc
+        - protocol: TCP
+          port: 8300
+    {{- if .Values.networkPolicies.serverWanSelectors }}
+    # consul wan
+    - from:
+        {{ .Values.networkPolicies.serverWanSelectors | toYaml | nindent 8 | trim }}
+      ports:
+        # remote dc forwarding
+        - protocol: TCP
+          port: 8300
+        # wan gossip
+        - protocol: TCP
+          port: 8302
+        - protocol: UDP
+          port: 8302
+    {{- end }}
+    {{- if .Values.networkPolicies.serverHTTPSelectors }}
+    # consul http
+    - from:
+        {{ .Values.networkPolicies.serverHTTPSelectors | toYaml | nindent 8 | trim }}
+      ports:
+        - protocol: TCP
+          port: 8500
+    {{- end }}
+
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: server
+        {{- if (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) }}
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: client
+        {{- end }}
+        {{- if .Values.networkPolicies.additionalClientSelectors }}
+        {{ .Values.networkPolicies.additionalClientSelectors | toYaml | nindent 8 | trim }}
+        {{- end }}
+        {{- if .Values.networkPolicies.additionalServerSelectors }}
+        {{ .Values.networkPolicies.additionalServerSelectors | toYaml | nindent 8 | trim }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 8301
+        - protocol: UDP
+          port: 8301
+    - to:
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: server
+      ports:
+        - protocol: TCP
+          port: 8300
+    {{- if .Values.networkPolicies.serverWanSelectors }}
+    - to:
+        {{ .Values.networkPolicies.serverWanSelectors | toYaml | nindent 8 | trim }}
+      ports:
+        # remote dc forwarding
+        - protocol: TCP
+          port: 8300
+        # wan gossip
+        - protocol: TCP
+          port: 8302
+        - protocol: UDP
+          port: 8302
+    {{- end }}
+{{- end }}

@@ -1,0 +1,56 @@
+# Network policy for sync-catalog.
+{{- if (and .Values.global.enableNetworkPolicies (or (and (ne (.Values.syncCatalog.enabled | toString) "-") .Values.syncCatalog.enabled) (and (eq (.Values.syncCatalog.enabled | toString) "-") .Values.global.enabled))) }}
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ template "consul.fullname" . }}-sync-catalog
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  policyTypes:
+    - Ingress
+    - Egress
+  podSelector:
+    matchLabels:
+      app: {{ template "consul.name" . }}
+      release: {{ .Release.Name }}
+      component: sync-catalog
+  ingress:
+    # Pod Healthcheck
+    - ports:
+        - protocol: TCP
+          port: 8080
+
+  egress:
+    # Kubernetes master API
+    - ports:
+        - protocol: TCP
+          port: 443
+      to:
+        {{ required "Usage of network policies requires setting a selector for the kubernetes master api endpoint" .Values.networkPolicies.kubernetesMasterSelector | toYaml | nindent 8 | trim }}
+    # Consul clients and servers
+    {{- if (or (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled))) }}
+    - to:
+        {{- if (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) }}
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: client
+        {{- end }}
+        {{- if (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) }}
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: server
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 8500
+    {{- end }}
+{{- end }}

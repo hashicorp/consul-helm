@@ -1,0 +1,110 @@
+# NetworkPolicies for the Consul client
+{{- if (and .Values.global.enableNetworkPolicies (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)))}}
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ template "consul.fullname" . }}-client
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  policyTypes:
+    - Ingress
+    - Egress
+  podSelector:
+    matchLabels:
+      app: {{ template "consul.name" . }}
+      release: {{ .Release.Name }}
+      component: client
+  ingress:
+    # consul gossip
+    - from:
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: client
+        {{- if (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) }}
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: server
+        {{- end }}
+        {{- if .Values.networkPolicies.additionalClientSelectors }}
+        {{ .Values.networkPolicies.additionalClientSelectors | toYaml | nindent 8 | trim}}
+        {{- end }}
+        {{- if .Values.networkPolicies.additionalServerSelectors }}
+        {{ .Values.networkPolicies.additionalServerSelectors | toYaml | nindent 8 | trim }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 8301
+        - protocol: UDP
+          port: 8301
+    {{- if (or .Values.networkPolicies.clientHTTPSelectors (or (and (ne (.Values.syncCatalog.enabled | toString) "-") .Values.syncCatalog.enabled) (and (eq (.Values.syncCatalog.enabled | toString) "-") .Values.global.enabled))) }}
+    # consul http
+    - from:
+        {{- if .Values.networkPolicies.clientHTTPSelectors }}
+        {{ .Values.networkPolicies.clientHTTPSelectors | toYaml | nindent 8 | trim }}
+        {{- end }}
+        {{- if (or (and (ne (.Values.syncCatalog.enabled | toString) "-") .Values.syncCatalog.enabled) (and (eq (.Values.syncCatalog.enabled | toString) "-") .Values.global.enabled)) }}
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: sync-catalog
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 8500
+    {{- end }}
+
+  egress:
+    # consul gossip
+    - to:
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: client
+        {{- if (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) }}
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: server
+        {{- end }}
+        {{- if .Values.networkPolicies.additionalClientSelectors }}
+        {{ .Values.networkPolicies.additionalClientSelectors | toYaml | nindent 8 | trim }}
+        {{- end }}
+        {{- if .Values.networkPolicies.additionalServerSelectors }}
+        {{ .Values.networkPolicies.additionalServerSelectors | toYaml | nindent 8 | trim }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 8301
+        - protocol: UDP
+          port: 8301
+
+    # consul rpc
+    - to:
+        {{- if (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) }}
+        - podSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: {{ .Release.Name }}
+              component: server
+        {{- if .Values.networkPolicies.additionalServerSelectors }}
+        {{ .Values.networkPolicies.additionalServerSelectors | toYaml | nindent 8 | trim }}
+        {{- end }}
+        {{- else }}
+        {{ required "networkPolicies.additionalServerSelectors must be set or server must be enabled" .Values.networkPolicies.additionalServerSelectors | toYaml | nindent 8 | trim }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 8300
+{{- end }}

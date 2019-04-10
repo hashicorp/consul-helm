@@ -1,0 +1,35 @@
+# Network policy for consul DNS
+{{- if (and .Values.global.enableNetworkPolicies (or (and (ne (.Values.dns.enabled | toString) "-") .Values.dns.enabled) (and (eq (.Values.dns.enabled | toString) "-") .Values.global.enabled)))}}
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ template "consul.fullname" . }}-dns
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  policyTypes:
+    - Ingress
+    - Egress
+  podSelector:
+    matchLabels:
+      app: {{ template "consul.name" . }}
+      release: "{{ .Release.Name }}"
+      hasDNS: "true"
+  ingress:
+    - from:
+        - podSelector:
+            {{ .Values.networkPolicies.dnsPodSelector | toYaml | nindent 12 | trim }}
+          namespaceSelector:
+            {{ .Values.networkPolicies.dnsNamespaceSelector | toYaml | nindent 12 | trim }}
+      ports:
+        # Although port 53 is the one exposed by the service, we need to use
+        # the ports on which the pod will actually receive the traffic.
+        - protocol: UDP
+          port: 8600
+        - protocol: TCP
+          port: 8600
+{{- end }}

@@ -37,15 +37,20 @@ global:
   # chart. See https://kubernetes.io/docs/concepts/policy/pod-security-policy/
   enablePodSecurityPolicies: false
 
+  # enableNetworkPolicies is a boolean flag that controls whether
+  # network policies are created for the components created by this
+  # chart. See: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+  enableNetworkPolicies: false
+
   # Gossip encryption key. To enable gossip encryption, provide the name of
   # a Kubernetes secret that contains a gossip key. You can create a gossip
-  # key with the "consul keygen" command. 
-  # See https://www.consul.io/docs/commands/keygen.html 
+  # key with the "consul keygen" command.
+  # See https://www.consul.io/docs/commands/keygen.html
   gossipEncryption:
     secretName: null
     secretKey: null
 
-  # bootstrapACLs will automatically create and assign ACL tokens within 
+  # bootstrapACLs will automatically create and assign ACL tokens within
   # the Consul cluster. This currently requires enabling both servers and
   # clients within Kubernetes. Additionally requires Consul v1.4+ and
   # consul-k8s v0.8.0+.
@@ -150,7 +155,7 @@ server:
   annotations: null
 
   # extraEnvVars is a list of extra enviroment variables to set with the stateful set. These could be
-  # used to include proxy settings required for cloud auto-join feature, 
+  # used to include proxy settings required for cloud auto-join feature,
   # in case kubernetes cluster is behind egress http proxies. Additionally, it could be used to configure
   # custom consul parameters.
   extraEnvironmentVars: {}
@@ -215,7 +220,7 @@ client:
   annotations: null
 
   # extraEnvVars is a list of extra enviroment variables to set with the pod. These could be
-  # used to include proxy settings required for cloud auto-join feature, 
+  # used to include proxy settings required for cloud auto-join feature,
   # in case kubernetes cluster is behind egress http proxies. Additionally, it could be used to configure
   # custom consul parameters.
   extraEnvironmentVars: {}
@@ -387,3 +392,46 @@ connectInject:
     # configured proxy.
     proxyDefaults: |
       {}
+
+networkPolicies:
+  # Selector for the kubenertes master API endpoint. Must be set for sync-catalog or connect-inject.
+  # In some environments, it will be the IP range of the kubernetes masters, e.g.:
+  # kubernetesMasterSelector:
+  #   - ipBlock:
+  #       cidr: 10.0.0.0/28
+  kubernetesMasterSelector: null
+
+  # additionalClientSelectors and additionalServerSelectors are used to allow traffic
+  # to/from clients/servers outside of kubernetes in hybrid environments.
+  additionalClientSelectors: null
+  additionalServerSelectors: null
+
+  # clientHTTPSelectors and serverHTTPSelectors are both used to allow access to the consul
+  # HTTP API port respectively to the clients and the servers.
+  clientHTTPSelectors: null
+  masterHTTPSelectors: null
+
+  # For consul dns access, a pod will need to match both the dnsPodSelector and
+  # the dnsNamespaceSelector in order to be able to query the service.
+  # dnsPodSelector is the selector for the pods that will be allowed to query the
+  # dns service. Usually, only kube-dns needs to access it.
+  dnsPodSelector:
+    matchLabels:
+      k8s-app: kube-dns
+
+  # dnsNamespaceSelector is the namespace selector used in conjunction with dnsPodSelector
+  # to determine from which namespace the requests can originate. This is usually the kube-system
+  # namespace only.
+  # Note that, since the kube-system namespace doesn't necessarily have labels, we set an
+  # empty selector as default here, but it should be changed to e.g. :
+  #  dnsNamespaceSelector:
+  #    matchLabels:
+  #      name: kube-system
+  dnsNamespaceSelector: {}
+
+  # Selectors for consul WAN gossip/rpc.
+  # Example:
+  # serverWanSelectors:
+  #   - ipBlock:
+  #       cidr: 10.2.0.0/24
+  serverWanSelectors: null
