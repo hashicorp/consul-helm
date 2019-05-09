@@ -39,13 +39,13 @@ global:
 
   # Gossip encryption key. To enable gossip encryption, provide the name of
   # a Kubernetes secret that contains a gossip key. You can create a gossip
-  # key with the "consul keygen" command. 
-  # See https://www.consul.io/docs/commands/keygen.html 
+  # key with the "consul keygen" command.
+  # See https://www.consul.io/docs/commands/keygen.html
   gossipEncryption:
     secretName: null
     secretKey: null
 
-  # bootstrapACLs will automatically create and assign ACL tokens within 
+  # bootstrapACLs will automatically create and assign ACL tokens within
   # the Consul cluster. This currently requires enabling both servers and
   # clients within Kubernetes. Additionally requires Consul v1.4+ and
   # consul-k8s v0.8.0+.
@@ -150,7 +150,7 @@ server:
   annotations: null
 
   # extraEnvVars is a list of extra enviroment variables to set with the stateful set. These could be
-  # used to include proxy settings required for cloud auto-join feature, 
+  # used to include proxy settings required for cloud auto-join feature,
   # in case kubernetes cluster is behind egress http proxies. Additionally, it could be used to configure
   # custom consul parameters.
   extraEnvironmentVars: {}
@@ -205,6 +205,18 @@ client:
   #   beta.kubernetes.io/arch: amd64
   nodeSelector: null
 
+  # Affinity Settings for Client pods
+  # ref https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  # Example:
+  # affinity:
+  #   nodeAffinity:
+  #     requiredDuringSchedulingIgnoredDuringExecution:
+  #       nodeSelectorTerms:
+  #       - matchExpressions:
+  #         - key: node-role.kubernetes.io/master
+  #           operator: DoesNotExist
+  affinity: {}
+
   # used to assign priority to client pods
   # ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
   priorityClassName: ""
@@ -215,7 +227,7 @@ client:
   annotations: null
 
   # extraEnvVars is a list of extra enviroment variables to set with the pod. These could be
-  # used to include proxy settings required for cloud auto-join feature, 
+  # used to include proxy settings required for cloud auto-join feature,
   # in case kubernetes cluster is behind egress http proxies. Additionally, it could be used to configure
   # custom consul parameters.
   extraEnvironmentVars: {}
