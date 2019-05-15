@@ -11,6 +11,9 @@ metadata:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
 spec:
+{{- if (not (empty .Values.dns.clusterIP)) }}
+  clusterIP: {{ .Values.dns.clusterIP }}
+{{- end }}
   ports:
     - name: dns-tcp
       port: 53
