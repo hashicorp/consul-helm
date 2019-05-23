@@ -59,3 +59,20 @@ Inject extra environment vars in the format key:value, if populated
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Generate standard helm labels
+*/}}
+{{- define "consul.labels" }}
+app: {{ template "consul.name" . }}
+chart: {{ template "consul.chart" . }}
+release: {{ .Release.Name | quote }}
+heritage: {{ .Release.Service | quote }}
+app.kubernetes.io/name: {{ template "consul.name" . }}
+helm.sh/chart: {{ template "consul.chart" . }}
+app.kubernetes.io/instance: {{ .Release.Name | quote }}
+app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+{{- if .Values.global.commonLabels }}
+{{ toYaml .Values.global.commonLabels }}
+{{- end }}
+{{- end }}
