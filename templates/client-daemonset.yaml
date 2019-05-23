@@ -6,24 +6,18 @@ metadata:
   name: {{ template "consul.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "consul.name" . }}
-    chart: {{ template "consul.chart" . }}
+    {{- include "consul.labels" . | indent 4 -}}
     heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
 spec:
   selector:
     matchLabels:
-      app: {{ template "consul.name" . }}
-      chart: {{ template "consul.chart" . }}
-      release: {{ .Release.Name }}
+      {{- include "consul.labels" . | indent 6 -}}
       component: client
       hasDNS: "true"
   template:
     metadata:
       labels:
-        app: {{ template "consul.name" . }}
-        chart: {{ template "consul.chart" . }}
-        release: {{ .Release.Name }}
+        {{- include "consul.labels" . | indent 8 -}}
         component: client
         hasDNS: "true"
       annotations:

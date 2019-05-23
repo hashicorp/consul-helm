@@ -6,10 +6,7 @@ metadata:
   name: {{ template "consul.fullname" . }}-dns
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "consul.name" . }}
-    chart: {{ template "consul.chart" . }}
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    {{- include "consul.labels" . | indent 4 -}}
 spec:
   ports:
     - name: dns-tcp
