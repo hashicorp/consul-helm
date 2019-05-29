@@ -184,6 +184,20 @@ spec:
           resources:
             {{ tpl .Values.client.resources . | nindent 12 | trim }}
           {{- end }}
+        {{- if .Values.client.snapshotAgent.enabled }}
+        - name: consul-snapshot-agent
+          image: "{{ default .Values.global.image .Values.client.image }}"
+          command:
+            - "/bin/sh"
+            - "-ec"
+            - |
+              exec /bin/consul snapshot agent \
+                -config-dir=/consul/config
+          volumeMounts:
+            - name: config
+              mountPath: /consul/config
+       {{- end }}
+
       {{- if .Values.global.bootstrapACLs }}
       initContainers:
       - name: client-acl-init

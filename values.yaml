@@ -176,6 +176,12 @@ client:
   # is made.
   resources: null
 
+  # snapshotAgent enables the snapshot agent to be run in each agent pod.
+  # The configuration options should be configured via the extraConfig key.
+  # Note: This is a Consul Enterprise only feature.
+  snapshotAgent:
+    enabled: false
+
   # extraConfig is a raw string of extra configuration to set with the
   # server. This should be JSON.
   extraConfig: |
