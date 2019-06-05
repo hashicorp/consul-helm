@@ -14,9 +14,9 @@ global:
   # servers below. This can be overridden per component.
   #
   # Examples:
-  #   image: "consul:1.5.0"
-  #   image: "hashicorp/consul-enterprise:1.5.0-ent"   # Enterprise Consul image
-  image: "consul:1.5.0"
+  #   image: "consul:1.5.1"
+  #   image: "hashicorp/consul-enterprise:1.5.1-ent"   # Enterprise Consul image
+  image: "consul:1.5.1"
 
   # imageK8S is the name (and tag) of the consul-k8s Docker image that
   # is used for functionality such as the catalog sync. This can be overridden
@@ -35,7 +35,8 @@ global:
   # enablePodSecurityPolicies is a boolean flag that controls whether pod
   # security policies are created for the consul components created by this
   # chart. See https://kubernetes.io/docs/concepts/policy/pod-security-policy/
-  enablePodSecurityPolicies: false
+  # Set to true for latest helm/tiller 2.14
+  enablePodSecurityPolicies: true
 
   # Gossip encryption key. To enable gossip encryption, provide the name of
   # a Kubernetes secret that contains a gossip key. You can create a gossip
