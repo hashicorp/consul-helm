@@ -48,7 +48,14 @@ spec:
       # emptyDir volume.
       volumes:
         - name: data
+        {{- if .Values.client.hostPath }}
+          hostPath:
+            # directory location on host
+            path: {{ .Values.client.hostPath }}
+            type: DirectoryOrCreate
+        {{- else }}
           emptyDir: {}
+        {{- end }}
         - name: config
           configMap:
             name: {{ template "consul.fullname" . }}-client-config
