@@ -28,8 +28,20 @@ spec:
         hasDNS: "true"
       annotations:
         "consul.hashicorp.com/connect-inject": "false"
+        {{- if .Values.client.annotations }}
+          {{- tpl .Values.client.annotations . | nindent 8 }}
+        {{- end }}
     spec:
+    {{- if .Values.client.tolerations }}
+      tolerations:
+        {{ tpl .Values.client.tolerations . | nindent 8 | trim }}
+    {{- end }}
       terminationGracePeriodSeconds: 10
+      serviceAccountName: {{ template "consul.fullname" . }}-client
+
+      {{- if .Values.client.priorityClassName }}
+      priorityClassName: {{ .Values.client.priorityClassName | quote }}
+      {{- end }}
 
       # Consul agents require a directory for data, even clients. The data
       # is okay to be wiped though if the Pod is removed, so just use an
@@ -48,6 +60,10 @@ spec:
             {{- else if (eq .type "secret") }}
             secretName: {{ .name }}
             {{- end }}
+        {{- end }}
+        {{- if .Values.global.bootstrapACLs }}
+        - name: aclconfig
+          emptyDir: {}
         {{- end }}
 
       {{- if .Values.client.hostNetwork.enabled }}
@@ -71,6 +87,14 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            {{- if (and .Values.global.gossipEncryption.secretName .Values.global.gossipEncryption.secretKey) }}
+            - name: GOSSIP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.gossipEncryption.secretName }}
+                  key: {{ .Values.global.gossipEncryption.secretKey }}
+            {{- end }}
+            {{- include "consul.extraEnvironmentVars" .Values.client | nindent 12 }}
           command:
             - "/bin/sh"
             - "-ec"
@@ -91,8 +115,14 @@ spec:
                 -config-dir=/consul/userconfig/{{ .name }} \
                 {{- end }}
                 {{- end }}
+                {{- if .Values.global.bootstrapACLs}}
+                -config-dir=/consul/aclconfig \
+                {{- end }}
                 -datacenter={{ .Values.global.datacenter }} \
                 -data-dir=/consul/data \
+                {{- if (and .Values.global.gossipEncryption.secretName .Values.global.gossipEncryption.secretKey) }}
+                -encrypt="${GOSSIP_KEY}" \
+                {{- end }}
                 {{- if (.Values.client.join) and (gt (len .Values.client.join) 0) }}
                 {{- range $value := .Values.client.join }}
                 -retry-join="{{ $value }}" \
@@ -114,6 +144,10 @@ spec:
             - name: userconfig-{{ .name }}
               readOnly: true
               mountPath: /consul/userconfig/{{ .name }}
+            {{- end }}
+            {{- if .Values.global.bootstrapACLs}}
+            - name: aclconfig
+              mountPath: /consul/aclconfig
             {{- end }}
           lifecycle:
             preStop:
@@ -155,4 +189,24 @@ spec:
           resources:
             {{ tpl .Values.client.resources . | nindent 12 | trim }}
           {{- end }}
+      {{- if .Values.global.bootstrapACLs }}
+      initContainers:
+      - name: client-acl-init
+        image: {{ .Values.global.imageK8S }}
+        command:
+          - "/bin/sh"
+          - "-ec"
+          - |
+            consul-k8s acl-init \
+              -secret-name="{{ .Release.Name }}-consul-client-acl-token" \
+              -k8s-namespace={{ .Release.Namespace }} \
+              -init-type="client"
+        volumeMounts:
+          - name: aclconfig
+            mountPath: /consul/aclconfig
+      {{- end }}
+      {{- if .Values.client.nodeSelector }}
+      nodeSelector:
+        {{ tpl .Values.client.nodeSelector . | indent 8 | trim }}
+      {{- end }}
 {{- end }}

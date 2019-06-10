@@ -25,6 +25,8 @@ spec:
         chart: {{ template "consul.chart" . }}
         release: {{ .Release.Name }}
         component: connect-injector
+      annotations:
+        "consul.hashicorp.com/connect-inject": "false"
     spec:
   {{- if not .Values.connectInject.certs.secretName }}
       serviceAccountName: {{ template "consul.fullname" . }}-connect-injector-webhook-svc-account
@@ -50,8 +52,17 @@ spec:
                 -envoy-image="{{ .Values.connectInject.imageEnvoy }}" \
                 {{ end -}}
                 -listen=:8080 \
+                {{- if .Values.global.bootstrapACLs }}
+                -acl-auth-method="{{ .Release.Name }}-consul-k8s-auth-method" \
+                {{- end }}
+                {{- if .Values.connectInject.centralConfig.enabled }}
+                -enable-central-config=true \
+                {{- end }}
+                {{- if (and .Values.connectInject.centralConfig.enabled .Values.connectInject.centralConfig.defaultProtocol) }}
+                -default-protocol="{{ .Values.connectInject.centralConfig.defaultProtocol }}" \
+                {{- end }}
 {{- if .Values.connectInject.certs.secretName }}
-                -tls-cert-file=/etc/connect-injector/certs/{{ .Values.connectInject.certs.certName }}
+                -tls-cert-file=/etc/connect-injector/certs/{{ .Values.connectInject.certs.certName }} \
                 -tls-key-file=/etc/connect-injector/certs/{{ .Values.connectInject.certs.keyName }}
 {{- else }}
                 -tls-auto=${CONSUL_FULLNAME}-connect-injector-cfg \
@@ -87,4 +98,8 @@ spec:
           secret:
             secretName: {{ .Values.connectInject.certs.secretName }}
 {{- end }}
+      {{- if .Values.connectInject.nodeSelector }}
+      nodeSelector:
+        {{ tpl .Values.connectInject.nodeSelector . | indent 8 | trim }}
+      {{- end }}  
 {{- end }}

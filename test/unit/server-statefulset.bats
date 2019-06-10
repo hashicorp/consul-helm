@@ -265,3 +265,195 @@ load _helpers
       yq '.spec.template.spec.affinity | .podAntiAffinity? != null' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# nodeSelector
+
+@test "server/StatefulSet: nodeSelector is not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.nodeSelector' | tee /dev/stderr)
+  [ "${actual}" = "null" ]
+}
+
+@test "server/StatefulSet: specified nodeSelector" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml \
+      --set 'server.nodeSelector=testing' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.nodeSelector' | tee /dev/stderr)
+  [ "${actual}" = "testing" ]
+}
+
+#--------------------------------------------------------------------
+# priorityClassName
+
+@test "server/StatefulSet: priorityClassName is not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.priorityClassName' | tee /dev/stderr)
+  [ "${actual}" = "null" ]
+}
+
+@test "server/StatefulSet: specified priorityClassName" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml \
+      --set 'server.priorityClassName=testing' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.priorityClassName' | tee /dev/stderr)
+  [ "${actual}" = "testing" ]
+}
+
+#--------------------------------------------------------------------
+# annotations
+
+@test "server/StatefulSet: no annotations defined by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.metadata.annotations | del(."consul.hashicorp.com/connect-inject")' | tee /dev/stderr)
+  [ "${actual}" = "{}" ]
+}
+
+@test "server/StatefulSet: annotations can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'server.annotations=foo: bar' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.metadata.annotations.foo' | tee /dev/stderr)
+  [ "${actual}" = "bar" ]
+}
+
+#--------------------------------------------------------------------
+# tolerations
+
+@test "server/StatefulSet: tolerations not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec | .tolerations? == null' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "server/StatefulSet: tolerations can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'server.tolerations=foobar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.tolerations == "foobar"' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
+# gossip encryption
+
+@test "server/StatefulSet: gossip encryption disabled in server StatefulSet by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .env[] | select(.name == "GOSSIP_KEY") | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "" ]
+}
+
+@test "server/StatefulSet: gossip encryption disabled in server StatefulSet when servers are disabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/enterprise-license.yaml  \
+      --set 'server.enabled=false' \
+      --set 'global.gossipEncryption.secretName=foo' \
+      --set 'global.gossipEncryption.secretKey=bar' \
+      . | tee /dev/stderr |
+      yq 'length > 0' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "server/StatefulSet: gossip encryption disabled in server StatefulSet when secretName is missing" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'global.gossipEncryption.secretKey=bar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .env[] | select(.name == "GOSSIP_KEY") | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "" ]
+}
+
+@test "server/StatefulSet: gossip encryption disabled in server StatefulSet when secretKey is missing" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'global.gossipEncryption.secretName=foo' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .env[] | select(.name == "GOSSIP_KEY") | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "" ]
+}
+
+@test "server/StatefulSet: gossip environment variable present in server StatefulSet when all config is provided" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'global.gossipEncryption.secretKey=foo' \
+      --set 'global.gossipEncryption.secretName=bar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .env[] | select(.name == "GOSSIP_KEY") | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "server/StatefulSet: encrypt CLI option not present in server StatefulSet when encryption disabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("encrypt")' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "server/StatefulSet: encrypt CLI option present in server StatefulSet when all config is provided" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'global.gossipEncryption.secretKey=foo' \
+      --set 'global.gossipEncryption.secretName=bar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("encrypt")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
+# extraEnvironmentVariables
+
+@test "server/StatefulSet: custom environment variables" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'server.extraEnvironmentVars.custom_proxy=fakeproxy' \
+      --set 'server.extraEnvironmentVars.no_proxy=custom_no_proxy' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].env' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.[2].name' | tee /dev/stderr)
+  [ "${actual}" = "custom_proxy" ]
+
+  local actual=$(echo $object |
+      yq -r '.[2].value' | tee /dev/stderr)
+  [ "${actual}" = "fakeproxy" ]
+
+  local actual=$(echo $object |
+      yq -r '.[3].name' | tee /dev/stderr)
+  [ "${actual}" = "no_proxy" ]
+
+  local actual=$(echo $object |
+      yq -r '.[3].value' | tee /dev/stderr)
+  [ "${actual}" = "custom_no_proxy" ]
+}

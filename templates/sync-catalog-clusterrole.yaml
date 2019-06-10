@@ -22,4 +22,26 @@ rules:
       - patch
       - delete
       - create
+  - apiGroups: [""]
+    resources:
+      - nodes
+    verbs:
+      - get
+{{- if .Values.global.bootstrapACLs }}
+  - apiGroups: [""]
+    resources:
+      - secrets
+    resourceNames:
+      - {{ .Release.Name }}-consul-catalog-sync-acl-token
+    verbs:
+      - get
+{{- end }}
+{{- if .Values.global.enablePodSecurityPolicies }}
+  - apiGroups: ["policy"]
+    resources: ["podsecuritypolicies"]
+    verbs:
+      - use
+    resourceNames:
+      - {{ template "consul.fullname" . }}-sync-catalog
+{{- end }}
 {{- end }}

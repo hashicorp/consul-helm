@@ -2,51 +2,51 @@
 
 load _helpers
 
-@test "sync/ClusterRole: disabled by default" {
+@test "server/ServiceAccount: enabled by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/sync-catalog-cluster-role.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
-}
-
-@test "sync/ClusterRole: disabled with global.enabled=false" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/sync-catalog-cluster-role.yaml  \
-      --set 'global.enabled=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
-}
-
-@test "sync/ClusterRole: disabled with sync disabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/sync-catalog-cluster-role.yaml  \
-      --set 'syncCatalog.enabled=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
-}
-
-@test "sync/ClusterRole: enabled with sync enabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/sync-catalog-cluster-role.yaml  \
-      --set 'syncCatalog.enabled=true' \
+      -x templates/server-serviceaccount.yaml  \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
-@test "sync/ClusterRole: enabled with sync enabled and global.enabled=false" {
+@test "server/ServiceAccount: disabled with global.enabled=false" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/sync-catalog-cluster-role.yaml  \
+      -x templates/server-serviceaccount.yaml  \
       --set 'global.enabled=false' \
-      --set 'syncCatalog.enabled=true' \
+      . | tee /dev/stderr |
+      yq 'length > 0' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "server/ServiceAccount: disabled with server disabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-serviceaccount.yaml  \
+      --set 'server.enabled=false' \
+      . | tee /dev/stderr |
+      yq 'length > 0' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "server/ServiceAccount: enabled with server enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-serviceaccount.yaml  \
+      --set 'server.enabled=true' \
+      . | tee /dev/stderr |
+      yq 'length > 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "server/ServiceAccount: enabled with server enabled and global.enabled=false" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-serviceaccount.yaml  \
+      --set 'global.enabled=false' \
+      --set 'server.enabled=true' \
       . | tee /dev/stderr |
       yq -s 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
