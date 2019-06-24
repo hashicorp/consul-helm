@@ -49,6 +49,8 @@ spec:
       priorityClassName: {{ .Values.client.priorityClassName | quote }}
       {{- end }}
 
+      # Default DnsPolicy is not dafualt for kube
+      dnsPolicy: {{.Values.client.DnsPolicy }}        
       # Consul agents require a directory for data, even clients. The data
       # is okay to be wiped though if the Pod is removed, so just use an
       # emptyDir volume.
@@ -74,7 +76,7 @@ spec:
             secretName: {{ .name }}
             {{- end }}
         {{- end }}
-        dnsPolicy: {{.Values.client.DnsPolicy }}        
+        
         {{- if .Values.global.bootstrapACLs }}
         - name: aclconfig
           emptyDir: {}
