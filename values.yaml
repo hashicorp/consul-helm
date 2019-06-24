@@ -16,7 +16,7 @@ global:
   # Examples:
   #   image: "consul:1.5.0"
   #   image: "hashicorp/consul-enterprise:1.5.0-ent"   # Enterprise Consul image
-  image: "consul:1.5.0"
+  image: "consul:1.5.1"
 
   # imageK8S is the name (and tag) of the consul-k8s Docker image that
   # is used for functionality such as the catalog sync. This can be overridden
@@ -50,6 +50,12 @@ global:
   # clients within Kubernetes. Additionally requires Consul v1.4+ and
   # consul-k8s v0.8.0+.
   bootstrapACLs: false
+  # updateStrategy used to customize number of pods that can be upgraded simultaniously
+  # starting from version 1.5.1 and using host path to store data between restarts, we can rollout 
+  # consul much faster with 10  maxUnavailable pods for example.
+  updateStrategy:
+    enabled: true
+    maxUnavailable: 1
 
 # Server, when enabled, configures a server cluster to run. This should
 # be disabled if you plan on connecting to a Consul cluster external to
@@ -230,6 +236,8 @@ client:
   # hostPath: '/var/consul-data'
   hostPath: null
 
+  # Deafult DnsPolicy is not default in kube. Specify your prefered DnsPolicy here.
+  DnsPolicy: "Default"
 # Configuration for DNS configuration within the Kubernetes cluster.
 # This creates a service that routes to all agents (client or server)
 # for serving DNS requests. This DOES NOT automatically configure kube-dns

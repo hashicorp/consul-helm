@@ -11,6 +11,12 @@ metadata:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
 spec:
+  {{- if .Values.global.updateStrategy.enabled }}
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: {{ .Values.global.updateStrategy.maxUnavailable }}
+    type: RollingUpdate
+  {{- end }}
   selector:
     matchLabels:
       app: {{ template "consul.name" . }}
@@ -68,6 +74,7 @@ spec:
             secretName: {{ .name }}
             {{- end }}
         {{- end }}
+        dnsPolicy: {{.Values.client.DnsPolicy }}        
         {{- if .Values.global.bootstrapACLs }}
         - name: aclconfig
           emptyDir: {}
