@@ -50,6 +50,7 @@ global:
   # clients within Kubernetes. Additionally requires Consul v1.4+ and
   # consul-k8s v0.8.0+.
   bootstrapACLs: false
+  
   # updateStrategy used to customize number of pods that can be upgraded simultaniously
   # starting from version 1.5.1 and using host path to store data between restarts, we can rollout 
   # consul much faster with 10  maxUnavailable pods for example.
