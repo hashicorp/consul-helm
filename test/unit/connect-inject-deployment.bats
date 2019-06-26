@@ -270,3 +270,31 @@ load _helpers
       yq '.spec.template.spec.containers[0].command | any(contains("-default-protocol=\"grpc\""))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# sidecarResources
+
+@test "connectInject/Deployment: sidecarResources is disabled by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-enable-resources"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "connectInject/Deployment: sidecarResources can be enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.sidecarResources.enabled=true' \
+      --set 'connectInject.sidecarResources.limits.cpu=100m' \
+      --set 'connectInject.sidecarResources.limits.memory=128Mi' \
+      --set 'connectInject.sidecarResources.requests.cpu=100m' \
+      --set 'connectInject.sidecarResources.limits.cpu=128Mi' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-enable-resources"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}

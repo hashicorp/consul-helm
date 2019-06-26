@@ -387,3 +387,13 @@ connectInject:
     # configured proxy.
     proxyDefaults: |
       {}
+
+  # enable resources for sidecar and init containers for injector
+  sidecarResources:
+    enabled: false
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi

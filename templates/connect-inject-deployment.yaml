@@ -61,6 +61,13 @@ spec:
                 {{- if (and .Values.connectInject.centralConfig.enabled .Values.connectInject.centralConfig.defaultProtocol) }}
                 -default-protocol="{{ .Values.connectInject.centralConfig.defaultProtocol }}" \
                 {{- end }}
+                {{- if .Values.connectInject.sidecarResources.enabled }}
+                -enable-resources=true \
+                -cpu-limit="{{ .Values.connectInject.sidecarResources.limits.cpu }}" \
+                -cpu-request="{{ .Values.connectInject.sidecarResources.requests.cpu }}" \
+                -memory-limit="{{ .Values.connectInject.sidecarResources.limits.memory }}" \
+                -memory-request="{{ .Values.connectInject.sidecarResources.requests.memory }}" \
+                {{- end }}
 {{- if .Values.connectInject.certs.secretName }}
                 -tls-cert-file=/etc/connect-injector/certs/{{ .Values.connectInject.certs.certName }} \
                 -tls-key-file=/etc/connect-injector/certs/{{ .Values.connectInject.certs.keyName }}
