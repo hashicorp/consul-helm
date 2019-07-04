@@ -2,63 +2,55 @@
 
 load _helpers
 
-@test "client/ClusterRole: enabled by default" {
+@test "client/SnapshotAgentClusterRole: disabled by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-clusterrole.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
-
-@test "client/ClusterRole: disabled with global.enabled=false" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/client-clusterrole.yaml  \
-      --set 'global.enabled=false' \
+      -x templates/client-snapshot-agent-clusterrole.yaml  \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
-@test "client/ClusterRole: can be enabled with global.enabled=false" {
+@test "client/SnapshotAgentClusterRole: enabled with client.snapshotAgent.enabled=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-clusterrole.yaml  \
-      --set 'global.enabled=false' \
-      --set 'client.enabled=true' \
+      -x templates/client-snapshot-agent-clusterrole.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
       . | tee /dev/stderr |
-      yq -s 'length > 0' | tee /dev/stderr)
+      yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
-@test "client/ClusterRole: disabled with client.enabled=false" {
+@test "client/SnapshotAgentClusterRole: enabled with client.enabled=true and client.snapshotAgent.enabled=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-clusterrole.yaml  \
+      -x templates/client-snapshot-agent-clusterrole.yaml  \
+      --set 'client.enabled=true' \
+      --set 'client.snapshotAgent.enabled=true' \
+      . | tee /dev/stderr |
+      yq 'length > 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/SnapshotAgentClusterRole: disabled with client=false and client.snapshotAgent.enabled=true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-snapshot-agent-clusterrole.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
       --set 'client.enabled=false' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
-@test "client/ClusterRole: enabled with client.enabled=true" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/client-clusterrole.yaml  \
-      --set 'client.enabled=true' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
-
 #--------------------------------------------------------------------
 # global.enablePodSecurityPolicies
 
-@test "client/ClusterRole: allows podsecuritypolicies access with global.enablePodSecurityPolicies=true" {
+@test "client/SnapshotAgentClusterRole: allows podsecuritypolicies access with global.enablePodSecurityPolicies=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-clusterrole.yaml  \
+      -x templates/client-snapshot-agent-clusterrole.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
       --set 'client.enabled=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       . | tee /dev/stderr |
@@ -69,10 +61,11 @@ load _helpers
 #--------------------------------------------------------------------
 # global.bootstrapACLs
 
-@test "client/ClusterRole: allows secret access with global.bootsrapACLs=true" {
+@test "client/SnapshotAgentClusterRole: allows secret access with global.bootsrapACLs=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-clusterrole.yaml  \
+      -x templates/client-snapshot-agent-clusterrole.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
       --set 'client.enabled=true' \
       --set 'global.bootstrapACLs=true' \
       . | tee /dev/stderr |
@@ -80,11 +73,12 @@ load _helpers
   [ "${actual}" = "secrets" ]
 }
 
-@test "client/ClusterRole: allows secret access with global.bootsrapACLs=true and global.enablePodSecurityPolicies=true" {
+@test "client/SnapshotAgentClusterRole: allows secret access with global.bootsrapACLs=true and global.enablePodSecurityPolicies=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-clusterrole.yaml  \
+      -x templates/client-snapshot-agent-clusterrole.yaml  \
       --set 'client.enabled=true' \
+      --set 'client.snapshotAgent.enabled=true' \
       --set 'global.bootstrapACLs=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       . | tee /dev/stderr |
