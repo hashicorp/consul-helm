@@ -190,6 +190,13 @@ client:
     #   name: my-secret
     #   load: false # if true, will add to `-config-dir` to load by Consul
 
+  # aclTokens for configure ACL agent token to use in the request.
+  # ACL agent token details:
+  # https://www.consul.io/docs/commands/acl/set-agent-token.html
+  aclTokens: []
+    # - type: "default" # Should <= default/agent/master or replication
+    #   value: "my-token"
+
   # Toleration Settings for Client pods
   # This should be a multi-line string matching the Toleration array
   # in a PodSpec.
