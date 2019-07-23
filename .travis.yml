@@ -8,6 +8,7 @@ before_install:
   - tar xzvf helm-v2.13.0-linux-amd64.tar.gz
   - mv linux-amd64/helm helm
   - chmod u+x helm
+  - ./helm init --client-only
 
 script:
   - mkdir build
