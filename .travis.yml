@@ -26,4 +26,3 @@ deploy:
   region: "us-east-1"
   local_dir: build
   upload-dir: consul-helm
-  acl: public_read
