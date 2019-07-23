@@ -15,7 +15,7 @@ script:
   - ./helm package ./
   - mv *.tgz build/
   - cd build
-  - ./helm repo index . --url http://helm-repo.sphera.tools.s3-website-us-east-1.amazonaws.com/consul-helm
+  - ./helm repo index build/ --url http://helm-repo.sphera.tools.s3-website-us-east-1.amazonaws.com/consul-helm
 
 
 deploy:
