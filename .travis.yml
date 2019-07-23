@@ -1,0 +1,27 @@
+language: go
+
+os:
+  - linux
+
+before_install:
+  - wget https://kubernetes-helm.storage.googleapis.com/helm-v2.13.0-linux-amd64.tar.gz
+  - tar xzvf helm-v2.13.0-linux-amd64.tar.gz
+  - mv linux-amd64/helm helm
+  - chmod u+x helm
+
+script:
+  - mkdir build
+  - helm package ./
+  - mv *.tgz build/
+  - helm repo index . --url http://helm-repo.sphera.tools.s3-website-us-east-1.amazonaws.com/consul-helm
+  - mv index.yaml build/index.yaml
+
+deploy:
+  provider: s3
+  access_key_id: "${AWS_ACCESS_KEY_ID}"
+  secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+  bucket: "helm-repo.sphera.tools"
+  skip_cleanup: true
+  region: "us-east-1"
+  local_dir: build
+  upload-dir: consul-helm
