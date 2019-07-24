@@ -52,6 +52,17 @@ load _helpers
   [ ! -z "${actual}" ]
 }
 
+@test "client/ConfigMap: aclTokens is set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-config-configmap.yaml  \
+      --set 'client.aclTokens[0].type=default' \
+      --set 'client.aclTokens[0].value=my-token' \
+      . | tee /dev/stderr |
+      yq '.data["acl-config.json"] | match("my-token") | length' | tee /dev/stderr)
+  [ ! -z "${actual}" ]
+}
+
 #--------------------------------------------------------------------
 # connectInject.centralConfig
 

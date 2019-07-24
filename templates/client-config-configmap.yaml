@@ -20,4 +20,18 @@ data:
       "enable_central_service_config": true
     }
   {{- end }}
+  {{- if gt (len .Values.client.aclTokens) 0 }}
+  acl-config.json: |-
+    {
+      "acl": {
+          "enabled": true,
+          "tokens": {
+          {{- $lastIndex := sub (len .Values.client.aclTokens) 1}}
+          {{- range $i, $token := .Values.client.aclTokens }}
+            "{{ $token.type }}": "{{ $token.value }}"{{ if ne $i $lastIndex -}},{{ end }}
+          {{- end }}
+          }
+      }
+    }
+  {{- end }}
 {{- end }}
