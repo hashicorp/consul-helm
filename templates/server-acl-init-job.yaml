@@ -76,6 +76,9 @@ spec:
                 {{- if .Values.client.snapshotAgent.enabled }}
                 -create-snapshot-agent-token=true \
                 {{- end }}
+                {{- if not (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) }}
+                -create-client-token=false \
+                {{- end }}
                 -expected-replicas={{ .Values.server.replicas }}
 {{- end }}
 {{- end }}
