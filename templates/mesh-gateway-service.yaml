@@ -5,10 +5,11 @@ metadata:
   name: {{ template "consul.fullname" . }}-mesh-gateway
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "consul.name" . }}
-    chart: {{ template "consul.chart" . }}
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    helm.sh/chart: {{ include "consul.chart" . }}
+    app.kubernetes.io/name: {{ include "consul.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/version: {{ .Chart.Version | quote }}
     component: mesh-gateway
   {{- if .Values.meshGateway.service.annotations }}
   annotations:
@@ -16,8 +17,9 @@ metadata:
   {{- end }}
 spec:
   selector:
-    app: {{ template "consul.name" . }}
-    release: "{{ .Release.Name }}"
+    helm.sh/chart: {{ template "consul.chart" . }}
+    app.kubernetes.io/name: {{ template "consul.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
     component: mesh-gateway
   ports:
     - name: gateway

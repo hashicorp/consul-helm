@@ -4,10 +4,11 @@ kind: ClusterRole
 metadata:
   name: {{ template "consul.fullname" . }}-mesh-gateway
   labels:
-    app: {{ template "consul.name" . }}
-    chart: {{ template "consul.chart" . }}
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    helm.sh/chart: {{ include "consul.chart" . }}
+    app.kubernetes.io/name: {{ include "consul.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/version: {{ .Chart.Version | quote }}
     component: mesh-gateway
 {{- if or .Values.global.bootstrapACLs .Values.global.enablePodSecurityPolicies }}
 rules:

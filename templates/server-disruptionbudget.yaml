@@ -7,15 +7,17 @@ metadata:
   name: {{ template "consul.fullname" . }}-server
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "consul.name" . }}
-    chart: {{ template "consul.chart" . }}
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    helm.sh/chart: {{ include "consul.chart" . }}
+    app.kubernetes.io/name: {{ include "consul.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/version: {{ .Chart.Version | quote }}
 spec:
   maxUnavailable: {{ template "consul.pdb.maxUnavailable" . }}
   selector:
     matchLabels:
-      app: {{ template "consul.name" . }}
-      release: "{{ .Release.Name }}"
+      helm.sh/chart: {{ template "consul.chart" . }}
+      app.kubernetes.io/name: {{ template "consul.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
       component: server
 {{- end }}

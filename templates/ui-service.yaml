@@ -6,18 +6,20 @@ metadata:
   name: {{ template "consul.fullname" . }}-ui
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "consul.name" . }}
-    chart: {{ template "consul.chart" . }}
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
+    helm.sh/chart: {{ include "consul.chart" . }}
+    app.kubernetes.io/name: {{ include "consul.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/version: {{ .Chart.Version | quote }}
   {{- if .Values.ui.service.annotations }}
   annotations:
     {{ tpl .Values.ui.service.annotations . | nindent 4 | trim }}
   {{- end }}
 spec:
   selector:
-    app: {{ template "consul.name" . }}
-    release: "{{ .Release.Name }}"
+    helm.sh/chart: {{ template "consul.chart" . }}
+    app.kubernetes.io/name: {{ template "consul.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
     component: server
   ports:
     - name: http
