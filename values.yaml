@@ -231,7 +231,11 @@ client:
 # https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/#configure-stub-domain-and-upstream-dns-servers
 dns:
   enabled: "-"
-  # clusterIP:
+  
+  # Set a predefined cluster IP for the DNS service.
+  # Useful if you need to reference the DNS service's IP
+  # address in CoreDNS config.
+  clusterIP: null
 
 ui:
   # True if you want to enable the Consul UI. The UI will run only
