@@ -253,6 +253,7 @@ client:
 # https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/#configure-stub-domain-and-upstream-dns-servers
 dns:
   enabled: "-"
+  clusterIP: ""
 
 ui:
   # True if you want to enable the Consul UI. The UI will run only
