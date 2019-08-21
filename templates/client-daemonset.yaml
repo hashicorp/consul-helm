@@ -134,7 +134,8 @@ spec:
             - name: data
               mountPath: /consul/data
             - name: config
-              mountPath: /consul/config
+              mountPath: /consul/config/extra-from-values.json
+              subPath: extra-from-values.json
             {{- range .Values.client.extraVolumes }}
             - name: userconfig-{{ .name }}
               readOnly: true
