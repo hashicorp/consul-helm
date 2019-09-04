@@ -4,6 +4,10 @@ BUG FIXES:
 
   * Fix enterprise license application when ACLs are turned off
 
+IMPROVEMENTS:
+
+  * Less privileges when syncCatalog.toK8S = false
+
 ## 0.8.1 (May 9, 2019)
 
 IMPROVEMENTS:
