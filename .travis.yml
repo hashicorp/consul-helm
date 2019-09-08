@@ -4,17 +4,20 @@ os:
   - linux
 
 before_install:
-  - wget https://kubernetes-helm.storage.googleapis.com/helm-v2.13.0-linux-amd64.tar.gz
+  - mkdir /tmp/helm
+  - wget https://kubernetes-helm.storage.googleapis.com/helm-v2.13.0-linux-amd64.tar.gz -O /tmp/helm/helm-v2.13.0-linux-amd64.tar.gz
+  - cd /tmp/helm
   - tar xzvf helm-v2.13.0-linux-amd64.tar.gz
+  - rm helm-v2.13.0-linux-amd64.tar.gz
   - mv linux-amd64/helm helm
   - chmod u+x helm
-  - ./helm init --client-only
+  - ./tmp/helm init --client-only
 
 script:
   - mkdir build
-  - ./helm package ./
+  - ./tmp/helm package ./
   - mv *.tgz build/
-  - ./helm repo index build/ --url http://helm-repo.sphera.tools.s3-website-us-east-1.amazonaws.com/consul-helm
+  - ./tmp/helm repo index build/ --url http://helm-repo.sphera.tools.s3-website-us-east-1.amazonaws.com/consul-helm
 
 deploy:
   provider: s3
