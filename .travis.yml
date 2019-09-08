@@ -6,11 +6,9 @@ os:
 before_install:
   - mkdir /tmp/helm
   - wget https://kubernetes-helm.storage.googleapis.com/helm-v2.13.0-linux-amd64.tar.gz -O /tmp/helm/helm-v2.13.0-linux-amd64.tar.gz
-  - cd /tmp/helm
-  - tar xzvf helm-v2.13.0-linux-amd64.tar.gz
-  - rm helm-v2.13.0-linux-amd64.tar.gz
-  - mv linux-amd64/helm helm
-  - chmod u+x helm
+  - tar xzvf /tmp/helm/helm-v2.13.0-linux-amd64.tar.gz -C /tmp/helm
+  - mv /tmp/helm/linux-amd64/helm /tmp/helm/helm
+  - chmod u+x /tmp/helm/helm
   - /tmp/helm/helm init --client-only
 
 script:
