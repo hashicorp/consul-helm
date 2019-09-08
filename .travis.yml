@@ -15,9 +15,9 @@ before_install:
 
 script:
   - mkdir build
-  - ./tmp/helm package ./
+  - ./tmp/helm/helm package ./
   - mv *.tgz build/
-  - ./tmp/helm repo index build/ --url http://helm-repo.sphera.tools.s3-website-us-east-1.amazonaws.com/consul-helm
+  - ./tmp/helm/helm repo index build/ --url http://helm-repo.sphera.tools.s3-website-us-east-1.amazonaws.com/consul-helm
 
 deploy:
   provider: s3
