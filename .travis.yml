@@ -11,13 +11,13 @@ before_install:
   - rm helm-v2.13.0-linux-amd64.tar.gz
   - mv linux-amd64/helm helm
   - chmod u+x helm
-  - ./tmp/helm/helm init --client-only
+  - /tmp/helm/helm init --client-only
 
 script:
   - mkdir build
-  - ./tmp/helm/helm package ./
+  - /tmp/helm/helm package ./
   - mv *.tgz build/
-  - ./tmp/helm/helm repo index build/ --url http://helm-repo.sphera.tools.s3-website-us-east-1.amazonaws.com/consul-helm
+  - /tmp/helm/helm repo index build/ --url http://helm-repo.sphera.tools.s3-website-us-east-1.amazonaws.com/consul-helm
 
 deploy:
   provider: s3
