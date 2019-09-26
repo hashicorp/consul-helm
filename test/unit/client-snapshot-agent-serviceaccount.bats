@@ -42,3 +42,12 @@ load _helpers
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
+
+@test "client/SnapshotAgentServiceAccount: no annotations by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-snapshot-agent-serviceaccount.yaml  \
+      . | tee /dev/stderr |
+      yq '.metadata.annotations | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}

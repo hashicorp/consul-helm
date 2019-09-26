@@ -42,3 +42,12 @@ load _helpers
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+@test "serverACLInitCleanup/ServiceAccount: no annotations by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-cleanup-serviceaccount.yaml  \
+      . | tee /dev/stderr |
+      yq '.metadata.annotations | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}

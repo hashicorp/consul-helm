@@ -53,3 +53,12 @@ load _helpers
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+@test "tlsInit/ServiceAccount: no annotations by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/tls-init-serviceaccount.yaml  \
+      . | tee /dev/stderr |
+      yq '.metadata.annotations | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}

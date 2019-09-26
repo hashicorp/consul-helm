@@ -51,3 +51,22 @@ load _helpers
       yq -s 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+@test "client/ServiceAccount: no annotations by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-serviceaccount.yaml  \
+      . | tee /dev/stderr |
+      yq '.metadata.annotations | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "client/ServiceAccount: annotations when enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-serviceaccount.yaml \
+      --set "client.serviceAccount.annotations=foo: bar" \
+      . | tee /dev/stderr |
+      yq '.metadata.annotations | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}

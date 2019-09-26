@@ -44,3 +44,12 @@ load _helpers
       yq -s 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+@test "connectInjectAuthMethod/ServiceAccount: no annotations by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-authmethod-serviceaccount.yaml  \
+      . | tee /dev/stderr |
+      yq '.metadata.annotations | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}

@@ -130,6 +130,12 @@ server:
     secretName: null
     secretKey: null
 
+    # Extra annotations to attach to the entreprise license service account
+    # This should be a multi-line string mapping directly to the a map of
+    # the annotations to apply to the service account
+    serviceAccount:
+      annotations: null
+
   # storage and storageClass are the settings for configuring stateful
   # storage for the server pods. storage should be set to the disk size of
   # the attached volume. storageClass is the class of storage which defaults
@@ -174,6 +180,12 @@ server:
     # - type: secret (or "configMap")
     #   name: my-secret
     #   load: false # if true, will add to `-config-dir` to load by Consul
+
+  # Extra annotations to attach to the server service account
+  # This should be a multi-line string mapping directly to the a map of
+  # the annotations to apply to the service account
+  serviceAccount:
+    annotations: null
 
   # Affinity Settings
   # Commenting out or setting as empty the affinity variable, will allow
@@ -302,6 +314,12 @@ client:
   # the annotations to apply to the client pods
   annotations: null
 
+  # Extra annotations to attach to the client service account
+  # This should be a multi-line string mapping directly to the a map of
+  # the annotations to apply to the service account
+  serviceAccount:
+    annotations: null
+
   # extraEnvVars is a list of extra enviroment variables to set with the pod. These could be
   # used to include proxy settings required for cloud auto-join feature,
   # in case kubernetes cluster is behind egress http proxies. Additionally, it could be used to configure
@@ -333,6 +351,12 @@ client:
 
     # replicas determines how many snapshot agent pods are created
     replicas: 2
+
+    # Extra annotations to attach to the snapshot agent service account
+    # This should be a multi-line string mapping directly to the a map of
+    # the annotations to apply to the service account
+    serviceAccount:
+      annotations: null
 
     # configSecret references a Kubernetes secret that should be manually created to
     # contain the entire config to be used on the snapshot agent. This is the preferred
@@ -460,6 +484,12 @@ syncCatalog:
     secretName: null
     secretKey: null
 
+  # Extra annotations to attach to the sync catalog service account
+  # This should be a multi-line string mapping directly to the a map of
+  # the annotations to apply to the service account
+  serviceAccount:
+    annotations: null
+
   # nodeSelector labels for syncCatalog pod assignment, formatted as a multi-line string.
   # ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
   # Example:
@@ -498,6 +528,12 @@ connectInject:
   #   matchLabels:
   #     namespace-label: label-value
   namespaceSelector: null
+  #
+  # Extra annotations to attach to the connect inject service account
+  # This should be a multi-line string mapping directly to the a map of
+  # the annotations to apply to the service account
+  serviceAccount:
+    annotations: null
 
   # The certs section configures how the webhook TLS certs are configured.
   # These are the TLS certs for the Kube apiserver communicating to the
@@ -669,6 +705,12 @@ meshGateway:
   # will fail health checks. You may disable health checks as a temporary
   # workaround.
   enableHealthChecks: true
+
+  # Extra annotations to attach to the mesh gateway service account
+  # This should be a multi-line string mapping directly to the a map of
+  # the annotations to apply to the service account
+  serviceAccount:
+    annotations: null
 
   resources: |
     requests:
