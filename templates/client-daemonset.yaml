@@ -74,10 +74,10 @@ spec:
         - name: consul
           image: "{{ default .Values.global.image .Values.client.image }}"
           env:
-            - name: POD_IP
+            - name: HOST_IP
               valueFrom:
                 fieldRef:
-                  fieldPath: status.podIP
+                  fieldPath: status.hostIP
             - name: NAMESPACE
               valueFrom:
                 fieldRef:
@@ -102,7 +102,7 @@ spec:
 
               exec /bin/consul agent \
                 -node="${NODE}" \
-                -advertise="${POD_IP}" \
+                -advertise="${HOST_IP}" \
                 -bind=0.0.0.0 \
                 -client=0.0.0.0 \
                 {{- if .Values.client.grpc }}
@@ -163,8 +163,10 @@ spec:
               hostPort: 8502
               name: grpc
             - containerPort: 8301
+              hostPort: 8301
               name: serflan
             - containerPort: 8302
+              hostPort: 8302
               name: serfwan
             - containerPort: 8300
               name: server

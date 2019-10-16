@@ -217,7 +217,7 @@ load _helpers
       --set 'client.extraVolumes[0].name=foo' \
       --set 'client.extraVolumes[0].load=true' \
       . | tee /dev/stderr |
-      yq -r '.spec.template.spec.containers[0].command | map(select(test("/consul/userconfig/foo"))) | length' | tee /dev/stderr)
+      yq -r '.spec.template.spec.containers[0].command | map(select(contains("/consul/userconfig/foo"))) | length' | tee /dev/stderr)
   [ "${actual}" = "1" ]
 }
 
