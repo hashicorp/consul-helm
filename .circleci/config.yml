@@ -2,7 +2,7 @@ version: 2
 jobs:
   unit:
     docker:
-      - image: hashicorpconsul/consul-helm-test:0.2.0
+      - image: hashicorpdev/consul-helm-test:0.2.0
 
     steps:
       - checkout
@@ -13,7 +13,7 @@ jobs:
 
   acceptance:
     docker:
-      - image: hashicorpconsul/consul-helm-test:0.2.0
+      - image: hashicorpdev/consul-helm-test:0.2.0
 
     steps:
       - checkout
