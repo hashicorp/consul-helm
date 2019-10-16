@@ -2,6 +2,7 @@ version: 2
 jobs:
   unit:
     docker:
+      # This image is build from test/docker/Test.dockerfile
       - image: hashicorpdev/consul-helm-test:0.2.0
 
     steps:
@@ -13,6 +14,7 @@ jobs:
 
   acceptance:
     docker:
+      # This image is build from test/docker/Test.dockerfile
       - image: hashicorpdev/consul-helm-test:0.2.0
 
     steps:
@@ -23,12 +25,12 @@ jobs:
           command: |
             set -e
 
-            terraform init
-            terraform apply -var 'init_cli=true' -var 'project=${GOOGLE_PROJECT} --auto-approve
+            terraform init test/terraform
+            terraform apply -var 'init_cli=true' -var project=${GOOGLE_PROJECT} --auto-approve test/terraform
 
             bats ./test/acceptance
 
-            terraform destroy -var 'project=${GOOGLE_PROJECT} --force
+            terraform destroy -var project=${GOOGLE_PROJECT} --force test/terraform
           environment:
             TF_VAR_init_cli: true
 
