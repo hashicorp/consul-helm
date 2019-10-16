@@ -26,11 +26,11 @@ jobs:
             set -e
 
             terraform init test/terraform
-            terraform apply -var 'init_cli=true' -var project=${GOOGLE_PROJECT} --auto-approve test/terraform
+            terraform apply -var init_cli=true -var project=${GOOGLE_PROJECT} -auto-approve test/terraform
 
             bats ./test/acceptance
 
-            terraform destroy -var project=${GOOGLE_PROJECT} --force test/terraform
+            terraform destroy -var project=${GOOGLE_PROJECT} -auto-approve test/terraform
           environment:
             TF_VAR_init_cli: true
 
@@ -42,3 +42,6 @@ workflows:
       - acceptance:
           requires:
             - unit
+          filters:
+            branches:
+              only: master
