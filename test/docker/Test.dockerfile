@@ -10,6 +10,7 @@ FROM alpine:latest
 WORKDIR /root
 
 ENV BATS_VERSION "1.1.0"
+ENV TERRAFORM_VERSION "0.12.10"
 
 # base packages
 RUN apk update && apk add --no-cache --virtual .build-deps \
@@ -32,7 +33,7 @@ RUN curl -OL https://dl.google.com/dl/cloudsdk/channels/rapid/install_google_clo
     ln -s /root/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud
 
 # terraform
-RUN curl -sSL https://releases.hashicorp.com/terraform/0.12.10/terraform_0.12.10_linux_amd64.zip -o /tmp/tf.zip \
+RUN curl -sSL https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -o /tmp/tf.zip \
     && unzip /tmp/tf.zip  \
     && ln -s /root/terraform /usr/local/bin/terraform
 
@@ -47,4 +48,4 @@ RUN curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | 
 # bats
 RUN curl -sSL https://github.com/bats-core/bats-core/archive/v${BATS_VERSION}.tar.gz -o /tmp/bats.tgz \
     && tar -zxf /tmp/bats.tgz -C /tmp \
-    && /bin/bash /tmp/bats-core-$BATS_VERSION/install.sh /usr/local
+    && /bin/bash /tmp/bats-core-${BATS_VERSION}/install.sh /usr/local
