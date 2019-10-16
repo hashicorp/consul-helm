@@ -2,7 +2,7 @@ version: 2
 jobs:
   unit:
     docker:
-      # This image is build from test/docker/Test.dockerfile
+      # This image is built from test/docker/Test.dockerfile
       - image: hashicorpdev/consul-helm-test:0.2.0
 
     steps:
