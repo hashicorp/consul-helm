@@ -31,6 +31,11 @@ RUN curl -OL https://dl.google.com/dl/cloudsdk/channels/rapid/install_google_clo
     bash install_google_cloud_sdk.bash --disable-prompts --install-dir='/root/' && \
     ln -s /root/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud
 
+# terraform
+RUN curl -sSL https://releases.hashicorp.com/terraform/0.12.10/terraform_0.12.10_linux_amd64.zip -o /tmp/tf.zip \
+    && unzip /tmp/tf.zip  \
+    && ln -s /root/terraform /usr/local/bin/terraform
+
 # kubectl
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && \
     chmod +x ./kubectl && \
