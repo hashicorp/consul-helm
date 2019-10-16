@@ -1,0 +1,42 @@
+version: 2
+jobs:
+  unit:
+    docker:
+      - image: hashicorpconsul/consul-helm-test:0.2.0
+
+    steps:
+      - checkout
+
+      - run:
+          name: Run Unit Tests
+          command: bats ./test/unit
+
+  acceptance:
+    docker:
+      - image: hashicorpconsul/consul-helm-test:0.2.0
+
+    steps:
+      - checkout
+
+      - run:
+          name: Run Acceptance Tests
+          command: |
+            set -e
+
+            terraform init
+            terraform apply -var 'init_cli=true' -var 'project=${GOOGLE_PROJECT} --auto-approve
+
+            bats ./test/acceptance
+
+            terraform destroy -var 'project=${GOOGLE_PROJECT} --force
+          environment:
+            TF_VAR_init_cli: true
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - unit
+      - acceptance:
+          requires:
+            - unit
