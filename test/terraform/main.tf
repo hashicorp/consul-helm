@@ -18,7 +18,7 @@ resource "google_container_cluster" "cluster" {
   name               = "consul-k8s-${random_id.suffix.dec}"
   project            = var.project
   enable_legacy_abac = true
-  initial_node_count = 5
+  initial_node_count = 3
   location           = var.zone
   min_master_version = data.google_container_engine_versions.main.latest_master_version
   node_version       = data.google_container_engine_versions.main.latest_node_version
@@ -65,7 +65,7 @@ resource "null_resource" "helm" {
   provisioner "local-exec" {
     command = <<EOF
 kubectl apply -f '${local.service_account_path}'
-helm init --service-account helm
+helm init --service-account helm --wait
 EOF
   }
 }
