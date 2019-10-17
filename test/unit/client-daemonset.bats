@@ -491,3 +491,38 @@ load _helpers
       yq -r '.command | any(contains("consul-k8s acl-init"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+#----------------------------------------------------------------
+# POD_IP or HOST_IP
+# @test "client/DaemonSet: When Server is enabled, client uses POD_IP" {
+#   cd `chart_dir`
+
+#   local actual=$(helm template \ 
+#      -x templates/client-daemonset.yaml  \
+#      --set 'server.enabled=true' )
+#     #. | tee /dev/stderr | yq -r '.spec.template.spec.containers | map(select(.name=="consul")) | .[0].env | map(select(.name=="ADVERTISE_IP")) | .[0] | .valueFrom.fieldRef.fieldPath' \
+#     #| tee /dev/stderr  )
+#   echo "test"
+#   [ "status.podIPxx" = "status.podIPyy" ]   
+# }
+
+@test "client/DaemonSet: When Server is enabled, client uses podIP" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'server.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers | map(select(.name=="consul")) | .[0].env | map(select(.name=="ADVERTISE_IP")) | .[0] | .valueFrom.fieldRef.fieldPath'  |
+      tee /dev/stderr)
+  [ "${actual}" = "status.podIP" ]
+}
+
+@test "client/DaemonSet: When Server is not enabled, client uses hostIP" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'server.enabled=false' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers | map(select(.name=="consul")) | .[0].env | map(select(.name=="ADVERTISE_IP")) | .[0] | .valueFrom.fieldRef.fieldPath'  |
+      tee /dev/stderr)
+  [ "${actual}" = "status.hostIP" ]
+}
