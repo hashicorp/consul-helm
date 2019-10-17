@@ -74,10 +74,18 @@ spec:
         - name: consul
           image: "{{ default .Values.global.image .Values.client.image }}"
           env:
-            - name: HOST_IP
+            - name: ADVERTISE_IP
               valueFrom:
                 fieldRef:
+                  {{- if (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) }}
+                  # If we are here the server is enabled, and the client is enabled, we can't both have 
+                  # the hostports 8301 and 8302.  If the user is doing client and server, then we just run on POD_IPs
+                  fieldPath: status.podIP
+                  {{- else }}
+                  # we are not going to be running a server on this cluster, so have the client listen on NodePorts
+                  # so that it can communicate bidirecationally with servers outside the cluster. 
                   fieldPath: status.hostIP
+                  {{- end }}
             - name: NAMESPACE
               valueFrom:
                 fieldRef:
@@ -102,7 +110,7 @@ spec:
 
               exec /bin/consul agent \
                 -node="${NODE}" \
-                -advertise="${HOST_IP}" \
+                -advertise="${ADVERTISE_IP}" \
                 -bind=0.0.0.0 \
                 -client=0.0.0.0 \
                 {{- if .Values.client.grpc }}
@@ -163,10 +171,16 @@ spec:
               hostPort: 8502
               name: grpc
             - containerPort: 8301
+              {{- if not (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) }}
+              # We are not installing server, take the host port which allows an external server to connect.
               hostPort: 8301
+              {{- end }}
               name: serflan
             - containerPort: 8302
+              {{- if not (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) }}
+              # We are not installing server, take the host port which allows an external server to connect.
               hostPort: 8302
+              {{- end }}
               name: serfwan
             - containerPort: 8300
               name: server
