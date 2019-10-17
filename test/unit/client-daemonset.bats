@@ -497,6 +497,7 @@ load _helpers
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'server.enabled=true' \
+      --set 'client.enabled=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers | map(select(.name=="consul")) | .[0].env | map(select(.name=="ADVERTISE_IP")) | .[0] | .valueFrom.fieldRef.fieldPath'  |
       tee /dev/stderr)
@@ -508,6 +509,7 @@ load _helpers
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'server.enabled=false' \
+      --set 'client.enabled=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers | map(select(.name=="consul")) | .[0].env | map(select(.name=="ADVERTISE_IP")) | .[0] | .valueFrom.fieldRef.fieldPath'  |
       tee /dev/stderr)
@@ -519,6 +521,7 @@ load _helpers
   local object=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'server.enabled=false' \
+      --set 'client.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers  | map(select(.name=="consul")) | .[0].ports'  |
       tee /dev/stderr)
@@ -526,7 +529,8 @@ load _helpers
   local actual=$(echo $object |
            yq -r 'map(select(.containerPort==8301))| .[0].hostPort' | tee /dev/stderr  )
   [ "${actual}" = "8301" ]
-  local actual=$(echo $object | yq -r 'map(select(.containerPort==8302))| .[0].hostPort' | tee /dev/stderr  )
+  local actual=$(echo $object |
+           yq -r 'map(select(.containerPort==8302))| .[0].hostPort' | tee /dev/stderr  )
   [ "${actual}" = "8302" ]
 
 }
@@ -535,6 +539,7 @@ load _helpers
   local object=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'server.enabled=true' \
+      --set 'client.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers  | map(select(.name=="consul")) | .[0].ports'  |
       tee /dev/stderr)
@@ -543,7 +548,8 @@ load _helpers
            yq -r 'map(select(.containerPort==8301))| .[0].hostPort' | tee /dev/stderr  )
   echo "${actual}"           
   [ "${actual}" = "null" ]
-  local actual=$(echo $object | yq -r 'map(select(.containerPort==8302))| .[0].hostPort' | tee /dev/stderr  )
+  local actual=$(echo $object | 
+           yq -r 'map(select(.containerPort==8302))| .[0].hostPort' | tee /dev/stderr  )
   [ "${actual}" = "null" ]
 
 }
