@@ -78,12 +78,12 @@ spec:
               valueFrom:
                 fieldRef:
                   {{- if (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) }}
-                  # If we are here the server is enabled, and the client is enabled, we can't both have 
-                  # the hostports 8301 and 8302.  If the user is doing client and server, then we just run on POD_IPs
+                  # The server is enabled, which we make the assumption that this is a contained environment and  
+                  # the pods do not need to be exposed, and need to run on Pod IP's to talk to the server (also on pod ips)
                   fieldPath: status.podIP
                   {{- else }}
                   # we are not going to be running a server on this cluster, so have the client listen on NodePorts
-                  # so that it can communicate bidirecationally with servers outside the cluster. 
+                  # so that it can communicate bidirectionally with servers outside the cluster. 
                   fieldPath: status.hostIP
                   {{- end }}
             - name: NAMESPACE
