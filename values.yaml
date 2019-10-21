@@ -159,6 +159,17 @@ server:
     # https_proxy: http://localhost:3128,
     # no_proxy: internal.domain.com
 
+  # extraContainers is a list of sidecar containers. Specified as a raw YAML string.
+  extraContainers: |
+    - name: consul-exporter
+      image: prom/consul-exporter
+      ports:
+      - name: metrics
+        containerPort: 9107
+        protocol: TCP
+      args:
+          - --consul.server=http://127.0.0.1:8500
+
 # Client, when enabled, configures Consul clients to run on every node
 # within the Kube cluster. The current deployment model follows a traditional
 # DC where a single agent is deployed per node.
@@ -223,10 +234,6 @@ client:
     # http_proxy: http://localhost:3128,
     # https_proxy: http://localhost:3128,
     # no_proxy: internal.domain.com
-
-  # extraContainer is a list of side-car containers that you might need to run with your
-  # vault instance e.g. prometheus exporter
-  extraContainers: |
 
   # snaphotAgent contains settings for setting up and running snapshot agents
   # within the Consul clusters. They are required to be co-located with Consul

@@ -173,9 +173,9 @@ spec:
           resources:
             {{ tpl .Values.server.resources . | nindent 12 | trim }}
           {{- end }}
-{{- with .Values.server.extraContainers }}
-{{ tpl . $ | indent 8 }}
-{{- end }}
+        {{- if .Values.server.extraContainers }}
+          {{ tpl .Values.server.extraContainer . | nindent 8 }}
+        {{- end }}
       {{- if .Values.server.nodeSelector }}
       nodeSelector:
         {{ tpl .Values.server.nodeSelector . | indent 8 | trim }}
