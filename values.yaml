@@ -160,15 +160,7 @@ server:
     # no_proxy: internal.domain.com
 
   # extraContainers is a list of sidecar containers. Specified as a raw YAML string.
-  extraContainers: |
-    - name: consul-exporter
-      image: prom/consul-exporter
-      ports:
-      - name: metrics
-        containerPort: 9107
-        protocol: TCP
-      args:
-          - --consul.server=http://127.0.0.1:8500
+  extraContainers: null
 
 # Client, when enabled, configures Consul clients to run on every node
 # within the Kube cluster. The current deployment model follows a traditional
