@@ -265,7 +265,7 @@ client:
 # https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/#configure-stub-domain-and-upstream-dns-servers
 dns:
   enabled: "-"
-  
+
   # Set a predefined cluster IP for the DNS service.
   # Useful if you need to reference the DNS service's IP
   # address in CoreDNS config.
@@ -371,6 +371,10 @@ syncCatalog:
 
   # Override the default interval to perform syncing operations creating Consul services.
   consulWriteInterval: null
+
+  # used to assign priority to syncCatalog pods
+  # ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
+  priorityClassName: ""
 
 # ConnectInject will enable the automatic Connect sidecar injector.
 connectInject:

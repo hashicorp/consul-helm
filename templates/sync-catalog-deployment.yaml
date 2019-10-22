@@ -29,6 +29,11 @@ spec:
         "consul.hashicorp.com/connect-inject": "false"
     spec:
       serviceAccountName: {{ template "consul.fullname" . }}-sync-catalog
+
+      {{- if .Values.syncCatalog.priorityClassName }}
+      priorityClassName: {{ .Values.syncCatalog.priorityClassName | quote }}
+      {{- end }}
+
       containers:
         - name: consul-sync-catalog
           image: "{{ default .Values.global.imageK8S .Values.syncCatalog.image }}"
