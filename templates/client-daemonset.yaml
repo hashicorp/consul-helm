@@ -157,10 +157,10 @@ spec:
                 - consul leave
           ports:
             - containerPort: 8500
-              hostPort: 8500
+              hostPort: {{ .Values.client.hostPort.http }}
               name: http
             - containerPort: 8502
-              hostPort: 8502
+              hostPort: {{ .Values.client.hostPort.grpc }}
               name: grpc
             - containerPort: 8301
               name: serflan

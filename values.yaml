@@ -167,6 +167,11 @@ client:
   image: null
   join: null
 
+  # Host ports uses by daemon set
+  hostPort:
+    http: 8500
+    gprc: 8502
+
   # grpc should be set to true if the gRPC listener should be enabled.
   # This should be set to true if connectInject or meshGateway is enabled.
   grpc: false
