@@ -167,7 +167,8 @@ client:
   image: null
   join: null
 
-  # Host ports uses by daemon set
+  # Host ports used by the client daemon set. These can be changed if one
+  # of the ports is already in use on one of the nodes.
   hostPort:
     http: 8500
     gprc: 8502
