@@ -73,6 +73,21 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# retry-join
+
+@test "client/DaemonSet: retry join gets populated" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'server.replicas=3' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].command | any(contains("-retry-join"))' | tee /dev/stderr)
+
+  [ "${actual}" = "true" ]
+}
+
+
+#--------------------------------------------------------------------
 # grpc
 
 @test "client/DaemonSet: grpc is disabled by default" {
@@ -241,6 +256,28 @@ load _helpers
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.nodeSelector' | tee /dev/stderr)
   [ "${actual}" = "testing" ]
+}
+
+#--------------------------------------------------------------------
+# affinity
+
+@test "client/DaemonSet: affinity not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec | .affinity? == null' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: specified affinity" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'client.affinity=foobar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec | .affinity == "foobar"' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
 }
 
 #--------------------------------------------------------------------

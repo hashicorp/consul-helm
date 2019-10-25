@@ -16,7 +16,7 @@ global:
   # Examples:
   #   image: "consul:1.5.0"
   #   image: "hashicorp/consul-enterprise:1.5.0-ent"   # Enterprise Consul image
-  image: "consul:1.6.0"
+  image: "consul:1.6.1"
 
   # imageK8S is the name (and tag) of the consul-k8s Docker image that
   # is used for functionality such as the catalog sync. This can be overridden
@@ -25,7 +25,7 @@ global:
   # to consul-k8s v0.6.0. If using an older consul-k8s version, you may need to
   # remove these checks to make the sync work.
   # If using mesh gateways and bootstrapACLs then must be >= 0.9.0.
-  imageK8S: "hashicorp/consul-k8s:0.9.2"
+  imageK8S: "hashicorp/consul-k8s:0.9.3"
 
   # Datacenter is the name of the datacenter that the agents should register
   # as. This shouldn't be changed once the Consul cluster is up and running
@@ -181,7 +181,7 @@ client:
   resources: null
 
   # extraConfig is a raw string of extra configuration to set with the
-  # server. This should be JSON.
+  # client. This should be JSON.
   extraConfig: |
     {}
 
@@ -208,6 +208,18 @@ client:
   # nodeSelector: |
   #   beta.kubernetes.io/arch: amd64
   nodeSelector: null
+
+  # Affinity Settings for Client pods, formatted as a multi-line YAML string.
+  # ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  # Example:
+  # affinity: |
+  #   nodeAffinity:
+  #     requiredDuringSchedulingIgnoredDuringExecution:
+  #       nodeSelectorTerms:
+  #       - matchExpressions:
+  #         - key: node-role.kubernetes.io/master
+  #           operator: DoesNotExist
+  affinity: {}
 
   # used to assign priority to client pods
   # ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
@@ -566,3 +578,9 @@ meshGateway:
 
   # Optional YAML string for additional annotations.
   annotations: null
+
+# Control whether a test Pod manifest is generated when running helm template.
+# When using helm install, the test Pod is not submitted to the cluster so this
+# is only useful when running helm template.
+tests:
+  enabled: true

@@ -2,29 +2,29 @@
 
 load _helpers
 
-@test "serverACLInit/ServiceAccount: disabled by default" {
+@test "serverACLInitCleanup/ClusterRole: disabled by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-serviceaccount.yaml  \
+      -x templates/server-acl-init-cleanup-clusterrole.yaml  \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
-@test "serverACLInit/ServiceAccount: enabled with global.bootstrapACLs=true" {
+@test "serverACLInitCleanup/ClusterRole: enabled with global.bootstrapACLs=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-serviceaccount.yaml  \
+      -x templates/server-acl-init-cleanup-clusterrole.yaml  \
       --set 'global.bootstrapACLs=true' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
-@test "serverACLInit/ServiceAccount: disabled with server=false and global.bootstrapACLs=true" {
+@test "serverACLInitCleanup/ClusterRole: disabled with server=false and global.bootstrapACLs=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-serviceaccount.yaml  \
+      -x templates/server-acl-init-cleanup-clusterrole.yaml  \
       --set 'global.bootstrapACLs=true' \
       --set 'server.enabled=false' \
       . | tee /dev/stderr |
@@ -32,12 +32,12 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "serverACLInit/ServiceAccount: enabled with client=false and global.bootstrapACLs=true" {
+@test "serverACLInitCleanup/ClusterRole: enabled with client=true and global.bootstrapACLs=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-serviceaccount.yaml  \
+      -x templates/server-acl-init-cleanup-clusterrole.yaml  \
       --set 'global.bootstrapACLs=true' \
-      --set 'client.enabled=false' \
+      --set 'client.enabled=true' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
