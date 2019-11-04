@@ -265,7 +265,7 @@ client:
 # https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/#configure-stub-domain-and-upstream-dns-servers
 dns:
   enabled: "-"
-  
+
   # Set a predefined cluster IP for the DNS service.
   # Useful if you need to reference the DNS service's IP
   # address in CoreDNS config.
@@ -328,10 +328,24 @@ syncCatalog:
   # to all namespaces.
   k8sSourceNamespace: null
 
-  # consulPrefix is the service prefix which preprends itself
+  # addK8SNamespaceSuffix appends Kubernetes namespace suffix to
+  # each service name synced to Consul, separated by an underscore.
+  # For example, for a service 'foo' in the default namespace,
+  # the sync process will create a Consul service named 'foo_default'.
+  # Set this flag to true to avoid registering services with the same name
+  # but in different namespaces as instances for the same Consul service.
+  # Namespace suffix is not added if 'annotationServiceName' is provided.
+  # NOTE: Setting this property to 'true' will result in deregistering of existing
+  # synced services in Consul and registering them with a new name.
+  addK8SNamespaceSuffix: false
+
+  # consulPrefix is the service prefix which prepends itself
   # to Kubernetes services registered within Consul
-  # For example, "k8s-" will register all services peprended with "k8s-".
+  # For example, "k8s-" will register all services prepended with "k8s-".
   # (Kubernetes -> Consul sync)
+  # consulPrefix is ignored when 'annotationServiceName' is provided.
+  # NOTE: Setting this property to a non-null value will result in deregistering
+  # of existing services in Consul and registering them with a new name.
   consulPrefix: null
 
   # k8sTag is an optional tag that is applied to all of the Kubernetes services
