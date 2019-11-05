@@ -173,6 +173,9 @@ spec:
           resources:
             {{ tpl .Values.server.resources . | nindent 12 | trim }}
           {{- end }}
+        {{- if .Values.server.extraContainers }}
+        {{ toYaml .Values.server.extraContainers | nindent 8 | trim }}
+        {{- end }}
       {{- if .Values.server.nodeSelector }}
       nodeSelector:
         {{ tpl .Values.server.nodeSelector . | indent 8 | trim }}

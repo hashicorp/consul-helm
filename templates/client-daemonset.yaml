@@ -188,6 +188,9 @@ spec:
           resources:
             {{ tpl .Values.client.resources . | nindent 12 | trim }}
           {{- end }}
+        {{- if .Values.client.extraContainers }}
+        {{ toYaml .Values.client.extraContainers | nindent 8 | trim }}
+        {{- end }}
       {{- if .Values.global.bootstrapACLs }}
       initContainers:
       - name: client-acl-init

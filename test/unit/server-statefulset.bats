@@ -259,6 +259,45 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# extraContainers
+
+@test "server/StatefulSet: extraContainers is not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
+}
+
+@test "server/StatefulSet: extraContainers is added" {
+  cd `chart_dir`
+
+  # Test that it defines it
+  local object=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'server.extraContainers[0].name=vault-agent' \
+      --set 'server.extraContainers[0].image=vault:latest' \
+      --set 'server.extraContainers[0].args[0]=-config=/etc/vault/config.hcl' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[] | select(.name == "vault-agent")' | tee /dev/stderr)
+
+  echo "${object}"
+
+  local actual=$(echo $object |
+      yq -r '.name' | tee /dev/stderr)
+  [ "${actual}" = "vault-agent" ]
+
+  local actual=$(echo $object |
+      yq -r '.image' | tee /dev/stderr)
+  [ "${actual}" = "vault:latest" ]
+
+  local actual=$(echo $object |
+      yq -r '.args | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
+}
+
+#--------------------------------------------------------------------
 # affinity
 
 @test "server/StatefulSet: affinity not set with server.affinity=null" {
