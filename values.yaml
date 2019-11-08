@@ -273,6 +273,22 @@ client:
       secretName: null
       secretKey: null
 
+    # extraVolumes is a list of extra volumes to mount. These will be exposed
+    # to Consul in the path `/consul/userconfig/<name>/`. The value below is
+    # an array of objects, examples are shown below.
+    extraVolumes: []
+      # - type: secret (or "configMap")
+      #   name: my-secret
+      #   load: false # if true, will add to `-config-dir` to load by Consul
+
+    # A list of additional containers to run alongside the Consul agent
+    # container.
+    extraContainers: []
+    # - name: vault-agent
+    #   image: vault:latest
+    #   args:
+    #   - "-config=/etc/vault/config.hcl"
+
 # Configuration for DNS configuration within the Kubernetes cluster.
 # This creates a service that routes to all agents (client or server)
 # for serving DNS requests. This DOES NOT automatically configure kube-dns

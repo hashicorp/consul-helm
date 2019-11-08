@@ -204,3 +204,115 @@ load _helpers
       yq '.spec.template.spec.nodeSelector | contains("allow")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# extraVolumes
+
+@test "client/SnapshotAgentDeployment: adds extra volume" {
+  cd `chart_dir`
+
+  # Test that it defines it
+  local object=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      --set 'client.snapshotAgent.extraVolumes[0].type=configMap' \
+      --set 'client.snapshotAgent.extraVolumes[0].name=foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.volumes[] | select(.name == "userconfig-foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.configMap.name' | tee /dev/stderr)
+  [ "${actual}" = "foo" ]
+
+  local actual=$(echo $object |
+      yq -r '.configMap.secretName' | tee /dev/stderr)
+  [ "${actual}" = "null" ]
+
+  # Test that it mounts it
+  local object=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      --set 'client.snapshotAgent.extraVolumes[0].type=configMap' \
+      --set 'client.snapshotAgent.extraVolumes[0].name=foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "userconfig-foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.readOnly' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+      yq -r '.mountPath' | tee /dev/stderr)
+  [ "${actual}" = "/consul/userconfig/foo" ]
+
+  # Doesn't load it
+  local actual=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      --set 'client.snapshotAgent.extraVolumes[0].type=configMap' \
+      --set 'client.snapshotAgent.extraVolumes[0].name=foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].command | map(select(test("userconfig"))) | length' | tee /dev/stderr)
+  [ "${actual}" = "0" ]
+}
+
+@test "client/SnapshotAgentDeployment: adds extra secret volume" {
+  cd `chart_dir`
+
+  # Test that it defines it
+  local object=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      --set 'client.snapshotAgent.extraVolumes[0].type=secret' \
+      --set 'client.snapshotAgent.extraVolumes[0].name=foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.volumes[] | select(.name == "userconfig-foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.secret.name' | tee /dev/stderr)
+  [ "${actual}" = "null" ]
+
+  local actual=$(echo $object |
+      yq -r '.secret.secretName' | tee /dev/stderr)
+  [ "${actual}" = "foo" ]
+
+  # Test that it mounts it
+  local object=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      --set 'client.snapshotAgent.extraVolumes[0].type=configMap' \
+      --set 'client.snapshotAgent.extraVolumes[0].name=foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "userconfig-foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.readOnly' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+      yq -r '.mountPath' | tee /dev/stderr)
+  [ "${actual}" = "/consul/userconfig/foo" ]
+
+  # Doesn't load it
+  local actual=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      --set 'client.snapshotAgent.extraVolumes[0].type=configMap' \
+      --set 'client.snapshotAgent.extraVolumes[0].name=foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].command | map(select(test("userconfig"))) | length' | tee /dev/stderr)
+  [ "${actual}" = "0" ]
+}
+
+@test "client/SnapshotAgentDeployment: adds loadable volume" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      --set 'client.snapshotAgent.extraVolumes[0].type=configMap' \
+      --set 'client.snapshotAgent.extraVolumes[0].name=foo' \
+      --set 'client.snapshotAgent.extraVolumes[0].load=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].command | map(select(test("/consul/userconfig/foo"))) | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
+}

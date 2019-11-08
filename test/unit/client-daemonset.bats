@@ -235,6 +235,7 @@ load _helpers
       yq -r '.spec.template.spec.containers[0].command | map(select(test("/consul/userconfig/foo"))) | length' | tee /dev/stderr)
   [ "${actual}" = "1" ]
 }
+
 #--------------------------------------------------------------------
 # extraContainers
 
