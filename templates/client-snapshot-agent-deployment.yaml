@@ -111,6 +111,9 @@ spec:
               mountPath: /consul/aclconfig
             {{- end }}
           {{- end }}
+        {{- if .Values.client.snapshotAgent.extraContainers }}
+        {{ toYaml .Values.client.snapshotAgent.extraContainers | nindent 8 | trim }}
+        {{- end }}
       {{- if .Values.global.bootstrapACLs }}
       initContainers:
       - name: client-snapshot-agent-acl-init
