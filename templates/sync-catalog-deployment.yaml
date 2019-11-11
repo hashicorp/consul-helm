@@ -124,6 +124,9 @@ spec:
               mountPath: {{ .mountPath }}
           {{- end }}
           {{- end }}
+        {{- if .Values.syncCatalog.extraContainers }}
+        {{ toYaml .Values.syncCatalog.extraContainers | nindent 8 | trim }}
+        {{- end }}
       {{- if .Values.global.bootstrapACLs }}
       initContainers:
       - name: sync-acl-init
