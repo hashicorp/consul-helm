@@ -114,6 +114,16 @@ spec:
             periodSeconds: 5
             successThreshold: 1
             timeoutSeconds: 5
+          {{- if .Values.syncCatalog.extraVolumes }}
+          volumeMounts:
+          {{- range .Values.syncCatalog.extraVolumes }}
+            - name: {{ .name }}
+              {{- if .readOnly }}
+              readOnly: true
+              {{- end }}
+              mountPath: {{ .mountPath }}
+          {{- end }}
+          {{- end }}
       {{- if .Values.global.bootstrapACLs }}
       initContainers:
       - name: sync-acl-init
@@ -127,8 +137,20 @@ spec:
               -k8s-namespace={{ .Release.Namespace }} \
               -init-type="sync"
       {{- end }}
+      {{- if .Values.syncCatalog.extraVolumes }}
+      volumes:
+        {{- range .Values.syncCatalog.extraVolumes }}
+        - name: {{ .name }}
+          {{ .type }}:
+            {{- if (eq .type "configMap") }}
+            name: {{ .name }}
+            {{- else if (eq .type "secret") }}
+            secretName: {{ .name }}
+            {{- end }}
+        {{- end }}
+      {{- end }}
       {{- if .Values.syncCatalog.nodeSelector }}
       nodeSelector:
         {{ tpl .Values.syncCatalog.nodeSelector . | indent 8 | trim }}
-      {{- end }}  
+      {{- end }}
 {{- end }}

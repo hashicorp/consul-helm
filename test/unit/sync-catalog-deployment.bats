@@ -371,3 +371,92 @@ load _helpers
       yq -r '.command | any(contains("consul-k8s acl-init"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# extraVolumes
+
+@test "syncCatalog/Deployment: adds extra volume" {
+  cd `chart_dir`
+
+  # Test that it defines it
+  local object=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      --set 'syncCatalog.extraVolumes[0].type=configMap' \
+      --set 'syncCatalog.extraVolumes[0].name=foo' \
+      --set 'syncCatalog.extraVolumes[0].mountPath=/foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.volumes[] | select(.name == "foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.configMap.name' | tee /dev/stderr)
+  [ "${actual}" = "foo" ]
+
+  local actual=$(echo $object |
+      yq -r '.configMap.secretName' | tee /dev/stderr)
+  [ "${actual}" = "null" ]
+
+  # Test that it mounts it
+  local object=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      --set 'syncCatalog.extraVolumes[0].type=configMap' \
+      --set 'syncCatalog.extraVolumes[0].name=foo' \
+      --set 'syncCatalog.extraVolumes[0].mountPath=/foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.mountPath' | tee /dev/stderr)
+  [ "${actual}" = "/foo" ]
+}
+
+@test "syncCatalog/Deployment: adds extra secret volume" {
+  cd `chart_dir`
+
+  # Test that it defines it
+  local object=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      --set 'syncCatalog.extraVolumes[0].type=secret' \
+      --set 'syncCatalog.extraVolumes[0].name=foo' \
+      --set 'syncCatalog.extraVolumes[0].mountPath=/foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.volumes[] | select(.name == "foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.secret.name' | tee /dev/stderr)
+  [ "${actual}" = "null" ]
+
+  local actual=$(echo $object |
+      yq -r '.secret.secretName' | tee /dev/stderr)
+  [ "${actual}" = "foo" ]
+
+  # Test that it mounts it
+  local object=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      --set 'syncCatalog.extraVolumes[0].type=configMap' \
+      --set 'syncCatalog.extraVolumes[0].name=foo' \
+      --set 'syncCatalog.extraVolumes[0].mountPath=/foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.mountPath' | tee /dev/stderr)
+  [ "${actual}" = "/foo" ]
+}
+
+@test "syncCatalog/Deployment: adds readonly volume" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      --set 'syncCatalog.extraVolumes[0].type=configMap' \
+      --set 'syncCatalog.extraVolumes[0].name=foo' \
+      --set 'syncCatalog.extraVolumes[0].mountPath=/foo' \
+      --set 'syncCatalog.extraVolumes[0].readOnly=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "foo") | .readOnly' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}

@@ -406,6 +406,21 @@ syncCatalog:
   # Override the default interval to perform syncing operations creating Consul services.
   consulWriteInterval: null
 
+  # extraVolumes is a list of extra volumes to mount. The value below is
+  # an array of objects, examples are shown below.
+  extraVolumes: []
+    # - type: secret (or "configMap")
+    #   name: my-secret
+    #   readOnly: false
+    #   mountPath: /path
+
+  # A list of additional containers to run alongside the container.
+  extraContainers: []
+  # - name: vault-agent
+  #   image: vault:latest
+  #   args:
+  #   - "-config=/etc/vault/config.hcl"
+
 # ConnectInject will enable the automatic Connect sidecar injector.
 connectInject:
   enabled: false
