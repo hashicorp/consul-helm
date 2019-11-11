@@ -90,11 +90,20 @@ spec:
             periodSeconds: 2
             successThreshold: 1
             timeoutSeconds: 5
-{{- if .Values.connectInject.certs.secretName }}
+          {{- if or .Values.connectInject.extraVolumes .Values.connectInject.certs.secretName }}
           volumeMounts:
+          {{- if .Values.connectInject.certs.secretName  }}
             - name: certs
               mountPath: /etc/connect-injector/certs
               readOnly: true
+          {{- end }}
+          {{- range .Values.client.extraVolumes }}
+            - name: {{ .name }}
+              readOnly: true
+              mountPath: {{ .path }}
+          {{- end }}
+          {{- end }}
+{{- if or .Values.connectInject.extraVolumes .Values.connectInject.certs.secretName }}
       volumes:
         - name: certs
           secret:
@@ -103,5 +112,5 @@ spec:
       {{- if .Values.connectInject.nodeSelector }}
       nodeSelector:
         {{ tpl .Values.connectInject.nodeSelector . | indent 8 | trim }}
-      {{- end }}  
+      {{- end }}
 {{- end }}

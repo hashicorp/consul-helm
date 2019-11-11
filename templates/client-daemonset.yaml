@@ -141,8 +141,10 @@ spec:
               mountPath: /consul/config
             {{- range .Values.client.extraVolumes }}
             - name: userconfig-{{ .name }}
+              {{- if .readOnly }}
               readOnly: true
-              mountPath: /consul/userconfig/{{ .name }}
+              {{- end }}
+              mountPath: {{ if .mountPath }}{{ .mountPath }}{{ else }}/consul/userconfig/{{ .name }}{{ end }}
             {{- end }}
             {{- if .Values.global.bootstrapACLs}}
             - name: aclconfig

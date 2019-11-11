@@ -99,7 +99,7 @@ spec:
                 -advertise="${POD_IP}" \
                 -bind=0.0.0.0 \
                 -bootstrap-expect={{ .Values.server.bootstrapExpect }} \
-                -client=0.0.0.0 \
+                -server=0.0.0.0 \
                 -config-dir=/consul/config \
                 {{- range .Values.server.extraVolumes }}
                 {{- if .load }}
@@ -129,8 +129,10 @@ spec:
               mountPath: /consul/config
             {{- range .Values.server.extraVolumes }}
             - name: userconfig-{{ .name }}
+              {{- if .readOnly }}
               readOnly: true
-              mountPath: /consul/userconfig/{{ .name }}
+              {{- end }}
+              mountPath: {{ if .mountPath }}{{ .mountPath }}{{ else }}/consul/userconfig/{{ .name }}{{ end }}
             {{- end }}
           lifecycle:
             preStop:

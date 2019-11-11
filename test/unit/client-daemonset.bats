@@ -162,10 +162,6 @@ load _helpers
       yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "userconfig-foo")' | tee /dev/stderr)
 
   local actual=$(echo $object |
-      yq -r '.readOnly' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-
-  local actual=$(echo $object |
       yq -r '.mountPath' | tee /dev/stderr)
   [ "${actual}" = "/consul/userconfig/foo" ]
 
@@ -207,10 +203,6 @@ load _helpers
       yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "userconfig-foo")' | tee /dev/stderr)
 
   local actual=$(echo $object |
-      yq -r '.readOnly' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-
-  local actual=$(echo $object |
       yq -r '.mountPath' | tee /dev/stderr)
   [ "${actual}" = "/consul/userconfig/foo" ]
 
@@ -234,6 +226,30 @@ load _helpers
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].command | map(select(test("/consul/userconfig/foo"))) | length' | tee /dev/stderr)
   [ "${actual}" = "1" ]
+}
+
+@test "client/DaemonSet: adds readonly volume" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'client.extraVolumes[0].type=configMap' \
+      --set 'client.extraVolumes[0].name=foo' \
+      --set 'client.extraVolumes[0].readOnly=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "userconfig-foo") | .readOnly' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: adds custom path volume" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'client.extraVolumes[0].type=configMap' \
+      --set 'client.extraVolumes[0].name=foo' \
+      --set 'client.extraVolumes[0].mountPath=/foo/bar' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "userconfig-foo") | .mountPath' | tee /dev/stderr)
+  [ "${actual}" = "/foo/bar" ]
 }
 
 #--------------------------------------------------------------------

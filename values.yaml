@@ -109,11 +109,13 @@ server:
     {}
 
   # extraVolumes is a list of extra volumes to mount. These will be exposed
-  # to Consul in the path `/consul/userconfig/<name>/`. The value below is
-  # an array of objects, examples are shown below.
+  # to Consul in the path `/consul/userconfig/<name>/` unless mountPath is specified.
+  # The value below is an array of objects, examples are shown below.
   extraVolumes: []
     # - type: secret (or "configMap")
     #   name: my-secret
+    #   mountPath: /custom_path
+    #   readOnly: true # Defaults to true
     #   load: false # if true, will add to `-config-dir` to load by Consul
 
   # A list of additional containers to run alongside the Consul Server
@@ -485,6 +487,20 @@ connectInject:
     # configured proxy.
     proxyDefaults: |
       {}
+
+  # extraVolumes is a list of extra volumes to mount. The value below is
+  # an array of objects, examples are shown below.
+  extraVolumes: []
+    # - type: secret (or "configMap")
+    #   name: my-secret
+    #   path: /path
+
+  # A list of additional containers to run alongside the container.
+  extraContainers: []
+  # - name: vault-agent
+  #   image: vault:latest
+  #   args:
+  #   - "-config=/etc/vault/config.hcl"
 
 # Mesh Gateways enable Consul Connect to work across Consul datacenters.
 meshGateway:
