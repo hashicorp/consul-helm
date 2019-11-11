@@ -493,7 +493,8 @@ connectInject:
   extraVolumes: []
     # - type: secret (or "configMap")
     #   name: my-secret
-    #   path: /path
+    #   readOnly: false
+    #   mountPath: /path
 
   # A list of additional containers to run alongside the container.
   extraContainers: []

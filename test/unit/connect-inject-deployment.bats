@@ -317,3 +317,92 @@ load _helpers
       yq '.spec.template.spec.containers[0].command | any(contains("-acl-auth-method=\"override\""))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# extraVolumes
+
+@test "connectInject/Deployment: adds extra volume" {
+  cd `chart_dir`
+
+  # Test that it defines it
+  local object=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.extraVolumes[0].type=configMap' \
+      --set 'connectInject.extraVolumes[0].name=foo' \
+      --set 'connectInject.extraVolumes[0].mountPath=/foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.volumes[] | select(.name == "foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.configMap.name' | tee /dev/stderr)
+  [ "${actual}" = "foo" ]
+
+  local actual=$(echo $object |
+      yq -r '.configMap.secretName' | tee /dev/stderr)
+  [ "${actual}" = "null" ]
+
+  # Test that it mounts it
+  local object=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.extraVolumes[0].type=configMap' \
+      --set 'connectInject.extraVolumes[0].name=foo' \
+      --set 'connectInject.extraVolumes[0].mountPath=/foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.mountPath' | tee /dev/stderr)
+  [ "${actual}" = "/foo" ]
+}
+
+@test "connectInject/Deployment: adds extra secret volume" {
+  cd `chart_dir`
+
+  # Test that it defines it
+  local object=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.extraVolumes[0].type=secret' \
+      --set 'connectInject.extraVolumes[0].name=foo' \
+      --set 'connectInject.extraVolumes[0].mountPath=/foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.volumes[] | select(.name == "foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.secret.name' | tee /dev/stderr)
+  [ "${actual}" = "null" ]
+
+  local actual=$(echo $object |
+      yq -r '.secret.secretName' | tee /dev/stderr)
+  [ "${actual}" = "foo" ]
+
+  # Test that it mounts it
+  local object=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.extraVolumes[0].type=configMap' \
+      --set 'connectInject.extraVolumes[0].name=foo' \
+      --set 'connectInject.extraVolumes[0].mountPath=/foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.mountPath' | tee /dev/stderr)
+  [ "${actual}" = "/foo" ]
+}
+
+@test "connectInject/Deployment: adds readonly volume" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.extraVolumes[0].type=configMap' \
+      --set 'connectInject.extraVolumes[0].name=foo' \
+      --set 'connectInject.extraVolumes[0].mountPath=/foo' \
+      --set 'connectInject.extraVolumes[0].readOnly=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "foo") | .readOnly' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}

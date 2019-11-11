@@ -97,18 +97,31 @@ spec:
               mountPath: /etc/connect-injector/certs
               readOnly: true
           {{- end }}
-          {{- range .Values.client.extraVolumes }}
+          {{- range .Values.connectInject.extraVolumes }}
             - name: {{ .name }}
+              {{- if .readOnly }}
               readOnly: true
-              mountPath: {{ .path }}
+              {{- end }}
+              mountPath: {{ .mountPath }}
           {{- end }}
           {{- end }}
-{{- if or .Values.connectInject.extraVolumes .Values.connectInject.certs.secretName }}
+      {{- if or .Values.connectInject.extraVolumes .Values.connectInject.certs.secretName }}
       volumes:
+        {{- if .Values.connectInject.certs.secretName  }}
         - name: certs
           secret:
             secretName: {{ .Values.connectInject.certs.secretName }}
-{{- end }}
+        {{- end }}
+        {{- range .Values.connectInject.extraVolumes }}
+        - name: {{ .name }}
+          {{ .type }}:
+            {{- if (eq .type "configMap") }}
+            name: {{ .name }}
+            {{- else if (eq .type "secret") }}
+            secretName: {{ .name }}
+            {{- end }}
+        {{- end }}
+      {{- end }}
       {{- if .Values.connectInject.nodeSelector }}
       nodeSelector:
         {{ tpl .Values.connectInject.nodeSelector . | indent 8 | trim }}
