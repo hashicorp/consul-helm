@@ -87,7 +87,7 @@ spec:
                 {{- end }}
                 {{- range .Values.client.snapshotAgent.extraVolumes }}
                 {{- if .load }}
-                -config-dir=/consul/userconfig/{{ .name }} \
+                -config-dir={{ if .mountPath }}{{ .mountPath }}{{ else }}/consul/userconfig/{{ .name }}{{ end }} \
                 {{- end }}
                 {{- end }}
                 {{- if .Values.global.bootstrapACLs}}
@@ -103,8 +103,10 @@ spec:
             {{- end }}
             {{- range .Values.client.snapshotAgent.extraVolumes }}
             - name: userconfig-{{ .name }}
+              {{- if .readOnly }}
               readOnly: true
-              mountPath: /consul/userconfig/{{ .name }}
+              {{- end }}
+              mountPath: {{ if .mountPath }}{{ .mountPath }}{{ else }}/consul/userconfig/{{ .name }}{{ end }}
             {{- end }}
             {{- if .Values.global.bootstrapACLs}}
             - name: aclconfig

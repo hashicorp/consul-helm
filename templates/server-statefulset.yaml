@@ -103,7 +103,7 @@ spec:
                 -config-dir=/consul/config \
                 {{- range .Values.server.extraVolumes }}
                 {{- if .load }}
-                -config-dir=/consul/userconfig/{{ .name }} \
+                -config-dir={{ if .mountPath }}{{ .mountPath }}{{ else }}/consul/userconfig/{{ .name }}{{ end }} \
                 {{- end }}
                 {{- end }}
                 -datacenter={{ .Values.global.datacenter }} \

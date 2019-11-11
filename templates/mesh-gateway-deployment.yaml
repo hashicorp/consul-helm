@@ -48,6 +48,15 @@ spec:
       volumes:
         - name: consul-bin
           emptyDir: {}
+        {{- range .Values.meshGateway.extraVolumes }}
+        - name: userconfig-{{ .name }}
+          {{ .type }}:
+            {{- if (eq .type "configMap") }}
+            name: {{ .name }}
+            {{- else if (eq .type "secret") }}
+            secretName: {{ .name }}
+            {{- end }}
+        {{- end }}
       {{- if .Values.meshGateway.hostNetwork }}
       hostNetwork: {{ .Values.meshGateway.hostNetwork }}
       {{- end }}
@@ -92,6 +101,13 @@ spec:
           volumeMounts:
           - name: consul-bin
             mountPath: /consul-bin
+          {{- range .Values.meshGateway.extraVolumes }}
+          - name: userconfig-{{ .name }}
+            {{- if .readOnly }}
+            readOnly: true
+            {{- end }}
+            mountPath: {{ if .mountPath }}{{ .mountPath }}{{ else }}/consul/userconfig/{{ .name }}{{ end }}
+          {{- end }}
           env:
             - name: HOST_IP
               valueFrom:
@@ -126,6 +142,11 @@ spec:
                 -address="${POD_IP}:{{ .Values.meshGateway.containerPort }}" \
                 -http-addr="${HOST_IP}:8500" \
                 -grpc-addr="${HOST_IP}:8502" \
+                {{- range .Values.meshGateway.extraVolumes }}
+                {{- if .load }}
+                -config-dir={{ if .mountPath }}{{ .mountPath }}{{ else }}/consul/userconfig/{{ .name }}{{ end }} \
+                {{- end }}
+                {{- end }}
                 {{- if .Values.meshGateway.wanAddress.host }}
                 -wan-address="{{ .Values.meshGateway.wanAddress.host }}:{{ .Values.meshGateway.wanAddress.port }}" \
                 {{- else if .Values.meshGateway.wanAddress.useNodeName }}

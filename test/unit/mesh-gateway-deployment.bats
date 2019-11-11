@@ -607,3 +607,151 @@ key2: value2' \
 
   [ "${actual}" = "value" ]
 }
+
+#--------------------------------------------------------------------
+# extraVolumes
+
+@test "meshGateway/Deployment: adds extra volume" {
+  cd `chart_dir`
+
+  # Test that it defines it
+  local object=$(helm template \
+      -x templates/mesh-gateway-deployment.yaml  \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      --set 'meshGateway.extraVolumes[0].type=configMap' \
+      --set 'meshGateway.extraVolumes[0].name=foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.volumes[] | select(.name == "userconfig-foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.configMap.name' | tee /dev/stderr)
+  [ "${actual}" = "foo" ]
+
+  local actual=$(echo $object |
+      yq -r '.configMap.secretName' | tee /dev/stderr)
+  [ "${actual}" = "null" ]
+
+  # Test that it mounts it
+  local object=$(helm template \
+      -x templates/mesh-gateway-deployment.yaml  \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      --set 'meshGateway.extraVolumes[0].type=configMap' \
+      --set 'meshGateway.extraVolumes[0].name=foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "userconfig-foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.mountPath' | tee /dev/stderr)
+  [ "${actual}" = "/consul/userconfig/foo" ]
+
+  # Doesn't load it
+  local actual=$(helm template \
+      -x templates/mesh-gateway-deployment.yaml  \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      --set 'meshGateway.extraVolumes[0].type=configMap' \
+      --set 'meshGateway.extraVolumes[0].name=foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].command | map(select(test("userconfig"))) | length' | tee /dev/stderr)
+  [ "${actual}" = "0" ]
+}
+
+@test "meshGateway/Deployment: adds extra secret volume" {
+  cd `chart_dir`
+
+  # Test that it defines it
+  local object=$(helm template \
+      -x templates/mesh-gateway-deployment.yaml  \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      --set 'meshGateway.extraVolumes[0].type=secret' \
+      --set 'meshGateway.extraVolumes[0].name=foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.volumes[] | select(.name == "userconfig-foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.secret.name' | tee /dev/stderr)
+  [ "${actual}" = "null" ]
+
+  local actual=$(echo $object |
+      yq -r '.secret.secretName' | tee /dev/stderr)
+  [ "${actual}" = "foo" ]
+
+  # Test that it mounts it
+  local object=$(helm template \
+      -x templates/mesh-gateway-deployment.yaml  \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      --set 'meshGateway.extraVolumes[0].type=configMap' \
+      --set 'meshGateway.extraVolumes[0].name=foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "userconfig-foo")' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.mountPath' | tee /dev/stderr)
+  [ "${actual}" = "/consul/userconfig/foo" ]
+
+  # Doesn't load it
+  local actual=$(helm template \
+      -x templates/mesh-gateway-deployment.yaml  \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      --set 'meshGateway.extraVolumes[0].type=configMap' \
+      --set 'meshGateway.extraVolumes[0].name=foo' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].command | map(select(test("userconfig"))) | length' | tee /dev/stderr)
+  [ "${actual}" = "0" ]
+}
+
+@test "meshGateway/Deployment: adds loadable volume" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/mesh-gateway-deployment.yaml  \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      --set 'meshGateway.extraVolumes[0].type=configMap' \
+      --set 'meshGateway.extraVolumes[0].name=foo' \
+      --set 'meshGateway.extraVolumes[0].load=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].command | map(select(test("/consul/userconfig/foo"))) | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
+}
+
+@test "meshGateway/Deployment: adds readonly volume" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/mesh-gateway-deployment.yaml  \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      --set 'meshGateway.extraVolumes[0].type=configMap' \
+      --set 'meshGateway.extraVolumes[0].name=foo' \
+      --set 'meshGateway.extraVolumes[0].readOnly=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "userconfig-foo") | .readOnly' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "meshGateway/Deployment: adds custom path volume" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/mesh-gateway-deployment.yaml  \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      --set 'meshGateway.extraVolumes[0].type=configMap' \
+      --set 'meshGateway.extraVolumes[0].name=foo' \
+      --set 'meshGateway.extraVolumes[0].mountPath=/foo/bar' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "userconfig-foo") | .mountPath' | tee /dev/stderr)
+  [ "${actual}" = "/foo/bar" ]
+}
