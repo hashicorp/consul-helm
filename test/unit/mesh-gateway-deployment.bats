@@ -755,3 +755,48 @@ key2: value2' \
       yq -r '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "userconfig-foo") | .mountPath' | tee /dev/stderr)
   [ "${actual}" = "/foo/bar" ]
 }
+
+#--------------------------------------------------------------------
+# extraContainers
+
+@test "meshGateway/Deployment: extraContainers is not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/mesh-gateway-deployment.yaml  \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
+}
+
+@test "meshGateway/Deployment: extraContainers is added" {
+  cd `chart_dir`
+
+  # Test that it defines it
+  local object=$(helm template \
+      -x templates/mesh-gateway-deployment.yaml  \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      --set 'meshGateway.extraContainers[0].name=vault-agent' \
+      --set 'meshGateway.extraContainers[0].image=vault:latest' \
+      --set 'meshGateway.extraContainers[0].args[0]=-config=/etc/vault/config.hcl' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[] | select(.name == "vault-agent")' | tee /dev/stderr)
+
+  echo "${object}"
+
+  local actual=$(echo $object |
+      yq -r '.name' | tee /dev/stderr)
+  [ "${actual}" = "vault-agent" ]
+
+  local actual=$(echo $object |
+      yq -r '.image' | tee /dev/stderr)
+  [ "${actual}" = "vault:latest" ]
+
+  local actual=$(echo $object |
+      yq -r '.args | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
+}

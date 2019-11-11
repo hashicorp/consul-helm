@@ -186,6 +186,9 @@ spec:
             preStop:
               exec:
                 command: ["/bin/sh", "-ec", "/consul-bin/consul services deregister -http-addr=\"${HOST_IP}:8500\" -id=\"{{ default "mesh-gateway" .Values.meshGateway.consulServiceName }}\""]
+        {{- if .Values.meshGateway.extraContainers }}
+        {{ toYaml .Values.meshGateway.extraContainers | nindent 8 | trim }}
+        {{- end }}
       {{- if .Values.meshGateway.priorityClassName }}
       priorityClassName: {{ .Values.meshGateway.priorityClassName | quote }}
       {{- end }}
