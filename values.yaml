@@ -25,7 +25,7 @@ global:
   # to consul-k8s v0.6.0. If using an older consul-k8s version, you may need to
   # remove these checks to make the sync work.
   # If using mesh gateways and bootstrapACLs then must be >= 0.9.0.
-  imageK8S: "hashicorp/consul-k8s:0.9.4"
+  imageK8S: "hashicorp/consul-k8s:0.9.5"
 
   # Datacenter is the name of the datacenter that the agents should register
   # as. This shouldn't be changed once the Consul cluster is up and running
@@ -329,15 +329,15 @@ syncCatalog:
   k8sSourceNamespace: null
 
   # addK8SNamespaceSuffix appends Kubernetes namespace suffix to
-  # each service name synced to Consul, separated by an underscore.
+  # each service name synced to Consul, separated by a dash.
   # For example, for a service 'foo' in the default namespace,
-  # the sync process will create a Consul service named 'foo_default'.
+  # the sync process will create a Consul service named 'foo-default'.
   # Set this flag to true to avoid registering services with the same name
   # but in different namespaces as instances for the same Consul service.
   # Namespace suffix is not added if 'annotationServiceName' is provided.
   # NOTE: Setting this property to 'true' will result in deregistering of existing
   # synced services in Consul and registering them with a new name.
-  addK8SNamespaceSuffix: false
+  addK8SNamespaceSuffix: true
 
   # consulPrefix is the service prefix which prepends itself
   # to Kubernetes services registered within Consul

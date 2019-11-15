@@ -95,7 +95,7 @@ spec:
                 -consul-service-prefix="{{ .Values.syncCatalog.consulPrefix}}" \
                 {{- end}}
                 {{- if .Values.syncCatalog.addK8SNamespaceSuffix}}
-                -add-k8s-namespace-suffix="{{ .Values.syncCatalog.addK8SNamespaceSuffix}}" \
+                -add-k8s-namespace-suffix \
                 {{- end}}
           livenessProbe:
             httpGet:

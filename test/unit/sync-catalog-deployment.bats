@@ -382,16 +382,16 @@ load _helpers
       --set 'syncCatalog.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-add-k8s-namespace-suffix"))' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+  [ "${actual}" = "true" ]
 }
 
-@test "syncCatalog/Deployment: can set addK8SNamespaceSuffix to true" {
+@test "syncCatalog/Deployment: can set addK8SNamespaceSuffix to false" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/sync-catalog-deployment.yaml  \
       --set 'syncCatalog.enabled=true' \
-      --set 'syncCatalog.addK8SNamespaceSuffix=true' \
+      --set 'syncCatalog.addK8SNamespaceSuffix=false' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-add-k8s-namespace-suffix"))' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
+  [ "${actual}" = "false" ]
 }
