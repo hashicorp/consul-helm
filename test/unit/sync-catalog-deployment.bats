@@ -375,7 +375,7 @@ load _helpers
 #--------------------------------------------------------------------
 # addK8SNamespaceSuffix
 
-@test "syncCatalog/Deployment: no k8s namespace prefix by default" {
+@test "syncCatalog/Deployment: k8s namespace suffix enabled by default" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/sync-catalog-deployment.yaml  \
