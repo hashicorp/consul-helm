@@ -335,8 +335,6 @@ syncCatalog:
   # Set this flag to true to avoid registering services with the same name
   # but in different namespaces as instances for the same Consul service.
   # Namespace suffix is not added if 'annotationServiceName' is provided.
-  # NOTE: Setting this property to 'true' will result in deregistering of existing
-  # synced services in Consul and registering them with a new name.
   addK8SNamespaceSuffix: true
 
   # consulPrefix is the service prefix which prepends itself
