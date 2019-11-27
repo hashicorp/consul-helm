@@ -344,7 +344,7 @@ syncCatalog:
   # For example, "k8s-" will register all services prepended with "k8s-".
   # (Kubernetes -> Consul sync)
   # consulPrefix is ignored when 'annotationServiceName' is provided.
-  # NOTE: Setting this property to a non-null value will result in deregistering
+  # NOTE: Updating this property to a non-null value for an existing installation will result in deregistering
   # of existing services in Consul and registering them with a new name.
   consulPrefix: null
 
