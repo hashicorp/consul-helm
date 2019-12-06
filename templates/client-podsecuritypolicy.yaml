@@ -29,14 +29,23 @@ spec:
   hostNetwork: false
   hostPorts:
   # HTTP Port
+  {{- if (not (and .Values.global.tls.enabled .Values.global.tls.httpsOnly)) }}
   - min: 8500
     max: 8500
+  {{- end }}
   # gRPC Port
+  {{- if .Values.client.grpc }}
   - min: 8502
     max: 8502
+  {{- end }}
   {{- if .Values.client.exposeGossipPorts }}
   - min: 8301
     max: 8301
+  {{- end }}
+  # HTTPS port
+  {{- if .Values.global.tls.enabled }}
+  - min: 8501
+    max: 8501
   {{- end }}
   hostIPC: false
   hostPID: false

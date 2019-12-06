@@ -88,7 +88,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "server/EnterpriseLicense: no service account specified when global.bootstrapACLS=false" {
+@test "server/EnterpriseLicense: no service account specified when global.bootstrapACLs=false" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/enterprise-license-job.yaml  \
@@ -112,7 +112,7 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
-# TLS
+# global.tls.enabled
 
 @test "server/EnterpriseLicense: no volumes when TLS is disabled" {
   cd `chart_dir`
@@ -135,7 +135,7 @@ load _helpers
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.volumes | length' | tee /dev/stderr)
-  [ "${actual}" = "2" ]
+  [ "${actual}" = "1" ]
 }
 
 @test "server/EnterpriseLicense: no volumes mounted when TLS is disabled" {
@@ -159,7 +159,7 @@ load _helpers
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].volumeMounts | length' | tee /dev/stderr)
-  [ "${actual}" = "2" ]
+  [ "${actual}" = "1" ]
 }
 
 @test "server/EnterpriseLicense: URL is http when TLS is disabled" {
@@ -221,29 +221,3 @@ load _helpers
       yq -r '.spec.template.spec.containers[0].env[] | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
   [ "${actual}" = "/consul/tls/ca/tls.crt" ]
 }
-
-@test "server/EnterpriseLicense: client certificate is specified when TLS is enabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/enterprise-license.yaml  \
-      --set 'server.enterpriseLicense.secretName=foo' \
-      --set 'server.enterpriseLicense.secretKey=bar' \
-      --set 'global.tls.enabled=true' \
-      . | tee /dev/stderr |
-      yq -r '.spec.template.spec.containers[0].env[] | select(.name == "CONSUL_CLIENT_CERT") | .value' | tee /dev/stderr)
-
-  [ "${actual}" = "/consul/tls/cli/tls.crt" ]
-}
-
-@test "server/EnterpriseLicense: client key is specified when TLS is enabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/enterprise-license.yaml  \
-      --set 'server.enterpriseLicense.secretName=foo' \
-      --set 'server.enterpriseLicense.secretKey=bar' \
-      --set 'global.tls.enabled=true' \
-      . | tee /dev/stderr |
-      yq -r '.spec.template.spec.containers[0].env[] | select(.name == "CONSUL_CLIENT_KEY") | .value' | tee /dev/stderr)
-  [ "${actual}" = "/consul/tls/cli/tls.key" ]
-}
-

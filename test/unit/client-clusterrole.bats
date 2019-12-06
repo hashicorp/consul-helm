@@ -102,3 +102,20 @@ load _helpers
       yq -r '.rules[1].resources[0]' | tee /dev/stderr)
   [ "${actual}" = "secrets" ]
 }
+
+#--------------------------------------------------------------------
+# global.tls.enabled
+
+@test "client/ClusterRole: allows read-only access to Consul CA with global.tls.enabled=true" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/client-clusterrole.yaml  \
+      --set 'client.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.rules[] | select(.resourceNames == ["release-name-consul-ca-cert"])' | tee /dev/stderr)
+
+  # check read-only access
+  local actual=$(echo "${object}" | yq -r '.verbs==["get"]')
+  [ "${actual}" = "true" ]
+}

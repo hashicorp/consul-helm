@@ -8,7 +8,7 @@ metadata:
     chart: {{ template "consul.chart" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-{{- if (or .Values.global.enablePodSecurityPolicies .Values.global.bootstrapACLs) }}
+{{- if (or .Values.global.enablePodSecurityPolicies .Values.global.bootstrapACLs .Values.global.tls.enabled) }}
 rules:
 {{- if .Values.global.enablePodSecurityPolicies }}
   - apiGroups: ["policy"]
@@ -24,6 +24,15 @@ rules:
       - secrets
     resourceNames:
       - {{ template "consul.fullname" . }}-client-acl-token
+    verbs:
+      - get
+{{- end }}
+{{- if .Values.global.tls.enabled }}
+  - apiGroups: [""]
+    resources:
+      - secrets
+    resourceNames:
+      - {{ template "consul.fullname" . }}-ca-cert
     verbs:
       - get
 {{- end }}

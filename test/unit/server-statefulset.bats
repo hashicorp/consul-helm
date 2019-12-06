@@ -458,9 +458,10 @@ load _helpers
   local actual=$(echo $object |
       yq -r '.[3].value' | tee /dev/stderr)
   [ "${actual}" = "custom_no_proxy" ]
+}
 
 #--------------------------------------------------------------------
-# TLS
+# global.tls.enabled
 
 @test "server/StatefulSet: no secret volumes when TLS is disabled" {
   cd `chart_dir`
@@ -574,43 +575,23 @@ load _helpers
   [ "${actual}" == "" ]
 }
 
-@test "server/StatefulSet: Readiness probe URL is http when TLS is disabled" {
+@test "server/StatefulSet: Readiness checks are over HTTP when TLS is disabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/server-statefulset.yaml  \
       --set 'global.tls.enabled=false' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("http://")' | tee /dev/stderr)
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("http://127.0.0.1:8500")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
-@test "server/StatefulSet: Readiness probe port is 8500 when TLS is disabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/server-statefulset.yaml  \
-      --set 'global.tls.enabled=false' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains(":8500")' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
-
-@test "server/StatefulSet: Readiness probe URL is https when TLS is enabled" {
+@test "server/StatefulSet: Readiness checks are over https when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/server-statefulset.yaml  \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("https://")' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
-
-@test "server/StatefulSet: Readiness probe port is 8501 when TLS is enabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/server-statefulset.yaml  \
-      --set 'global.tls.enabled=true' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains(":8501")' | tee /dev/stderr)
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("https://127.0.0.1:8501")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -621,26 +602,6 @@ load _helpers
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("--cacert /consul/tls/ca/tls.crt")' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
-
-@test "server/StatefulSet: server certificate is specified when TLS is enabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/server-statefulset.yaml  \
-      --set 'global.tls.enabled=true' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("--cert /consul/tls/server/tls.crt")' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
-
-@test "server/StatefulSet: server key is specified when TLS is enabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/server-statefulset.yaml  \
-      --set 'global.tls.enabled=true' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("--key /consul/tls/server/tls.key")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 

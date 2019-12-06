@@ -38,9 +38,6 @@ spec:
         - name: tls-ca-cert
           secret:
             secretName: {{ template "consul.fullname" . }}-ca-cert
-        - name: tls-cli-cert
-          secret:
-            secretName: {{ template "consul.fullname" . }}-cli-cert
       {{- end }}
       containers:
         - name: apply-enterprise-license
@@ -60,10 +57,6 @@ spec:
             {{- if .Values.global.tls.enabled }}
             - name:  CONSUL_CACERT
               value: /consul/tls/ca/tls.crt
-            - name:  CONSUL_CLIENT_CERT
-              value: /consul/tls/cli/tls.crt
-            - name:  CONSUL_CLIENT_KEY
-              value: /consul/tls/cli/tls.key
             {{- end}}
             {{- if .Values.global.bootstrapACLs }}
             - name: CONSUL_HTTP_TOKEN
@@ -80,9 +73,9 @@ spec:
           {{- if .Values.global.tls.enabled }}
           volumeMounts:
             - name: tls-ca-cert
-              mountPath: /consul/tls/ca
-            - name: tls-cli-cert
-              mountPath: /consul/tls/cli
+              mountPath: /consul/tls/ca/tls.crt
+              subPath: tls.crt
+              readOnly: true
           {{- end }}
       {{- if .Values.global.bootstrapACLs }}
       initContainers:

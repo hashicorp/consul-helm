@@ -60,7 +60,7 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
-# TLS
+# global.tls.enabled
 
 @test "server/Service: no HTTPS listener when TLS is disabled" {
   cd `chart_dir`

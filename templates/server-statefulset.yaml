@@ -52,7 +52,6 @@ spec:
     {{- end }}
       terminationGracePeriodSeconds: 10
       serviceAccountName: {{ template "consul.fullname" . }}-server
-      automountServiceAccountToken: true
       securityContext:
         fsGroup: 1000
       volumes:
@@ -113,10 +112,9 @@ spec:
                 -hcl='ca_file = "/consul/tls/ca/tls.crt"' \
                 -hcl='cert_file = "/consul/tls/server/tls.crt"' \
                 -hcl='key_file = "/consul/tls/server/tls.key"' \
-                -hcl='verify_incoming_rpc = {{ .Values.global.tls.verifyIncomingRpc }}' \
-                -hcl='verify_incoming_https = {{ .Values.global.tls.verifyIncomingHttps }}' \
-                -hcl='verify_outgoing = {{ .Values.global.tls.verifyOutgoing }}' \
-                -hcl='verify_server_hostname = {{ .Values.global.tls.verifyServerHostname }}' \
+                -hcl='verify_incoming_rpc = true' \
+                -hcl='verify_outgoing = true' \
+                -hcl='verify_server_hostname = true' \
                 -hcl='ports { https = 8501 }' \
                 {{- if .Values.global.tls.httpsOnly }}
                 -hcl='ports { http = -1 }' \
@@ -152,9 +150,12 @@ spec:
               mountPath: /consul/config
             {{- if .Values.global.tls.enabled }}
             - name: tls-ca-cert
-              mountPath: /consul/tls/ca
+              mountPath: /consul/tls/ca/tls.crt
+              subPath: tls.crt
+              readOnly: true
             - name: tls-server-cert
               mountPath: /consul/tls/server
+              readOnly: true
             {{- end }}
             {{- range .Values.server.extraVolumes }}
             - name: userconfig-{{ .name }}
@@ -198,8 +199,7 @@ spec:
                 - "-ec"
                 - |
                   {{- if .Values.global.tls.enabled }}
-                  curl --cert /consul/tls/server/tls.crt \
-                    --key /consul/tls/server/tls.key \
+                  curl \
                     --cacert /consul/tls/ca/tls.crt \
                     https://127.0.0.1:8501/v1/status/leader \
                   {{- else }}
