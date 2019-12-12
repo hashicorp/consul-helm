@@ -44,6 +44,12 @@ spec:
       tolerations:
         {{ tpl .Values.client.tolerations . | nindent 8 | trim }}
     {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsGroup: {{ .Values.client.gid | default 1000 }}
+        runAsUser: {{ .Values.client.uid | default 100 }}
+        fsGroup: {{ .Values.client.gid | default 1000 }}
+
       terminationGracePeriodSeconds: 10
       serviceAccountName: {{ template "consul.fullname" . }}-client
 
