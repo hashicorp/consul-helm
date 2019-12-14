@@ -10,8 +10,6 @@ metadata:
     chart: {{ template "consul.chart" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  "helm.sh/hook": post-delete
-  "helm.sh/hook-delete-policy": hook-succeed
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

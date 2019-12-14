@@ -10,14 +10,11 @@ metadata:
     chart: {{ template "consul.chart" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  "helm.sh/hook": post-delete
-  "helm.sh/hook-delete-policy": hook-succeed
 rules:
 - apiGroups: [""]
   resources:
     - secrets
   resourceNames:
-    - {{ template "consul.fullname" . }}-ca-cert
     - {{ template "consul.fullname" . }}-server-cert
   verbs:
     - delete

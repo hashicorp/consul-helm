@@ -80,7 +80,7 @@ global:
   # Enables TLS encryption across the cluster to verify authenticity of the
   # servers and clients that connect. Note: It is HIGHLY recommended that you also
   # enable Gossip encryption.
-  # See https://learn.hashicorp.com/consul/advanced/day-1-operations/agent-encryption
+  # See https://learn.hashicorp.com/consul/security-networking/agent-encryption
   #
   # Note: this relies on functionality introduced with Consul 1.4.1. Make sure
   # your global.image value is at least version 1.4.1.
