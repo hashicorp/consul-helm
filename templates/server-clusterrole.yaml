@@ -8,26 +8,14 @@ metadata:
     chart: {{ template "consul.chart" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-{{- if (or .Values.global.tls.enabled .Values.global.enablePodSecurityPolicies) }}
-rules:
 {{- if .Values.global.enablePodSecurityPolicies }}
-- apiGroups: ["policy"]
+rules:
+  - apiGroups: ["policy"]
   resources: ["podsecuritypolicies"]
   resourceNames:
   - {{ template "consul.fullname" . }}-server
   verbs:
   - use
-{{- end }}
-{{- if .Values.global.tls.enabled }}
-- apiGroups: [""]
-  resources:
-    - secrets
-  resourceNames:
-    - {{ template "consul.fullname" . }}-ca-cert
-    - {{ template "consul.fullname" . }}-server-cert
-  verbs:
-    - get
-{{- end }}
 {{- else}}
 rules: []
 {{- end }}
