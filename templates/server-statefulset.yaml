@@ -50,7 +50,7 @@ spec:
       tolerations:
         {{ tpl .Values.server.tolerations . | nindent 8 | trim }}
     {{- end }}
-      terminationGracePeriodSeconds: 10
+      terminationGracePeriodSeconds: 30
       serviceAccountName: {{ template "consul.fullname" . }}-server
       securityContext:
         fsGroup: 1000
@@ -96,6 +96,12 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.global.gossipEncryption.secretName }}
                   key: {{ .Values.global.gossipEncryption.secretKey }}
+            {{- end }}
+            {{- if .Values.global.tls.enabled }}
+            - name: CONSUL_HTTP_ADDR
+              value: https://localhost:8501
+            - name: CONSUL_CACERT
+              value: /consul/tls/ca/tls.crt
             {{- end }}
             {{- include "consul.extraEnvironmentVars" .Values.server | nindent 12 }}
           command:
@@ -150,8 +156,7 @@ spec:
               mountPath: /consul/config
             {{- if .Values.global.tls.enabled }}
             - name: tls-ca-cert
-              mountPath: /consul/tls/ca/tls.crt
-              subPath: tls.crt
+              mountPath: /consul/tls/ca/
               readOnly: true
             - name: tls-server-cert
               mountPath: /consul/tls/server

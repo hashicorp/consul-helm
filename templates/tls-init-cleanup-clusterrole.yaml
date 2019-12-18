@@ -16,6 +16,7 @@ rules:
     - secrets
   resourceNames:
     - {{ template "consul.fullname" . }}-ca-cert
+    - {{ template "consul.fullname" . }}-ca-key
     - {{ template "consul.fullname" . }}-server-cert
   verbs:
     - delete

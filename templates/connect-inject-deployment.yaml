@@ -105,8 +105,7 @@ spec:
             {{- end }}
             {{- if .Values.global.tls.enabled }}
             - name: consul-ca-cert
-              mountPath: /consul/tls/ca/tls.crt
-              subPath: tls.crt
+              mountPath: /consul/tls/ca
               readOnly: true
             {{- end }}
           {{- end }}

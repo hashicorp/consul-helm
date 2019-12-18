@@ -115,7 +115,7 @@ load _helpers
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
       yq -c '.spec.hostPorts' | tee /dev/stderr)
-  [ "${actual}" = '[{"min":8500,"max":8500},{"min":8502,"max":8502},{"min":8501,"max":8501}]' ]
+  [ "${actual}" = '[{"min":8500,"max":8500},{"min":8501,"max":8501},{"min":8502,"max":8502}]' ]
 }
 
 @test "client/PodSecurityPolicy: hostPort 8500 is not allowed when global.tls.enabled=true and global.tls.httpsOnly=true" {
@@ -127,5 +127,5 @@ load _helpers
       --set 'global.tls.httpsOnly=true' \
       . | tee /dev/stderr |
       yq -c '.spec.hostPorts' | tee /dev/stderr)
-  [ "${actual}" = '[{"min":8502,"max":8502},{"min":8501,"max":8501}]' ]
+  [ "${actual}" = '[{"min":8501,"max":8501},{"min":8502,"max":8502}]' ]
 }

@@ -424,16 +424,6 @@ load _helpers
 #--------------------------------------------------------------------
 # global.tls.enabled
 
-@test "client/DaemonSet: no secret volumes when TLS is disabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/client-daemonset.yaml  \
-      --set 'global.tls.enabled=false' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.volumes[] | select(.secret)' | tee /dev/stderr)
-  [ "${actual}" == "" ]
-}
-
 @test "client/DaemonSet: CA volume present when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
@@ -444,53 +434,13 @@ load _helpers
   [ "${actual}" != "" ]
 }
 
-@test "client/DaemonSet: client volume present when TLS is enabled" {
+@test "client/DaemonSet: client certificate volume present when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.volumes[] | select(.name == "tls-client-cert")' | tee /dev/stderr)
-  [ "${actual}" != "" ]
-}
-
-@test "client/DaemonSet: no volumes mounted when TLS is disabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/client-daemonset.yaml  \
-      --set 'global.tls.enabled=false' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].volumeMounts[] | select(.secret)' | tee /dev/stderr)
-  [ "${actual}" == "" ]
-}
-
-@test "client/DaemonSet: CA volume mounted when TLS is enabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/client-daemonset.yaml  \
-      --set 'global.tls.enabled=true' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "tls-ca-cert")' | tee /dev/stderr)
-  [ "${actual}" != "" ]
-}
-
-@test "client/DaemonSet: Client volume mounted when TLS is enabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/client-daemonset.yaml  \
-      --set 'global.tls.enabled=true' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "tls-client-cert")' | tee /dev/stderr)
-  [ "${actual}" != "" ]
-}
-
-@test "client/DaemonSet: port 8500 is exposed when TLS is disabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/client-daemonset.yaml  \
-      --set 'global.tls.enabled=false' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8500)' | tee /dev/stderr)
   [ "${actual}" != "" ]
 }
 
@@ -536,7 +486,7 @@ load _helpers
   [ "${actual}" == "" ]
 }
 
-@test "client/DaemonSet: Readiness checks are over HTTP TLS is disabled" {
+@test "client/DaemonSet: readiness checks are over HTTP TLS is disabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
@@ -546,7 +496,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "client/DaemonSet: Readiness checks are over HTTPS when TLS is disabled" {
+@test "client/DaemonSet: readiness checks are over HTTPS when TLS is disabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
@@ -556,7 +506,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "client/DaemonSet: Readiness checks use CA certificate when TLS is enabled" {
+@test "client/DaemonSet: readiness checks use CA certificate when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
@@ -579,20 +529,11 @@ load _helpers
 
 @test "client/DaemonSet: init container is created when global.tls.enabled=true" {
   cd `chart_dir`
-  local object=$(helm template \
+  local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.initContainers[] | select(.name == "client-tls-init")' | tee /dev/stderr)
-
-  # test that it generates client certificate
-  local actual=$(echo $object |
-      yq -r '.command | any(contains("consul tls cert create -client"))' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-
-  # test that it adds host IP as a certificate SAN
-  local actual=$(echo $object |
-      yq -r '.command | any(contains("-additional-ipaddress=${HOST_IP}"))' | tee /dev/stderr)
+      yq '.spec.template.spec.initContainers[] | select(.name == "client-tls-init") | length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -615,6 +556,22 @@ load _helpers
       yq '.spec.template.spec.initContainers[] | select(.name == "client-acl-init") | length > 0' | tee /dev/stderr)
 
   [ "${has_tls_init_container}" = "true" ]
+}
+
+@test "client/DaemonSet: sets Consul environment variables when global.tls.enabled" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].env[]' | tee /dev/stderr)
+
+  local actual
+  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = "https://localhost:8501" ]
+
+  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
+    [ "${actual}" = "/consul/tls/ca/tls.crt" ]
 }
 
 #--------------------------------------------------------------------

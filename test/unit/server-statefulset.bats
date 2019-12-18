@@ -463,16 +463,6 @@ load _helpers
 #--------------------------------------------------------------------
 # global.tls.enabled
 
-@test "server/StatefulSet: no secret volumes when TLS is disabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/server-statefulset.yaml  \
-      --set 'global.tls.enabled=false' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.volumes[] | select(.secret)' | tee /dev/stderr)
-  [ "${actual}" == "" ]
-}
-
 @test "server/StatefulSet: CA volume present when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
@@ -493,16 +483,6 @@ load _helpers
   [ "${actual}" != "" ]
 }
 
-@test "server/StatefulSet: no volumes mounted when TLS is disabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/server-statefulset.yaml  \
-      --set 'global.tls.enabled=false' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].volumeMounts[] | select(.secret)' | tee /dev/stderr)
-  [ "${actual}" == "" ]
-}
-
 @test "server/StatefulSet: CA volume mounted when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
@@ -513,23 +493,13 @@ load _helpers
   [ "${actual}" != "" ]
 }
 
-@test "server/StatefulSet: Server volume mounted when TLS is enabled" {
+@test "server/StatefulSet: server certificate volume mounted when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/server-statefulset.yaml  \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "tls-server-cert")' | tee /dev/stderr)
-  [ "${actual}" != "" ]
-}
-
-@test "server/StatefulSet: port 8500 is exposed when TLS is disabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/server-statefulset.yaml  \
-      --set 'global.tls.enabled=false' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8500)' | tee /dev/stderr)
   [ "${actual}" != "" ]
 }
 
@@ -575,7 +545,7 @@ load _helpers
   [ "${actual}" == "" ]
 }
 
-@test "server/StatefulSet: Readiness checks are over HTTP when TLS is disabled" {
+@test "server/StatefulSet: readiness checks are over HTTP when TLS is disabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/server-statefulset.yaml  \
@@ -585,7 +555,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "server/StatefulSet: Readiness checks are over https when TLS is enabled" {
+@test "server/StatefulSet: readiness checks are over HTTPS when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/server-statefulset.yaml  \
@@ -614,4 +584,20 @@ load _helpers
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | join(" ") | contains("ports { http = -1 }")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
+}
+
+@test "server/StatefulSet: sets Consul environment variables when global.tls.enabled" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].env[]' | tee /dev/stderr)
+
+  local actual
+  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = "https://localhost:8501" ]
+
+  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
+    [ "${actual}" = "/consul/tls/ca/tls.crt" ]
 }

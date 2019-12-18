@@ -87,20 +87,20 @@ global:
   tls:
     enabled: false
 
-    # Set serverAdditionalDNSSANs is a list of additional DNS names to
+    # serverAdditionalDNSSANs is a list of additional DNS names to
     # set as Subject Alternative Names (SANs) in the server certificate.
     # This is useful when you need to access the Consul server(s) externally,
     # for example, if you're using the UI.
     serverAdditionalDNSSANs: []
 
-    # Set serverAdditionalIPSANs is a list of additional IP addresses to
+    # serverAdditionalIPSANs is a list of additional IP addresses to
     # set as Subject Alternative Names (SANs) in the server certificate.
     # This is useful when you need to access Consul server(s) externally,
     # for example, if you're using the UI.
     serverAdditionalIPSANs: []
 
-    # If httpsOnly is true, Consul will disable the HTTP port and only accept
-    # HTTPS connections.
+    # If httpsOnly is true, Consul will disable the HTTP port on both
+    # clients and servers and only accept HTTPS connections.
     #
     # Note: if you are using the syncCatalog or connectInject features below,
     # do not set httpsOnly to true. This limitation will be addressed in the future.
