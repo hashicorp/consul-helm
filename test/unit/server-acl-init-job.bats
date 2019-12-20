@@ -211,7 +211,6 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-
 #--------------------------------------------------------------------
 # global.tls.enabled
 
@@ -231,6 +230,6 @@ load _helpers
   actual=$(echo $command | jq -r '. | any(contains("-consul-ca-cert=/consul/tls/ca/tls.crt"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
-    actual=$(echo $command | jq -r '. | any(contains(" -consul-tls-server-name=server.dc1.consul"))' | tee /dev/stderr)
+    actual=$(echo $command | jq -r '. | any(contains("-consul-tls-server-name=server.dc1.consul"))' | tee /dev/stderr)
     [ "${actual}" = "true" ]
 }

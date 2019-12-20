@@ -57,12 +57,14 @@ spec:
             - "-ec"
             - |
               consul-k8s server-acl-init \
+                -server-label-selector=component=server,app={{ template "consul.name" . }},release={{ .Release.Name }} \
+                -resource-prefix={{ template "consul.fullname" . }} \
+                -k8s-namespace={{ .Release.Namespace }} \
                 {{- if .Values.global.tls.enabled }}
                 -use-https \
                 -consul-ca-cert=/consul/tls/ca/tls.crt \
                 -consul-tls-server-name=server.{{ .Values.global.datacenter }}.{{ .Values.global.domain }} \
                 {{- end }}
-                -k8s-namespace={{ .Release.Namespace }} \
                 {{- if .Values.syncCatalog.enabled }}
                 -create-sync-token=true \
                 {{- end }}

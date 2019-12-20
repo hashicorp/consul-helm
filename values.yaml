@@ -101,10 +101,7 @@ global:
 
     # If httpsOnly is true, Consul will disable the HTTP port on both
     # clients and servers and only accept HTTPS connections.
-    #
-    # Note: if you are using the syncCatalog or connectInject features below,
-    # do not set httpsOnly to true. This limitation will be addressed in the future.
-    httpsOnly: false
+    httpsOnly: true
 
 # Server, when enabled, configures a server cluster to run. This should
 # be disabled if you plan on connecting to a Consul cluster external to
