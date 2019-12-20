@@ -44,6 +44,7 @@ spec:
               consul tls ca create
               consul tls cert create -server \
                 -days=730 \
+                -additional-dnsname='{{ template "consul.fullname" . }}-server' \
                 -additional-dnsname='*.{{ template "consul.fullname" . }}-server' \
                 -additional-dnsname='*.{{ template "consul.fullname" . }}-server.{{ .Release.Namespace }}' \
                 -additional-dnsname='*.{{ template "consul.fullname" . }}-server.{{ .Release.Namespace }}.svc' \
