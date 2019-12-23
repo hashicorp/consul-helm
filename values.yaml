@@ -40,7 +40,7 @@ global:
   # remove these checks to make the sync work.
   # If using bootstrapACLs then must be >= 0.10.1.
   # If using connect inject then must be >= 0.10.1.
-  imageK8S: "hashicorp/consul-k8s:0.10.1"
+  imageK8S: "hashicorp/consul-k8s:0.11.0"
 
   # datacenter is the name of the datacenter that the agents should register
   # as. This can't be changed once the Consul cluster is up and running
