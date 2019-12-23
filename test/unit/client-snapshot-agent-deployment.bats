@@ -204,3 +204,44 @@ load _helpers
       yq '.spec.template.spec.nodeSelector | contains("allow")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# global.tls.enabled
+
+@test "client/SnapshotAgentDeployment: sets TLS flags when global.tls.enabled" {
+  cd `chart_dir`
+  local command=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual
+  actual=$(echo $command | jq -r '. | any(contains("-http-addr=\"https://${HOST_IP}:8501\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+    actual=$(echo $command | jq -r '. | any(contains("-ca-file=/consul/tls/ca/tls.crt"))' | tee /dev/stderr)
+    [ "${actual}" = "true" ]
+}
+@test "client/SnapshotAgentDeployment: populates volumes when global.tls.enabled is true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.volumes | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/SnapshotAgentDeployment: populates container volumeMounts when global.tls.enabled is true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].volumeMounts | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
