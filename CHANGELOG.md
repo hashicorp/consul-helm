@@ -1,5 +1,15 @@
 ## Unreleased
 
+IMPROVEMENTS:
+
+  * Optionally allow enabling TLS [[GH-313](https://github.com/hashicorp/consul-helm/pull/313/files#)].
+    If `global.tls.enabled` is set to `true`, the Helm chart will generate a CA and necessary certificates and
+    enable TLS for servers, clients, Connect Inject, Mesh gateways, Sync Catalog, ACL bootstrapping, and snapshot agents.
+
+    Note that this feature is only supported if both servers and clients are running
+    on Kubernetes. We will have better support for other deployment architectures,
+    as well as bringing your own CA, in the future.
+
 ## 0.15.0 (Dec 17, 2019)
 
 BREAKING CHANGES:
@@ -24,14 +34,6 @@ BUG FIXES:
   * Connect Inject: Fix critical bug where Connect-registered services instances would be de-registered
     when the Consul client on the same node was restarted. This fix adds a new
     sidecar that ensures the service instance is always registered. [[GH-314](https://github.com/hashicorp/consul-helm/pull/314)]
-
-  * Optionally allow enabling TLS [[GH-313](https://github.com/hashicorp/consul-helm/pull/313/files#)].
-    If `global.tls.enabled` is set to `true`, the Helm chart will generate CA and necessary certificates and
-    enable TLS for servers, clients, Connect Inject, Sync Catalog, and ACL bootstrapping.
-
-    Note that this feature is only supported if both servers and clients are running
-    on Kubernetes. We will have better support for other deployment architectures,
-    as well as bringing your own CA, in the future.
 
 ## 0.14.0 (Dec 10, 2019)
 
