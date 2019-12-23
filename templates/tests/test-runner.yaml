@@ -30,5 +30,5 @@ spec:
             consul kv put _consul_helm_test $VALUE
             [ `consul kv get _consul_helm_test` = "$VALUE" ]
             consul kv delete _consul_helm_test
-  restartPolicy: Never
+  restartPolicy: OnFailure
 {{- end }}
