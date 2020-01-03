@@ -146,9 +146,11 @@ spec:
                 -hcl='ca_file = "/consul/tls/ca/tls.crt"' \
                 -hcl='cert_file = "/consul/tls/client/tls.crt"' \
                 -hcl='key_file = "/consul/tls/client/tls.key"' \
+                {{- if .Values.global.tls.verify }}
                 -hcl='verify_incoming_rpc = true' \
                 -hcl='verify_outgoing = true' \
                 -hcl='verify_server_hostname = true' \
+                {{- end }}
                 -hcl='ports { https = 8501 }' \
                 {{- if .Values.global.tls.httpsOnly }}
                 -hcl='ports { http = -1 }' \

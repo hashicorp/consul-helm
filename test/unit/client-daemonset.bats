@@ -574,6 +574,45 @@ load _helpers
     [ "${actual}" = "/consul/tls/ca/tls.crt" ]
 }
 
+@test "client/DaemonSet: sets verify_* flags to true by default when global.tls.enabled" {
+  cd `chart_dir`
+  local command=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | join(" ")' | tee /dev/stderr)
+
+  local actual
+  actual=$(echo $command | jq -r '. | contains("verify_incoming_rpc = true")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  actual=$(echo $command | jq -r '. | contains("verify_outgoing = true")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  actual=$(echo $command | jq -r '. | contains("verify_server_hostname = true")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: doesn't set the verify_* flags by default when global.tls.enabled and global.tls.verify is false" {
+  cd `chart_dir`
+  local command=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.verify=false' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | join(" ")' | tee /dev/stderr)
+
+  local actual
+  actual=$(echo $command | jq -r '. | contains("verify_incoming_rpc = true")' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  actual=$(echo $command | jq -r '. | contains("verify_outgoing = true")' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  actual=$(echo $command | jq -r '. | contains("verify_server_hostname = true")' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
 #--------------------------------------------------------------------
 # extraEnvironmentVariables
 
