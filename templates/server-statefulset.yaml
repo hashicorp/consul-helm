@@ -101,6 +101,7 @@ spec:
                 -bootstrap-expect={{ .Values.server.bootstrapExpect }} \
                 -client=0.0.0.0 \
                 -config-dir=/consul/config \
+                -log-level={{ .Values.server.loglevel }} \
                 {{- range .Values.server.extraVolumes }}
                 {{- if .load }}
                 -config-dir=/consul/userconfig/{{ .name }} \
@@ -121,7 +122,7 @@ spec:
                 {{- range $index := until (.Values.server.replicas | int) }}
                 -retry-join=${CONSUL_FULLNAME}-server-{{ $index }}.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc \
                 {{- end }}
-                -server
+                -server \
           volumeMounts:
             - name: data-{{ .Release.Namespace }}
               mountPath: /consul/data
