@@ -10,13 +10,13 @@ metadata:
     release: {{ .Release.Name }}
 {{- if .Values.global.enablePodSecurityPolicies }}
 rules:
-  - apiGroups: ["policy"]
+- apiGroups: ["policy"]
   resources: ["podsecuritypolicies"]
   resourceNames:
   - {{ template "consul.fullname" . }}-server
   verbs:
   - use
-{{- else}}
+{{- else }}
 rules: []
 {{- end }}
 {{- end }}

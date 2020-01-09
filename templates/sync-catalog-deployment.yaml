@@ -68,7 +68,7 @@ spec:
               value: /consul/tls/ca/tls.crt
             {{- else }}
             - name: CONSUL_HTTP_ADDR
-              value: $(HOST_IP):8500
+              value: http://$(HOST_IP):8500
             {{- end }}
           {{- if .Values.global.tls.enabled }}
           volumeMounts:

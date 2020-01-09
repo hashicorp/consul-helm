@@ -65,6 +65,15 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            {{- if .Values.global.tls.enabled }}
+            - name: CONSUL_HTTP_ADDR
+              value: https://$(HOST_IP):8501
+            - name: CONSUL_CACERT
+              value: /consul/tls/ca/tls.crt
+            {{- else }}
+            - name: CONSUL_HTTP_ADDR
+              value: http://$(HOST_IP):8500
+            {{- end }}
             {{- if .Values.global.bootstrapACLs }}
             - name: CONSUL_HTTP_TOKEN
               valueFrom:
@@ -82,12 +91,6 @@ spec:
                 {{- end }}
                 {{- if .Values.global.bootstrapACLs}}
                 -config-dir=/consul/aclconfig \
-                {{- end }}
-                {{- if .Values.global.tls.enabled }}
-                -ca-file=/consul/tls/ca/tls.crt \
-                -http-addr="https://${HOST_IP}:8501"
-                {{- else }}
-                -http-addr="${HOST_IP}:8500"
                 {{- end }}
           {{- if (or .Values.global.bootstrapACLs .Values.global.tls.enabled (and .Values.client.snapshotAgent.configSecret.secretName .Values.client.snapshotAgent.configSecret.secretKey) ) }}
           volumeMounts:

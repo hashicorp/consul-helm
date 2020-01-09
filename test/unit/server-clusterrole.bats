@@ -62,3 +62,16 @@ load _helpers
       yq '.rules' | tee /dev/stderr)
   [ "${actual}" = "[]" ]
 }
+
+#--------------------------------------------------------------------
+# global.enablePodSecurityPolicies
+@test "server/ClusterRole: podsecuritypolicies are added when global.enablePodSecurityPolicies is true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-clusterrole.yaml  \
+      --set 'server.enabled=true' \
+      --set 'global.enablePodSecurityPolicies=true' \
+      . | tee /dev/stderr |
+      yq -r '.rules[0].resources[0]' | tee /dev/stderr)
+  [ "${actual}" = "podsecuritypolicies" ]
+}

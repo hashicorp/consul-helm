@@ -54,3 +54,14 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
+@test "tlsInit/ClusterRole: adds pod security polices with global.tls.enabled and global.enablePodSecurityPolicies" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/tls-init-clusterrole.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.enablePodSecurityPolicies=true' \
+      . | tee /dev/stderr |
+      yq -r '.rules[] | select(.resources==["podsecuritypolicies"]) | .resourceNames[0]' | tee /dev/stderr)
+
+  [ "${actual}" = "release-name-consul-tls-init" ]
+}

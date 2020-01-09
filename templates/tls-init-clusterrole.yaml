@@ -19,5 +19,14 @@ rules:
     - secrets
   verbs:
     - create
+{{- if .Values.global.enablePodSecurityPolicies }}
+- apiGroups: ["policy"]
+  resources:
+  - podsecuritypolicies
+  verbs:
+    - use
+  resourceNames:
+    - {{ template "consul.fullname" . }}-tls-init
+{{- end }}
 {{- end }}
 {{- end }}

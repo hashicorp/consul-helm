@@ -20,5 +20,14 @@ rules:
     - {{ template "consul.fullname" . }}-server-cert
   verbs:
     - delete
+{{- if .Values.global.enablePodSecurityPolicies }}
+- apiGroups: ["policy"]
+  resources:
+    - podsecuritypolicies
+  verbs:
+    - use
+  resourceNames:
+    - {{ template "consul.fullname" . }}-tls-init-cleanup
+{{- end }}
 {{- end }}
 {{- end }}

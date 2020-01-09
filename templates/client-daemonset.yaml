@@ -282,7 +282,7 @@ spec:
       {{- end }}
       {{- if .Values.global.tls.enabled }}
       - name: client-tls-init
-        image: {{ .Values.global.image }}
+        image: "{{ default .Values.global.image .Values.client.image }}"
         env:
         - name: HOST_IP
           valueFrom:

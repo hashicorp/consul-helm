@@ -212,7 +212,7 @@ spec:
                   {{- else }}
                   curl http://127.0.0.1:8500/v1/status/leader \
                   {{- end }}
-                  2>&1 | grep -E '".+"'
+                  2>/dev/null | grep -E '".+"'
             failureThreshold: 2
             initialDelaySeconds: 5
             periodSeconds: 3
