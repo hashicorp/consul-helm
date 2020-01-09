@@ -4,7 +4,7 @@ IMPROVEMENTS:
 
   * Optionally allow enabling TLS for Consul communication [[GH-313](https://github.com/hashicorp/consul-helm/pull/313)].
     If `global.tls.enabled` is set to `true`, the Helm chart will generate a CA and necessary certificates and
-    enable TLS for servers, clients, Connect Inject, Mesh gateways, Sync Catalog, ACL bootstrapping, and snapshot agents.
+    enable TLS for servers, clients, Connect injector, Mesh gateways, catalog sync, ACL bootstrapping, and snapshot agents.
 
     Note that this feature is only supported if both servers and clients are running
     on Kubernetes. We will have better support for other deployment architectures,
@@ -12,11 +12,12 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-  * Fix graceful terminations for servers and clients [[GH-313](https://github.com/hashicorp/consul-helm/pull/313)].
-    Set `terminationGracePeriod` to 10 seconds for the servers. Previously, it was set to 10 seconds, which wasn't
-    enough time for a graceful leave. Additionally, clients always set `leave_on_terminate` to `true` for clients,
-    so that they can gracefully leave the cluster. This replaces the `preStop` hook that was calling `consul leave`.
-    Note that this defaults to true for clients as of Consul `0.7`, so this change only affects earlier versions.
+  * Fix graceful termination for servers [[GH-313](https://github.com/hashicorp/consul-helm/pull/313)].
+    `terminationGracePeriod` is now set to 30 seconds for the servers. The previous setting of 10 seconds
+    wasn't always enough time for a graceful leave, and in those cases, servers leave the cluster
+    in a "failed" state. Additionally, clients always set `leave_on_terminate` to `true`.
+    This replaces the `preStop` hook that was calling `consul leave`. Note that `leave_on_terminate` defaults
+    to true for clients as of Consul `0.7`, so this change only affects earlier versions.
 
 ## 0.15.0 (Dec 17, 2019)
 

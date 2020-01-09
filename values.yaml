@@ -274,7 +274,7 @@ client:
   #   - operator: "Exists"
   tolerations: ""
 
-  # nodeSelector labels for client pod assignment, formatted as a muli-line string.
+  # nodeSelector labels for client pod assignment, formatted as a multi-line string.
   # ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
   # Example:
   # nodeSelector: |
@@ -460,7 +460,7 @@ syncCatalog:
     secretName: null
     secretKey: null
 
-  # nodeSelector labels for syncCatalog pod assignment, formatted as a muli-line string.
+  # nodeSelector labels for syncCatalog pod assignment, formatted as a multi-line string.
   # ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
   # Example:
   # nodeSelector: |

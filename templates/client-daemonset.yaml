@@ -77,7 +77,7 @@ spec:
         - name: tls-client-cert
           emptyDir:
             # We're using tmpfs here so that
-            # Client certs are not written to disk
+            # client certs are not written to disk
             medium: "Memory"
         {{- end }}
         {{- range .Values.client.extraVolumes }}
