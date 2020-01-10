@@ -31,7 +31,6 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: {{ template "consul.fullname" . }}-enterprise-license
-      {{- end }}
       {{- if .Values.global.tls.enabled }}
       volumes:
         - name: tls-ca-cert
