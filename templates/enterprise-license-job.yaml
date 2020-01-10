@@ -30,7 +30,6 @@ spec:
         component: license
     spec:
       restartPolicy: Never
-      {{- if .Values.global.bootstrapACLs }}
       serviceAccountName: {{ template "consul.fullname" . }}-enterprise-license
       {{- end }}
       {{- if .Values.global.tls.enabled }}
