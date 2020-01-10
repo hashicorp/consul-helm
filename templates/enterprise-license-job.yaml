@@ -71,7 +71,7 @@ spec:
           {{- if .Values.global.tls.enabled }}
           volumeMounts:
             - name: tls-ca-cert
-              mountPath: /consul/tls/ca/tls.crt
+              mountPath: /consul/tls/ca
               readOnly: true
           {{- end }}
       {{- if .Values.global.bootstrapACLs }}
