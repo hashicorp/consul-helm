@@ -65,6 +65,7 @@ load _helpers
 
 #--------------------------------------------------------------------
 # global.enablePodSecurityPolicies
+
 @test "server/ClusterRole: podsecuritypolicies are added when global.enablePodSecurityPolicies is true" {
   cd `chart_dir`
   local actual=$(helm template \
@@ -72,6 +73,6 @@ load _helpers
       --set 'server.enabled=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       . | tee /dev/stderr |
-      yq -r '.rules[0].resources[0]' | tee /dev/stderr)
-  [ "${actual}" = "podsecuritypolicies" ]
+      yq -r '.rules | map(select(.resources[0] == "podsecuritypolicies")) | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
 }

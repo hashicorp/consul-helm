@@ -170,20 +170,8 @@ load _helpers
       --set 'server.enterpriseLicense.secretKey=bar' \
       --set 'global.tls.enabled=false' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].env[] | select(.name == "CONSUL_HTTP_ADDR") | .value | contains("http://")' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
-
-@test "server/EnterpriseLicense: Port is 8500 when TLS is disabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/enterprise-license-job.yaml  \
-      --set 'server.enterpriseLicense.secretName=foo' \
-      --set 'server.enterpriseLicense.secretKey=bar' \
-      --set 'global.tls.enabled=false' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].env[] | select(.name == "CONSUL_HTTP_ADDR") | .value | contains(":8500")' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
+      yq -r '.spec.template.spec.containers[0].env[] | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = "http://release-name-consul-server:8500" ]
 }
 
 @test "server/EnterpriseLicense: URL is https when TLS is enabled" {
@@ -194,20 +182,8 @@ load _helpers
       --set 'server.enterpriseLicense.secretKey=bar' \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].env[] | select(.name == "CONSUL_HTTP_ADDR") | .value | contains("https://")' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
-
-@test "server/EnterpriseLicense: Port is 8501 when TLS is enabled" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/enterprise-license-job.yaml  \
-      --set 'server.enterpriseLicense.secretName=foo' \
-      --set 'server.enterpriseLicense.secretKey=bar' \
-      --set 'global.tls.enabled=true' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].env[] | select(.name == "CONSUL_HTTP_ADDR") | .value | contains(":8501")' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
+      yq -r '.spec.template.spec.containers[0].env[] | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = "https://release-name-consul-server:8501" ]
 }
 
 @test "server/EnterpriseLicense: CA certificate is specified when TLS is enabled" {
