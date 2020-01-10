@@ -135,7 +135,7 @@ spec:
             - name: CONSUL_HTTP_ADDR
               value: http://$(HOST_IP):8500
             - name: CONSUL_GRPC_ADDR
-              value: http://$(HOST_IP):8502
+              value: $(HOST_IP):8502
             {{- end }}
           command:
             # /bin/sh -c is needed so we can use the pod-specific environment

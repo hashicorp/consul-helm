@@ -60,7 +60,7 @@ global:
   #
   # The secret can be created by running:
   #    kubectl create secret generic consul-gossip-encryption-key \
-  #      --from-literal=key=$(consul keygen)`.
+  #      --from-literal=key=$(consul keygen).
   #
   # In this case, secretName would be "consul-gossip-encryption-key" and
   # secretKey would be "key".
