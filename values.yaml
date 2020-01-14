@@ -108,6 +108,14 @@ server:
   # via the extraConfig setting.
   connect: true
 
+  # exposeWANPorts exposes servers' wan ports as hostPorts.
+  # This is required if federating Consul datacenters since it makes the
+  # server WAN addresses routable from other datacenters.
+  # In order for this to work, the node IPs must be routable from the other
+  # datacenters.
+  # Also changes the servers' advertised IP to the hostIP rather than podIP.
+  exposeWANPorts: false
+
   # Resource requests, limits, etc. for the server cluster placement. This
   # should map directly to the value of the resources field for a PodSpec,
   # formatted as a multi-line string. By default no direct resource request

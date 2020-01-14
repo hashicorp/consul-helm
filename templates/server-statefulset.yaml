@@ -89,6 +89,12 @@ spec:
                   name: {{ .Values.global.gossipEncryption.secretName }}
                   key: {{ .Values.global.gossipEncryption.secretKey }}
             {{- end }}
+            {{ if .Values.server.exposeWANPorts }}
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            {{- end }}
             {{- include "consul.extraEnvironmentVars" .Values.server | nindent 12 }}
           command:
             - "/bin/sh"
@@ -98,6 +104,9 @@ spec:
 
               exec /bin/consul agent \
                 -advertise="${POD_IP}" \
+                {{- if .Values.server.exposeWANPorts }}
+                -advertise-wan="${NODE_IP}" \
+                {{- end }}
                 -bind=0.0.0.0 \
                 -bootstrap-expect={{ .Values.server.bootstrapExpect }} \
                 -client=0.0.0.0 \
@@ -146,9 +155,22 @@ spec:
             - containerPort: 8301
               name: serflan
             - containerPort: 8302
-              name: serfwan
+              name: serfwan-tcp
+              protocol: "TCP"
+              {{- if .Values.server.exposeWANPorts }}
+              hostPort: 8302
+              {{- end }}
+            - containerPort: 8302
+              name: serfwan-udp
+              protocol: "UDP"
+              {{- if .Values.server.exposeWANPorts }}
+              hostPort: 8302
+              {{- end }}
             - containerPort: 8300
               name: server
+              {{- if .Values.server.exposeWANPorts }}
+              hostPort: 8300
+              {{- end }}
             - containerPort: 8600
               name: dns-tcp
               protocol: "TCP"
