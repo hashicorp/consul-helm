@@ -415,3 +415,167 @@ load _helpers
   actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
     [ "${actual}" = "/consul/tls/ca/tls.crt" ]
 }
+
+#--------------------------------------------------------------------
+# k8sAllowNamespaces & k8sDenyNamespaces
+
+@test "syncCatalog/Deployment: default is allow `*`, deny kube-system and kube-public" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+    yq 'map(select(test("allow-namespace"))) | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("allow-namespace=\"*\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("deny-namespace=\"kube-system\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("deny-namespace=\"kube-public\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "syncCatalog/Deployment: can set allow and deny {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      --set 'syncCatalog.k8sAllowNamespaces[0]=allowNamespace' \
+      --set 'syncCatalog.k8sDenyNamespaces[0]=denyNamespace' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+    yq 'map(select(test("allow-namespace"))) | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
+
+  local actual=$(echo $object |
+    yq 'map(select(test("deny-namespace"))) | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("allow-namespace=\"allowNamespace\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("deny-namespace=\"denyNamespace\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
+# namespaces
+
+@test "syncCatalog/Deployment: namespace options disabled by default" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-namespaces"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("consul-namespace"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-namespace-mirroring"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("mirroring-prefix"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "syncCatalog/Deployment: namespace options set with .global.consulNamespacesEnabled=true" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      --set 'global.consulNamespacesEnabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-namespaces=true"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("consul-namespace=default"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-namespace-mirroring"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("mirroring-prefix"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "syncCatalog/Deployment: mirroring options set with .syncCatalog.consulNamespaces.mirrorK8S=true" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      --set 'global.consulNamespacesEnabled=true' \
+      --set 'syncCatalog.consulNamespaces.mirrorK8S=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-namespaces=true"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("consul-namespace=default"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-namespace-mirroring=true"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("mirroring-prefix"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "syncCatalog/Deployment: prefix can be set with .syncCatalog.consulNamespaces.mirroringPrefix" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      --set 'global.consulNamespacesEnabled=true' \
+      --set 'syncCatalog.consulNamespaces.mirrorK8S=true' \
+      --set 'syncCatalog.consulNamespaces.mirroringPrefix=k8s-' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-namespaces=true"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("consul-namespace=default"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-namespace-mirroring=true"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("mirroring-prefix=k8s-"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
