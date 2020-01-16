@@ -40,7 +40,7 @@ global:
   # remove these checks to make the sync work.
   # If using bootstrapACLs then must be >= 0.10.1.
   # If using connect inject then must be >= 0.10.1.
-  # If using Consul namespaces, must be >= 0.12.
+  # If using Consul Enterprise namespaces, must be >= 0.12.
   imageK8S: "hashicorp/consul-k8s:0.11.0"
 
   # datacenter is the name of the datacenter that the agents should register
@@ -113,8 +113,8 @@ global:
     httpsOnly: true
 
   # [Enterprise Only] consulNamespacesEnabled indicates that you are running
-  # Consul v1.7+ with a valid Consul Enterprise license and would like to make
-  # use of configuration beyond registering everything into the `default` Consul
+  # Consul Enterprise v1.7+ with a valid Consul Enterprise license and would like to
+  # make use of configuration beyond registering everything into the `default` Consul
   # namespace. Requires consul-k8s v0.12+.
   # Additional configuration options are found in the `consulNamespaces` section
   # of both the catalog sync and connect injector.
@@ -421,10 +421,56 @@ syncCatalog:
   # prepended with "consul-". (Consul -> Kubernetes sync)
   k8sPrefix: null
 
+  # k8sAllowNamespaces is a list of k8s namespaces to sync the k8s services from.
+  # If a k8s namespace is not included or is listed in `k8sDenyNamespaces`,
+  # services in that k8s namespace will not be synced even if they are explicitly
+  # annotated. Use ["*"] to automatically allow all k8s namespaces.
+  #
+  # For example, ["namespace1", "namespace2"] will only allow services in the k8s
+  # namespaces `namespace1` and `namespace2` to be synced and registered
+  # with Consul. All other k8s namespaces will be ignored.
+  # Note: `k8sDenyNamespaces` takes precedence over values defined here.
+  # Requires consul-k8s v0.12+
+  k8sAllowNamespaces: ["*"]
+
+  # k8sDenyNamespaces is a list of k8s namespaces that should not have their
+  # service synced. This list takes precedence over `k8sAllowNamespaces`.
+  # `*` is not supported because then nothing would be allowed to sync.
+  # Requires consul-k8s v0.12+.
+  #
+  # For example, if `k8sAllowNamespaces is `["*"]` and k8sDenyNamespaces is
+  # `["namespace1", "namespace2"]`, then all k8s namespaces besides "namespace1"
+  # and "namespace2" will be synced.
+  k8sDenyNamespaces: ["kube-system", "kube-public"]
+
+  # [DEPRECATED] Use k8sAllowNamespaces and k8sDenyNamespaces instead.
   # k8sSourceNamespace is the Kubernetes namespace to watch for service
   # changes and sync to Consul. If this is not set then it will default
   # to all namespaces.
   k8sSourceNamespace: null
+
+  # [Enterprise Only] These settings manage the catalog sync's interaction with
+  # Consul namespaces (requires consul-ent v1.7+ and consul-k8s v0.12+).
+  # Also, `global.consulNamespacesEnabled` must be true.
+  consulNamespaces:
+    # consulDestinationNamespace is the name of the Consul namespace to register all
+    # k8s services into. If the Consul namespace does not already exist,
+    # it will be created. This will be ignored if `mirrorK8S` is true.
+    consulDestinationNamespace: "default"
+
+    # mirrorK8S causes k8s services to be registered into a Consul namespace
+    # of the same name as their k8s namespace, optionally prefixed if
+    # `mirroringPrefix` is set below. If the Consul namespace does not
+    # already exist, it will be created. Turning this on overrides the
+    # `consulDestinationNamespace` setting.
+    # `addK8SNamespaceSuffix` may no longer be needed if enabling this option.
+    mirrorK8S: false
+
+    # If `mirrorK8S` is set to true, `mirroringPrefix` allows each Consul namespace
+    # to be given a prefix. For example, if `mirroringPrefix` is set to "k8s-", a
+    # service in the k8s `staging` namespace will be registered into the
+    # `k8s-staging` Consul namespace.
+    mirroringPrefix: ""
 
   # addK8SNamespaceSuffix appends Kubernetes namespace suffix to
   # each service name synced to Consul, separated by a dash.
