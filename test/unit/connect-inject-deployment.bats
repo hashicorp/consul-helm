@@ -894,6 +894,32 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# replicas
+
+@test "connectInject/Deployment: replicas defaults to 2" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.replicas' | tee /dev/stderr)
+  [ "${actual}" = "2" ]
+}
+
+@test "connectInject/Deployment: replicas can be overridden" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'client.grpc=true' \
+      --set 'connectInject.replicas=3' \
+      . | tee /dev/stderr |
+      yq -r '.spec.replicas' | tee /dev/stderr)
+  [ "${actual}" = "3" ]
+}
+
+#--------------------------------------------------------------------
 # resources
 
 @test "connectInject/Deployment: default resources" {

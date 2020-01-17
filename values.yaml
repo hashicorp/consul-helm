@@ -799,6 +799,18 @@ connectInject:
   # consul-k8s 0.12.0 the default is envoyproxy/envoy-alpine:v1.13.0.
   imageEnvoy: null
 
+  # Number of replicas for the Deployment.
+  replicas: 2
+
+  # disruptionBudget enables the creation of a PodDisruptionBudget to
+  # prevent voluntary degrading of the sidecar injection.
+  disruptionBudget:
+    enabled: true
+
+    # Default to 1 and should < replicas count
+    # If you'd like a custom value, you can specify an override here.
+    minAvailable: 1
+
   # namespaceSelector is the selector for restricting the webhook to only
   # specific namespaces. This should be set to a multiline string.
   # See https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#matching-requests-namespaceselector
