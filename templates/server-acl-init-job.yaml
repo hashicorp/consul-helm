@@ -89,6 +89,18 @@ spec:
                 {{- if not (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) }}
                 -create-client-token=false \
                 {{- end }}
+                {{- if .Values.global.consulNamespacesEnabled }}
+                -enable-namespaces=true \
+                {{- if .Values.syncCatalog.consulNamespaces.consulDestinationNamespace }}
+                -consul-sync-namespace={{ .Values.syncCatalog.consulNamespaces.consulDestinationNamespace }} \
+                {{- end }}
+                {{- if .Values.syncCatalog.consulNamespaces.mirrorK8S }}
+                -enable-sync-namespace-mirroring=true \
+                {{- if .Values.syncCatalog.consulNamespaces.mirroringPrefix }}
+                -sync-mirroring-prefix={{ .Values.syncCatalog.consulNamespaces.mirroringPrefix }} \
+                {{- end }}
+                {{- end }}
+                {{- end }}
                 -expected-replicas={{ .Values.server.replicas }}
 {{- end }}
 {{- end }}
