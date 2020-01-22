@@ -233,3 +233,112 @@ load _helpers
     actual=$(echo $command | jq -r '. | any(contains("-consul-tls-server-name=server.dc1.consul"))' | tee /dev/stderr)
     [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# namespaces
+
+@test "serverACLInit/Job: namespace options disabled by default" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-namespaces"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("consul-sync-namespace"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-sync-namespace-mirroring"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("sync-mirroring-prefix"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "serverACLInit/Job: namespace options set with .global.consulNamespacesEnabled=true" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      --set 'global.consulNamespacesEnabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-namespaces=true"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("consul-sync-namespace=default"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-sync-namespace-mirroring"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("sync-mirroring-prefix"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "serverACLInit/Job: mirroring options set with .syncCatalog.consulNamespaces.mirrorK8S=true" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      --set 'global.consulNamespacesEnabled=true' \
+      --set 'syncCatalog.consulNamespaces.mirrorK8S=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-namespaces=true"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("consul-sync-namespace=default"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-sync-namespace-mirroring=true"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("sync-mirroring-prefix"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "serverACLInit/Job: prefix can be set with .syncCatalog.consulNamespaces.mirroringPrefix" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      --set 'global.consulNamespacesEnabled=true' \
+      --set 'syncCatalog.consulNamespaces.mirrorK8S=true' \
+      --set 'syncCatalog.consulNamespaces.mirroringPrefix=k8s-' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-namespaces=true"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("consul-sync-namespace=default"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("enable-sync-namespace-mirroring=true"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("sync-mirroring-prefix=k8s-"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
