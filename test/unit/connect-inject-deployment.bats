@@ -422,15 +422,15 @@ load _helpers
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
   local actual=$(echo $object |
-    yq 'map(select(test("allow-namespace"))) | length' | tee /dev/stderr)
+    yq 'map(select(test("allow-k8s-namespace"))) | length' | tee /dev/stderr)
   [ "${actual}" = "1" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("allow-namespace=\"*\""))' | tee /dev/stderr)
+    yq 'any(contains("allow-k8s-namespace=\"*\""))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'map(select(test("deny-namespace"))) | length' | tee /dev/stderr)
+    yq 'map(select(test("deny-k8s-namespace"))) | length' | tee /dev/stderr)
   [ "${actual}" = "0" ]
 }
 
@@ -445,19 +445,19 @@ load _helpers
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
   local actual=$(echo $object |
-    yq 'map(select(test("allow-namespace"))) | length' | tee /dev/stderr)
+    yq 'map(select(test("allow-k8s-namespace"))) | length' | tee /dev/stderr)
   [ "${actual}" = "1" ]
 
   local actual=$(echo $object |
-    yq 'map(select(test("deny-namespace"))) | length' | tee /dev/stderr)
+    yq 'map(select(test("deny-k8s-namespace"))) | length' | tee /dev/stderr)
   [ "${actual}" = "1" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("allow-namespace=\"allowNamespace\""))' | tee /dev/stderr)
+    yq 'any(contains("allow-k8s-namespace=\"allowNamespace\""))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("deny-namespace=\"denyNamespace\""))' | tee /dev/stderr)
+    yq 'any(contains("deny-k8s-namespace=\"denyNamespace\""))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -477,24 +477,24 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("consul-namespace"))' | tee /dev/stderr)
+    yq 'any(contains("consul-destination-namespace"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("enable-namespace-mirroring"))' | tee /dev/stderr)
+    yq 'any(contains("enable-k8s-namespace-mirroring"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("mirroring-prefix"))' | tee /dev/stderr)
+    yq 'any(contains("k8s-namespace-mirroring-prefix"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
-@test "connectInject/Deployment: namespace options set with .global.consulNamespacesEnabled=true" {
+@test "connectInject/Deployment: namespace options set with .global.enableConsulNamespaces=true" {
   cd `chart_dir`
   local object=$(helm template \
       -x templates/connect-inject-deployment.yaml  \
       --set 'connectInject.enabled=true' \
-      --set 'global.consulNamespacesEnabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
@@ -503,25 +503,25 @@ load _helpers
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("consul-namespace=default"))' | tee /dev/stderr)
+    yq 'any(contains("consul-destination-namespace=default"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("enable-namespace-mirroring"))' | tee /dev/stderr)
+    yq 'any(contains("enable-k8s-namespace-mirroring"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("mirroring-prefix"))' | tee /dev/stderr)
+    yq 'any(contains("k8s-namespace-mirroring-prefix"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
-@test "connectInject/Deployment: mirroring options set with .connectInject.consulNamespaces.mirrorK8S=true" {
+@test "connectInject/Deployment: mirroring options set with .connectInject.consulNamespaces.mirroringK8S=true" {
   cd `chart_dir`
   local object=$(helm template \
       -x templates/connect-inject-deployment.yaml  \
       --set 'connectInject.enabled=true' \
-      --set 'global.consulNamespacesEnabled=true' \
-      --set 'connectInject.consulNamespaces.mirrorK8S=true' \
+      --set 'global.enableConsulNamespaces=true' \
+      --set 'connectInject.consulNamespaces.mirroringK8S=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
@@ -530,26 +530,26 @@ load _helpers
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("consul-namespace=default"))' | tee /dev/stderr)
+    yq 'any(contains("consul-destination-namespace=default"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("enable-namespace-mirroring=true"))' | tee /dev/stderr)
+    yq 'any(contains("enable-k8s-namespace-mirroring=true"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("mirroring-prefix"))' | tee /dev/stderr)
+    yq 'any(contains("k8s-namespace-mirroring-prefix"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
-@test "connectInject/Deployment: prefix can be set with .connectInject.consulNamespaces.mirroringPrefix" {
+@test "connectInject/Deployment: prefix can be set with .connectInject.consulNamespaces.mirroringK8SPrefix" {
   cd `chart_dir`
   local object=$(helm template \
       -x templates/connect-inject-deployment.yaml  \
       --set 'connectInject.enabled=true' \
-      --set 'global.consulNamespacesEnabled=true' \
-      --set 'connectInject.consulNamespaces.mirrorK8S=true' \
-      --set 'connectInject.consulNamespaces.mirroringPrefix=k8s-' \
+      --set 'global.enableConsulNamespaces=true' \
+      --set 'connectInject.consulNamespaces.mirroringK8S=true' \
+      --set 'connectInject.consulNamespaces.mirroringK8SPrefix=k8s-' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
@@ -558,15 +558,15 @@ load _helpers
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("consul-namespace=default"))' | tee /dev/stderr)
+    yq 'any(contains("consul-destination-namespace=default"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("enable-namespace-mirroring=true"))' | tee /dev/stderr)
+    yq 'any(contains("enable-k8s-namespace-mirroring=true"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("mirroring-prefix=k8s-"))' | tee /dev/stderr)
+    yq 'any(contains("k8s-namespace-mirroring-prefix=k8s-"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -588,7 +588,7 @@ load _helpers
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/connect-inject-deployment.yaml  \
-      --set 'global.consulNamespacesEnabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
       --set 'connectInject.enabled=true' \
       --set 'connectInject.aclInjectToken.secretKey=bar' \
       . | tee /dev/stderr |
@@ -600,7 +600,7 @@ load _helpers
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/connect-inject-deployment.yaml  \
-      --set 'global.consulNamespacesEnabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
       --set 'connectInject.enabled=true' \
       --set 'connectInject.aclInjectToken.secretName=foo' \
       . | tee /dev/stderr |
@@ -612,7 +612,7 @@ load _helpers
   cd `chart_dir`
   local object=$(helm template \
       -x templates/connect-inject-deployment.yaml  \
-      --set 'global.consulNamespacesEnabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
       --set 'connectInject.enabled=true' \
       --set 'connectInject.aclInjectToken.secretName=foo' \
       --set 'connectInject.aclInjectToken.secretKey=bar' \
@@ -636,7 +636,7 @@ load _helpers
   local object=$(helm template \
       -x templates/connect-inject-deployment.yaml \
       --set 'connectInject.enabled=true' \
-      --set 'global.consulNamespacesEnabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
       --set 'global.bootstrapACLs=true' \
       . | tee /dev/stderr |
       yq '[.spec.template.spec.containers[0].env[].name] ' | tee /dev/stderr)
@@ -655,7 +655,7 @@ load _helpers
   local object=$(helm template \
       -x templates/connect-inject-deployment.yaml \
       --set 'connectInject.enabled=true' \
-      --set 'global.consulNamespacesEnabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
       --set 'global.bootstrapACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.initContainers[0]' | tee /dev/stderr)
@@ -677,7 +677,7 @@ load _helpers
   local actual=$(helm template \
       -x templates/connect-inject-deployment.yaml \
       --set 'connectInject.enabled=true' \
-      --set 'global.consulNamespacesEnabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
       . | tee /dev/stderr |
       yq '[.spec.template.spec.containers[0].env[].name] | any(contains("CONSUL_HTTP_ADDR"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -688,7 +688,7 @@ load _helpers
   local object=$(helm template \
       -x templates/connect-inject-deployment.yaml \
       --set 'connectInject.enabled=true' \
-      --set 'global.consulNamespacesEnabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
       yq '[.spec.template.spec.containers[0].env[].name] ' | tee /dev/stderr)
@@ -720,7 +720,7 @@ load _helpers
   local actual=$(helm template \
       -x templates/connect-inject-deployment.yaml \
       --set 'connectInject.enabled=true' \
-      --set 'global.consulNamespacesEnabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
       . | tee /dev/stderr |
       yq '[.spec.template.spec.containers[0].env[].name] | any(contains("HOST_IP"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]

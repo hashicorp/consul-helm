@@ -112,13 +112,13 @@ global:
     # clients and servers and only accept HTTPS connections.
     httpsOnly: true
 
-  # [Enterprise Only] consulNamespacesEnabled indicates that you are running
+  # [Enterprise Only] enableConsulNamespaces indicates that you are running
   # Consul Enterprise v1.7+ with a valid Consul Enterprise license and would like to
   # make use of configuration beyond registering everything into the `default` Consul
   # namespace. Requires consul-k8s v0.12+.
   # Additional configuration options are found in the `consulNamespaces` section
   # of both the catalog sync and connect injector.
-  consulNamespacesEnabled: false
+  enableConsulNamespaces: false
 
 # Server, when enabled, configures a server cluster to run. This should
 # be disabled if you plan on connecting to a Consul cluster external to
@@ -438,7 +438,7 @@ syncCatalog:
   # `*` is not supported because then nothing would be allowed to sync.
   # Requires consul-k8s v0.12+.
   #
-  # For example, if `k8sAllowNamespaces is `["*"]` and k8sDenyNamespaces is
+  # For example, if `k8sAllowNamespaces` is `["*"]` and `k8sDenyNamespaces` is
   # `["namespace1", "namespace2"]`, then all k8s namespaces besides "namespace1"
   # and "namespace2" will be synced.
   k8sDenyNamespaces: ["kube-system", "kube-public"]
@@ -451,26 +451,26 @@ syncCatalog:
 
   # [Enterprise Only] These settings manage the catalog sync's interaction with
   # Consul namespaces (requires consul-ent v1.7+ and consul-k8s v0.12+).
-  # Also, `global.consulNamespacesEnabled` must be true.
+  # Also, `global.enableConsulNamespaces` must be true.
   consulNamespaces:
     # consulDestinationNamespace is the name of the Consul namespace to register all
     # k8s services into. If the Consul namespace does not already exist,
-    # it will be created. This will be ignored if `mirrorK8S` is true.
+    # it will be created. This will be ignored if `mirroringK8S` is true.
     consulDestinationNamespace: "default"
 
-    # mirrorK8S causes k8s services to be registered into a Consul namespace
+    # mirroringK8S causes k8s services to be registered into a Consul namespace
     # of the same name as their k8s namespace, optionally prefixed if
-    # `mirroringPrefix` is set below. If the Consul namespace does not
+    # `mirroringK8SPrefix` is set below. If the Consul namespace does not
     # already exist, it will be created. Turning this on overrides the
     # `consulDestinationNamespace` setting.
     # `addK8SNamespaceSuffix` may no longer be needed if enabling this option.
-    mirrorK8S: false
+    mirroringK8S: false
 
-    # If `mirrorK8S` is set to true, `mirroringPrefix` allows each Consul namespace
-    # to be given a prefix. For example, if `mirroringPrefix` is set to "k8s-", a
+    # If `mirroringK8S` is set to true, `mirroringK8SPrefix` allows each Consul namespace
+    # to be given a prefix. For example, if `mirroringK8SPrefix` is set to "k8s-", a
     # service in the k8s `staging` namespace will be registered into the
     # `k8s-staging` Consul namespace.
-    mirroringPrefix: ""
+    mirroringK8SPrefix: ""
 
   # addK8SNamespaceSuffix appends Kubernetes namespace suffix to
   # each service name synced to Consul, separated by a dash.
@@ -582,25 +582,25 @@ connectInject:
 
   # [Enterprise Only] These settings manage the connect injector's interaction with
   # Consul namespaces (requires consul-ent v1.7+ and consul-k8s v0.12+).
-  # Also, `global.consulNamespacesEnabled` must be true.
+  # Also, `global.enableConsulNamespaces` must be true.
   consulNamespaces:
     # consulDestinationNamespace is the name of the Consul namespace to register all
     # k8s services into. If the Consul namespace does not already exist,
-    # it will be created. This will be ignored if `mirrorK8S` is true.
+    # it will be created. This will be ignored if `mirroringK8S` is true.
     consulDestinationNamespace: "default"
 
-    # mirrorK8S causes k8s services to be registered into a Consul namespace
+    # mirroringK8S causes k8s services to be registered into a Consul namespace
     # of the same name as their k8s namespace, optionally prefixed if
-    # `mirroringPrefix` is set below. If the Consul namespace does not
+    # `mirroringK8SPrefix` is set below. If the Consul namespace does not
     # already exist, it will be created. Turning this on overrides the
     # `consulDestinationNamespace` setting.
-    mirrorK8S: false
+    mirroringK8S: false
 
-    # If `mirrorK8S` is set to true, `mirroringPrefix` allows each Consul namespace
-    # to be given a prefix. For example, if `mirroringPrefix` is set to "k8s-", a
+    # If `mirroringK8S` is set to true, `mirroringK8SPrefix` allows each Consul namespace
+    # to be given a prefix. For example, if `mirroringK8SPrefix` is set to "k8s-", a
     # service in the k8s `staging` namespace will be registered into the
     # `k8s-staging` Consul namespace.
-    mirroringPrefix: ""
+    mirroringK8SPrefix: ""
 
   # The certs section configures how the webhook TLS certs are configured.
   # These are the TLS certs for the Kube apiserver communicating to the

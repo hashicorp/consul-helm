@@ -89,15 +89,15 @@ spec:
                 {{- if not (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) }}
                 -create-client-token=false \
                 {{- end }}
-                {{- if .Values.global.consulNamespacesEnabled }}
+                {{- if .Values.global.enableConsulNamespaces }}
                 -enable-namespaces=true \
                 {{- if .Values.syncCatalog.consulNamespaces.consulDestinationNamespace }}
-                -consul-sync-namespace={{ .Values.syncCatalog.consulNamespaces.consulDestinationNamespace }} \
+                -consul-sync-destination-namespace={{ .Values.syncCatalog.consulNamespaces.consulDestinationNamespace }} \
                 {{- end }}
-                {{- if .Values.syncCatalog.consulNamespaces.mirrorK8S }}
-                -enable-sync-namespace-mirroring=true \
-                {{- if .Values.syncCatalog.consulNamespaces.mirroringPrefix }}
-                -sync-mirroring-prefix={{ .Values.syncCatalog.consulNamespaces.mirroringPrefix }} \
+                {{- if .Values.syncCatalog.consulNamespaces.mirroringK8S }}
+                -enable-sync-k8s-namespace-mirroring=true \
+                {{- if .Values.syncCatalog.consulNamespaces.mirroringK8SPrefix }}
+                -sync-k8s-namespace-mirroring-prefix={{ .Values.syncCatalog.consulNamespaces.mirroringK8SPrefix }} \
                 {{- end }}
                 {{- end }}
                 {{- end }}

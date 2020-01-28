@@ -250,24 +250,24 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("consul-sync-namespace"))' | tee /dev/stderr)
+    yq 'any(contains("consul-sync-destination-namespace"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("enable-sync-namespace-mirroring"))' | tee /dev/stderr)
+    yq 'any(contains("enable-sync-k8s-namespace-mirroring"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("sync-mirroring-prefix"))' | tee /dev/stderr)
+    yq 'any(contains("sync-k8s-namespace-mirroring-prefix"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
-@test "serverACLInit/Job: namespace options set with .global.consulNamespacesEnabled=true" {
+@test "serverACLInit/Job: namespace options set with .global.enableConsulNamespaces=true" {
   cd `chart_dir`
   local object=$(helm template \
       -x templates/server-acl-init-job.yaml  \
       --set 'global.bootstrapACLs=true' \
-      --set 'global.consulNamespacesEnabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
@@ -276,25 +276,25 @@ load _helpers
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("consul-sync-namespace=default"))' | tee /dev/stderr)
+    yq 'any(contains("consul-sync-destination-namespace=default"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("enable-sync-namespace-mirroring"))' | tee /dev/stderr)
+    yq 'any(contains("enable-sync-k8s-namespace-mirroring"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("sync-mirroring-prefix"))' | tee /dev/stderr)
+    yq 'any(contains("sync-k8s-namespace-mirroring-prefix"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
-@test "serverACLInit/Job: mirroring options set with .syncCatalog.consulNamespaces.mirrorK8S=true" {
+@test "serverACLInit/Job: mirroring options set with .syncCatalog.consulNamespaces.mirroringK8S=true" {
   cd `chart_dir`
   local object=$(helm template \
       -x templates/server-acl-init-job.yaml  \
       --set 'global.bootstrapACLs=true' \
-      --set 'global.consulNamespacesEnabled=true' \
-      --set 'syncCatalog.consulNamespaces.mirrorK8S=true' \
+      --set 'global.enableConsulNamespaces=true' \
+      --set 'syncCatalog.consulNamespaces.mirroringK8S=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
@@ -303,26 +303,26 @@ load _helpers
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("consul-sync-namespace=default"))' | tee /dev/stderr)
+    yq 'any(contains("consul-sync-destination-namespace=default"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("enable-sync-namespace-mirroring=true"))' | tee /dev/stderr)
+    yq 'any(contains("enable-sync-k8s-namespace-mirroring=true"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("sync-mirroring-prefix"))' | tee /dev/stderr)
+    yq 'any(contains("sync-k8s-namespace-mirroring-prefix"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
-@test "serverACLInit/Job: prefix can be set with .syncCatalog.consulNamespaces.mirroringPrefix" {
+@test "serverACLInit/Job: prefix can be set with .syncCatalog.consulNamespaces.mirroringK8SPrefix" {
   cd `chart_dir`
   local object=$(helm template \
       -x templates/server-acl-init-job.yaml  \
       --set 'global.bootstrapACLs=true' \
-      --set 'global.consulNamespacesEnabled=true' \
-      --set 'syncCatalog.consulNamespaces.mirrorK8S=true' \
-      --set 'syncCatalog.consulNamespaces.mirroringPrefix=k8s-' \
+      --set 'global.enableConsulNamespaces=true' \
+      --set 'syncCatalog.consulNamespaces.mirroringK8S=true' \
+      --set 'syncCatalog.consulNamespaces.mirroringK8SPrefix=k8s-' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
@@ -331,14 +331,14 @@ load _helpers
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("consul-sync-namespace=default"))' | tee /dev/stderr)
+    yq 'any(contains("consul-sync-destination-namespace=default"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("enable-sync-namespace-mirroring=true"))' | tee /dev/stderr)
+    yq 'any(contains("enable-sync-k8s-namespace-mirroring=true"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("sync-mirroring-prefix=k8s-"))' | tee /dev/stderr)
+    yq 'any(contains("sync-k8s-namespace-mirroring-prefix=k8s-"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }

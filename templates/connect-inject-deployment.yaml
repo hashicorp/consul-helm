@@ -42,7 +42,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             {{- /* An ACL token is only necessary for the connect injector if namespaces are enabled */}}
-            {{- if .Values.global.consulNamespacesEnabled }}
+            {{- if .Values.global.enableConsulNamespaces }}
             - name: HOST_IP
               valueFrom:
                 fieldRef:
@@ -99,20 +99,20 @@ spec:
                 -default-protocol="{{ .Values.connectInject.centralConfig.defaultProtocol }}" \
                 {{- end }}
                 {{- range $value := .Values.connectInject.k8sAllowNamespaces }}
-                -allow-namespace="{{ $value }}" \
+                -allow-k8s-namespace="{{ $value }}" \
                 {{- end }}
                 {{- range $value := .Values.connectInject.k8sDenyNamespaces }}
-                -deny-namespace="{{ $value }}" \
+                -deny-k8s-namespace="{{ $value }}" \
                 {{- end }}
-                {{- if .Values.global.consulNamespacesEnabled }}
+                {{- if .Values.global.enableConsulNamespaces }}
                 -enable-namespaces=true \
                 {{- if .Values.connectInject.consulNamespaces.consulDestinationNamespace }}
-                -consul-namespace={{ .Values.connectInject.consulNamespaces.consulDestinationNamespace }} \
+                -consul-destination-namespace={{ .Values.connectInject.consulNamespaces.consulDestinationNamespace }} \
                 {{- end }}
-                {{- if .Values.connectInject.consulNamespaces.mirrorK8S }}
-                -enable-namespace-mirroring=true \
-                {{- if .Values.connectInject.consulNamespaces.mirroringPrefix }}
-                -mirroring-prefix={{ .Values.connectInject.consulNamespaces.mirroringPrefix }} \
+                {{- if .Values.connectInject.consulNamespaces.mirroringK8S }}
+                -enable-k8s-namespace-mirroring=true \
+                {{- if .Values.connectInject.consulNamespaces.mirroringK8SPrefix }}
+                -k8s-namespace-mirroring-prefix={{ .Values.connectInject.consulNamespaces.mirroringK8SPrefix }} \
                 {{- end }}
                 {{- end }}
                 {{- end }}
@@ -169,7 +169,7 @@ spec:
             secretName: {{ template "consul.fullname" . }}-ca-cert
         {{- end }}
       {{- end }}
-      {{- if and .Values.global.bootstrapACLs .Values.global.consulNamespacesEnabled }}
+      {{- if and .Values.global.bootstrapACLs .Values.global.enableConsulNamespaces }}
       initContainers:
       - name: injector-acl-init
         image: {{ .Values.global.imageK8S }}
