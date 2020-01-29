@@ -1,0 +1,19 @@
+{{- if (and (and .Values.snapshot.enabled .Values.snapshot.storage.enabled) (not .Values.snapshot.storage.existingClaim)) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ template "consul.fullname" . }}-snapshot
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  accessModes:
+    - {{ .Values.snapshot.storage.accessMode | quote}}
+  storageClassName: {{ .Values.snapshot.storage.storageClassName | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.snapshot.storage.size }}
+{{- end }}

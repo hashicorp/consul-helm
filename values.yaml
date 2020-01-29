@@ -43,6 +43,9 @@ global:
   # If using Consul Enterprise namespaces, must be >= 0.12.
   imageK8S: "hashicorp/consul-k8s:0.12.0"
 
+  # This image is used for creating snapshots with cronjob. It creates snapshot using te consul http api. The cronjob can upload to s3 compatible storage.
+  imageSnapshot: "xueshanf/awscli:3.10-alpine"
+
   # datacenter is the name of the datacenter that the agents should register
   # as. This can't be changed once the Consul cluster is up and running
   # since Consul doesn't support an automatic way to change this value
@@ -226,6 +229,52 @@ server:
     # http_proxy: http://localhost:3128,
     # https_proxy: http://localhost:3128,
     # no_proxy: internal.domain.com
+
+# This will install a CronJob that will create snapshots of the consul leader, via the http API. Snapshots can be saved to a PVC if you configure storage. It will also upload it to s3 compatible storage if you provide, at a minimum, a bucket name.
+snapshot:
+  enabled: false
+  image: null
+  annotations: null
+
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+
+  nodeSelector: null
+  affinity: null
+  tolerations: ""
+  resources: null
+
+  # You need to at least provide a bucket name
+  s3:
+    endpoint: null
+    region: null
+    bucket: null
+    access_key: null
+
+  extraEnvironmentVars: {}
+    # AWS_ACCESS_KEY: foo
+    # AWS_DEFAULT_REGION: us-east-1
+
+  extraSecretEnvironmentVars: []
+    # - envName: AWS_SECRET_ACCESS_KEY
+    #   secretName: consul-snapshot
+    #   secretKey: AWS_SECRET_ACCESS_KEY
+
+  # Start cleaning up backups from the pvc after this many days:
+  backup_retention: 30
+
+  # https://www.consul.io/docs/commands/snapshot/save.html#stale
+  allow_stale: false
+
+  # Provide an existing claim. If you leave it as null, one will be created for you, depending on the values passed to storage, storageClassName, and accessMode
+  storage:
+    enabled: false
+    existingClaim: null
+    size: 10Gi
+    storageClassName: null
+    accessMode: ReadWriteMany
 
 # Client, when enabled, configures Consul clients to run on every node
 # within the Kube cluster. The current deployment model follows a traditional

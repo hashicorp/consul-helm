@@ -1,0 +1,235 @@
+# This CronJob will save snapshots to a PVC. It can also upload to s3 compatible storage
+{{- if (or (and (ne (.Values.snapshot.enabled | toString) "-") .Values.snapshot.enabled) (and (eq (.Values.snapshot.enabled | toString) "-") .Values.global.enabled)) }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ template "consul.fullname" . }}-snapshot
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "consul.name" . }}-snapshot
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  schedule: "{{ .Values.snapshot.schedule }}"
+  {{- with .Values.snapshot.concurrencyPolicy }}
+  concurrencyPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.snapshot.failedJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.snapshot.successfulJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ . }}
+  {{- end }}
+  jobTemplate:
+    metadata:
+      labels:
+        app: {{ template "consul.name" . }}-snapshot
+        chart: {{ template "consul.chart" . }}
+        release: {{ .Release.Name }}
+        component: snapshot
+      annotations:
+        "consul.hashicorp.com/connect-inject": "false"
+        {{- if .Values.snapshot.annotations }}
+          {{- tpl .Values.snapshot.annotations . | nindent 8 }}
+        {{- end }}
+    spec:
+      template:
+        metadata:
+          labels:
+            app: {{ template "consul.name" . }}-snapshot
+            chart: {{ template "consul.chart" . }}
+            release: {{ .Release.Name }}
+            component: snapshot
+          annotations:
+            "consul.hashicorp.com/connect-inject": "false"
+            {{- if .Values.snapshot.annotations }}
+              {{- tpl .Values.snapshot.annotations . | nindent 12 }}
+            {{- end }}
+        spec:
+          restartPolicy: OnFailure
+          volumes:
+            - name: snapshot
+              {{- if .Values.snapshot.storage.enabled }}
+              persistentVolumeClaim:
+                claimName: {{ default (printf "%s-snapshot" (include "consul.fullname" .) ) .Values.snapshot.storage.existingClaim }}
+              {{- else }}
+              emptyDir:
+                medium: "Memory"
+              {{- end }}
+            {{- if .Values.global.tls.enabled }}
+            - name: tls-ca-cert
+              secret:
+                secretName: {{ template "consul.fullname" . }}-ca-cert
+            - name: tls-ca-key
+              secret:
+                secretName: {{ template "consul.fullname" . }}-ca-key
+            - name: tls-client-cert
+              emptyDir:
+                # We're using tmpfs here so that
+                # client certs are not written to disk
+                medium: "Memory"
+            {{- end }}
+            {{- if .Values.global.bootstrapACLs }}
+              # the snapshot command needs a management token if acls are being used
+            - name: bootstrap-acl-token
+              secret:
+                secretName: {{ template "consul.fullname" . }}-bootstrap-acl-token
+            {{- end }}
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+          serviceAccountName: {{ template "consul.fullname" . }}-snapshot
+          containers:
+            - name: consul
+              image: "{{ default .Values.global.imageSnapshot .Values.snapshot.image }}"
+              securityContext:
+                runAsUser: 100
+                allowPrivilegeEscalation: false
+              env:
+                - name: NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                {{- include "consul.extraEnvironmentVars" .Values.snapshot | nindent 16 }}
+                {{- include "consul.extraSecretEnvironmentVars" .Values.snapshot | nindent 16 }}
+              command:
+                - "/bin/sh"
+                - "-ec"
+                - |
+                  CONSUL_FULLNAME="{{template "consul.fullname" . }}"
+                  YYYYMMDD="$(date --utc +%Y%m%d)"
+                  ISODATE="$(date --utc +%Y%m%dT%H%M%SZ)"
+                  SNAPSHOT_FILENAME="${CONSUL_FULLNAME}_${ISODATE}.tgz"
+                  FILENAME="${CONSUL_FULLNAME}/${YYYYMMDD}/${SNAPSHOT_FILENAME}"
+                  FILE="/consul/snapshot/${FILENAME}"
+
+                  if [ ! -d "/consul/snapshot/${CONSUL_FULLNAME}/${YYYYMMDD}" ]; then
+                    printf "creating directory: /consul/snapshot/${CONSUL_FULLNAME}/${YYYYMMDD}\n"
+                    mkdir -p "/consul/snapshot/${CONSUL_FULLNAME}/${YYYYMMDD}"
+                  fi
+
+                  {{- if .Values.global.tls.enabled }}
+                  : "${CONSUL_HTTP_ADDR:=https://${CONSUL_FULLNAME}-server:8501}"
+                  {{- else }}
+                  : "${CONSUL_HTTP_ADDR:=http://${CONSUL_FULLNAME}-server:8500}"
+                  {{- end }}
+
+                  printf "saving snapshot to ${FILE}\n"
+                  curl -f \
+                    ${CONSUL_HTTP_ADDR}/v1/snapshot?dc={{ .Values.global.datacenter }}{{- if .Values.snapshot.allow_stale}}&stale=true{{- end }} \
+                    {{- if .Values.global.bootstrapACLs }}
+                    --header "X-CONSUL-TOKEN: $(cat /consul/bootstrap-acl-token/token)" \
+                    {{- end }}
+                    {{- if .Values.global.tls.enabled }}
+                    --cacert "/consul/tls/ca/tls.crt" \
+                    --cert "/consul/tls/client/tls.crt" \
+                    --key "/consul/tls/client/tls.key" \
+                    {{- end }}
+                    -o "${FILE}"
+
+                  {{- if and (gt (len .Values.snapshot.s3) 0) .Values.snapshot.s3.bucket }}
+                  BUCKET="{{ .Values.snapshot.s3.bucket }}"
+                  {{- if .Values.snapshot.s3.region }}
+                  : "${AWS_DEFAULT_REGION:={{ .Values.snapshot.s3.region }}}"
+                  {{- end}}
+                  {{- if .Values.snapshot.s3.access_key }}
+                  : "${AWS_ACCESS_KEY_ID:={{ .Values.snapshot.s3.access_key }}}"
+                  {{- end }}
+
+                  printf "uploading snapshot to s3://${BUCKET}/${FILENAME}\n"
+                  aws \
+                    {{- if .Values.snapshot.s3.endpoint }}
+                    --endpoint "{{ .Values.snapshot.s3.endpoint }}" \
+                    {{- end }}
+                    s3 cp ${FILE} \
+                    "s3://${BUCKET}/${FILENAME}"
+                  {{- end }}
+                  #
+                  # delete old backups
+                  #
+                  {{- if .Values.snapshot.backup_retention }}
+                  find "/consul/snapshot/${CONSUL_FULLNAME}" \
+                    -type d \
+                    -mtime +{{ .Values.snapshot.backup_retention }} \
+                    -exec rm -r {} \;
+                  {{- end }}
+              volumeMounts:
+                - name: snapshot
+                  mountPath: /consul/snapshot
+                {{- if .Values.global.tls.enabled }}
+                - name: tls-ca-cert
+                  mountPath: /consul/tls/ca
+                  readOnly: true
+                - name: tls-client-cert
+                  mountPath: /consul/tls/client
+                  readOnly: true
+                {{- end }}
+                {{- if .Values.global.bootstrapACLs}}
+                - name: bootstrap-acl-token
+                  mountPath: /consul/bootstrap-acl-token
+                {{- end }}
+              {{- if .Values.snapshot.resources }}
+              resources:
+                {{ tpl .Values.snapshot.resources . | nindent 16 | trim }}
+              {{- end }}
+          initContainers:
+            - name: chown-snapshot-dir
+              image: {{ default .Values.global.imageSnapshot .Values.snapshot.image }}
+              securityContext:
+                runAsUser: 0
+              command:
+                - "/bin/sh"
+                - "-ec"
+                - |
+                  if [ ! -d /consul/snapshot]; then
+                    mkdir -p /consul/snapshot
+                  fi
+                  chown -R 100:1000 /consul/snapshot
+              volumeMounts:
+                - name: snapshot
+                  mountPath: /consul/snapshot
+            {{- if .Values.global.tls.enabled }}
+            - name: client-tls-init
+              image: "{{ default .Values.global.image .Values.server.image }}"
+              env:
+              - name: HOST_IP
+                valueFrom:
+                  fieldRef:
+                    fieldPath: status.hostIP
+              command:
+                - "/bin/sh"
+                - "-ec"
+                - |
+                  cd /consul/tls/client
+                  consul tls cert create -client \
+                    -additional-ipaddress=${HOST_IP} \
+                    -dc={{ .Values.global.datacenter }} \
+                    -domain={{ .Values.global.domain }} \
+                    -ca=/consul/tls/ca/cert/tls.crt \
+                    -key=/consul/tls/ca/key/tls.key
+                  mv {{ .Values.global.datacenter }}-client-{{ .Values.global.domain }}-0.pem tls.crt
+                  mv {{ .Values.global.datacenter }}-client-{{ .Values.global.domain }}-0-key.pem tls.key
+              volumeMounts:
+                - name: tls-client-cert
+                  mountPath: /consul/tls/client
+                - name: tls-ca-cert
+                  mountPath: /consul/tls/ca/cert
+                  readOnly: true
+                - name: tls-ca-key
+                  mountPath: /consul/tls/ca/key
+                  readOnly: true
+            {{- end }}
+        {{- if .Values.snapshot.nodeSelector }}
+          nodeSelector:
+            {{ tpl .Values.snapshot.nodeSelector . | nindent 10 | trim }}
+        {{- end }}
+        {{- if .Values.snapshot.affinity }}
+          affinity:
+            {{ tpl .Values.snapshot.affinity . | nindent 12 | trim }}
+        {{- end }}
+        {{- if .Values.snapshot.tolerations }}
+          tolerations:
+            {{ tpl .Values.snapshot.tolerations . | nindent 10 | trim }}
+        {{- end }}
+{{- end }}

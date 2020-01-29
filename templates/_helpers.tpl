@@ -61,3 +61,18 @@ Inject extra environment vars in the format key:value, if populated
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Inject extra environment populated by secrets, if populated
+*/}}
+{{- define "consul.extraSecretEnvironmentVars" -}}
+{{- if .extraSecretEnvironmentVars -}}
+{{- range .extraSecretEnvironmentVars }}
+- name: {{ .envName }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ .secretName }}
+      key: {{ .secretKey }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
