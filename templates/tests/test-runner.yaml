@@ -16,7 +16,11 @@ spec:
   volumes:
     - name: tls-ca-cert
       secret:
+        {{- if .Values.global.tls.caCert.secretName }}
+        secretName: {{ .Values.global.tls.caCert.secretName }}
+        {{- else }}
         secretName: {{ template "consul.fullname" . }}-ca-cert
+        {{- end }}
   {{- end }}
   containers:
     - name: consul-test
@@ -30,7 +34,7 @@ spec:
         - name: CONSUL_HTTP_ADDR
           value: https://$(HOST_IP):8501
         - name: CONSUL_CACERT
-          value: /consul/tls/ca/tls.crt
+          value: /consul/tls/ca/{{ .Values.global.tls.caCert.secretKey }}
         {{- else }}
         - name: CONSUL_HTTP_ADDR
           value: http://$(HOST_IP):8500

@@ -409,3 +409,26 @@ load _helpers
       yq '.spec.template.spec.containers[0].volumeMounts | length' | tee /dev/stderr)
   [ "${actual}" = "2" ]
 }
+
+@test "connectInject/Deployment: can overwrite CA secret with the provided one" {
+  cd `chart_dir`
+  local ca_cert_volume=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.caCert.secretName=foo-ca-cert' \
+      --set 'global.tls.caCert.secretKey=key' \
+      --set 'global.tls.caKey.secretName=foo-ca-key' \
+      --set 'global.tls.caKey.secretKey=key' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.volumes[] | select(.name=="consul-ca-cert")' | tee /dev/stderr)
+
+  # check that the provided ca cert secret is attached as a volume
+  local actual
+  actual=$(echo $ca_cert_volume | jq -r '.secret.secretName' | tee /dev/stderr)
+  [ "${actual}" = "foo-ca-cert" ]
+
+  # check that the volume uses the provided secret key
+  actual=$(echo $ca_cert_volume | jq -r '.secret.items[0].key' | tee /dev/stderr)
+  [ "${actual}" = "key" ]
+}
