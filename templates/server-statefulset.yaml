@@ -90,7 +90,13 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            {{- if (and .Values.global.gossipEncryption.secretName .Values.global.gossipEncryption.secretKey) }}
+            {{- if .Values.global.gossipEncryption.secret }}
+            - name: GOSSIP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "consul.fullname" . }}-server
+                  key: gossip-key
+            {{- else if (and .Values.global.gossipEncryption.secretName .Values.global.gossipEncryption.secretKey) }}
             - name: GOSSIP_KEY
               valueFrom:
                 secretKeyRef:
