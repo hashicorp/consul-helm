@@ -48,6 +48,7 @@ load _helpers
   local actual=$(helm template \
       -x templates/ui-service.yaml  \
       --set 'ui.service.enabled=false' \
+      --set 'ui.ingress.enabled=false' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
@@ -72,6 +73,17 @@ load _helpers
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
+}
+
+@test "ui/Service: force enabled when ingress is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ui-service.yaml  \
+      --set 'ui.service.enabled=false' \
+      --set 'ui.ingress.enabled=true' \
+      . | tee /dev/stderr |
+      yq 'length > 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
 }
 
 @test "ui/Service: no type by default" {

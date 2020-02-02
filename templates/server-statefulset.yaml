@@ -144,7 +144,7 @@ spec:
                 -datacenter={{ .Values.global.datacenter }} \
                 -data-dir=/consul/data \
                 -domain={{ .Values.global.domain }} \
-                {{- if (and .Values.global.gossipEncryption.secretName .Values.global.gossipEncryption.secretKey) }}
+                {{- if (or .Values.global.gossipEncryption.secret (and .Values.global.gossipEncryption.secretName .Values.global.gossipEncryption.secretKey)) }}
                 -encrypt="${GOSSIP_KEY}" \
                 {{- end }}
                 {{- if .Values.server.connect }}

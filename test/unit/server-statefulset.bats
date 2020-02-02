@@ -400,12 +400,22 @@ load _helpers
   [ "${actual}" = "" ]
 }
 
-@test "server/StatefulSet: gossip environment variable present in server StatefulSet when all config is provided" {
+@test "server/StatefulSet: gossip environment variable present in server StatefulSet when secretName and secretKey is provided" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/server-statefulset.yaml  \
       --set 'global.gossipEncryption.secretKey=foo' \
       --set 'global.gossipEncryption.secretName=bar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .env[] | select(.name == "GOSSIP_KEY") | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "server/StatefulSet: gossip environment variable present in server StatefulSet when secret is provided" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'global.gossipEncryption.secret=foo' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[] | select(.name=="consul") | .env[] | select(.name == "GOSSIP_KEY") | length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -420,12 +430,22 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "server/StatefulSet: encrypt CLI option present in server StatefulSet when all config is provided" {
+@test "server/StatefulSet: encrypt CLI option present in server StatefulSet when secretName and secretKey is provided" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/server-statefulset.yaml  \
       --set 'global.gossipEncryption.secretKey=foo' \
       --set 'global.gossipEncryption.secretName=bar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("encrypt")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "server/StatefulSet: encrypt CLI option present in server StatefulSet when secret is provided" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'global.gossipEncryption.secret=foo' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("encrypt")' | tee /dev/stderr)
   [ "${actual}" = "true" ]

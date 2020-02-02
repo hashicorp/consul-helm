@@ -1,0 +1,54 @@
+{{- if (and (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) (or (and (ne (.Values.ui.enabled | toString) "-") .Values.ui.enabled) (and (eq (.Values.ui.enabled | toString) "-") .Values.global.enabled)) (or (and (ne (.Values.ui.ingress.enabled | toString) "-") .Values.ui.ingress.enabled) (and (eq (.Values.ui.ingress.enabled | toString) "-") .Values.global.enabled))) }}
+{{- $root := . -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "consul.fullname" . }}-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  annotations:
+    {{- if .Values.ui.ingress.certManager }}
+    kubernetes.io/tls-acme: "true"
+    {{- end }}
+    {{- if .Values.global.tls.enabled }}
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/secure-backends: "true"
+    {{- end }}
+    {{- range $key, $value := .Values.ui.ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  rules:
+  {{- range .Values.ui.ingress.hosts }}
+  - host: {{ .name }}
+    http:
+      paths:
+      - path: {{ default "/" .path }}
+        backend:
+          serviceName: {{ template "consul.fullname" $ }}-ui
+          {{- if $root.Values.global.tls.enabled }}
+          servicePort: https
+          {{- else }}
+          servicePort: http
+          {{- end }}
+  {{- end }}
+  tls:
+  {{- range .Values.ui.ingress.hosts }}
+  {{- if (or .tls $root.Values.global.tls.enabled) }}
+  - hosts:
+  {{- if .tlsHosts }}
+  {{- range $host := .tlsHosts }}
+    - {{ $host }}
+  {{- end }}
+  {{- else }}
+    - {{ .name }}
+  {{- end }}
+    secretName: {{ .tlsSecret }}
+  {{- end }}
+  {{- end }}
+{{- end }}
