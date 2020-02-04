@@ -390,12 +390,22 @@ load _helpers
   [ "${actual}" = "" ]
 }
 
-@test "client/DaemonSet: gossip environment variable present in client DaemonSet when all config is provided" {
+@test "client/DaemonSet: gossip environment variable present in client DaemonSet when secretName and secretKey are provided" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'global.gossipEncryption.secretKey=foo' \
       --set 'global.gossipEncryption.secretName=bar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .env[] | select(.name == "GOSSIP_KEY") | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: gossip environment variable present in client DaemonSet when secret is provided" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.gossipEncryption.secret=foo' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[] | select(.name=="consul") | .env[] | select(.name == "GOSSIP_KEY") | length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -410,12 +420,22 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "client/DaemonSet: encrypt CLI option present in client DaemonSet when all config is provided" {
+@test "client/DaemonSet: encrypt CLI option present in client DaemonSet when secretName and secretKey are provided" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'global.gossipEncryption.secretKey=foo' \
       --set 'global.gossipEncryption.secretName=bar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("encrypt")' | tee /dev/stderr)
+  [ "${actual}" == "true" ]
+}
+
+@test "client/DaemonSet: encrypt CLI option present in client DaemonSet when secret is provided" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.gossipEncryption.secret=foo' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("encrypt")' | tee /dev/stderr)
   [ "${actual}" == "true" ]

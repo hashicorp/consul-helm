@@ -1,0 +1,8 @@
+version: '3'
+services:
+  bats:
+    image: webcenter/bats-helm:latest
+    volumes:
+      - ./:/code:ro
+    working_dir: /code
+    command:  ./test/unit

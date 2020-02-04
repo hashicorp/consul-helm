@@ -21,6 +21,8 @@ very quickly. These should be used for fast feedback during development.
 The acceptance tests require a Kubernetes cluster with a configured `kubectl`.
 
 ### Prequisites
+
+__You can install required on your computer:__
 * [Bats](https://github.com/bats-core/bats-core)
   ```bash
   brew install bats-core
@@ -33,6 +35,15 @@ The acceptance tests require a Kubernetes cluster with a configured `kubectl`.
   ```bash
   brew install kubernetes-helm
   ```
+
+__Or you can use docker:__
+```bash
+# To run unit test
+docker-compose run --rm bats ./test/unit
+
+# To run acceptance test
+docker-compose run --rm bats ./test/acceptance
+```
 
 ### Running The Tests
 To run the unit tests:
