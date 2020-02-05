@@ -41,7 +41,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            {{- /* An ACL token is only necessary for the connect injector if namespaces are enabled */}}
+            {{- /* A Consul client and ACL token is only necessary for the connect injector if namespaces are enabled */}}
             {{- if .Values.global.enableConsulNamespaces }}
             - name: HOST_IP
               valueFrom:

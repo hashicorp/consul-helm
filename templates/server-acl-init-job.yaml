@@ -91,6 +91,8 @@ spec:
                 {{- end }}
                 {{- if .Values.global.enableConsulNamespaces }}
                 -enable-namespaces=true \
+                {{- /* syncCatalog must be enabled to set sync flags */}}
+                {{- if (or (and (ne (.Values.syncCatalog.enabled | toString) "-") .Values.syncCatalog.enabled) (and (eq (.Values.syncCatalog.enabled | toString) "-") .Values.global.enabled)) }}
                 {{- if .Values.syncCatalog.consulNamespaces.consulDestinationNamespace }}
                 -consul-sync-destination-namespace={{ .Values.syncCatalog.consulNamespaces.consulDestinationNamespace }} \
                 {{- end }}
@@ -98,6 +100,19 @@ spec:
                 -enable-sync-k8s-namespace-mirroring=true \
                 {{- if .Values.syncCatalog.consulNamespaces.mirroringK8SPrefix }}
                 -sync-k8s-namespace-mirroring-prefix={{ .Values.syncCatalog.consulNamespaces.mirroringK8SPrefix }} \
+                {{- end }}
+                {{- end }}
+                {{- end }}
+                {{- /* connectInject must be enabled to set inject flags */}}
+                {{- if (or (and (ne (.Values.connectInject.enabled | toString) "-") .Values.connectInject.enabled) (and (eq (.Values.connectInject.enabled | toString) "-") .Values.global.enabled)) }}
+                {{- if .Values.connectInject.consulNamespaces.consulDestinationNamespace }}
+                -consul-inject-destination-namespace={{ .Values.connectInject.consulNamespaces.consulDestinationNamespace }} \
+                {{- end }}
+                {{- if .Values.connectInject.consulNamespaces.mirroringK8S }}
+                -enable-inject-k8s-namespace-mirroring=true \
+                {{- if .Values.connectInject.consulNamespaces.mirroringK8SPrefix }}
+                -inject-k8s-namespace-mirroring-prefix={{ .Values.connectInject.consulNamespaces.mirroringK8SPrefix }} \
+                {{- end }}
                 {{- end }}
                 {{- end }}
                 {{- end }}

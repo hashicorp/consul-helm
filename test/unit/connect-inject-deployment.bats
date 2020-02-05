@@ -672,6 +672,16 @@ load _helpers
 #--------------------------------------------------------------------
 # namespaces + http address
 
+@test "connectInject/Deployment: CONSUL_HTTP_ADDR env variable not set when namespaces are disabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq '[.spec.template.spec.containers[0].env[].name] | any(contains("CONSUL_HTTP_ADDR"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
 @test "connectInject/Deployment: CONSUL_HTTP_ADDR env variable set when namespaces are enabled" {
   cd `chart_dir`
   local actual=$(helm template \
