@@ -72,7 +72,7 @@ spec:
                 -allow-dns=true \
                 {{- end }}
                 {{- if .Values.connectInject.enabled }}
-                -create-inject-token=true \
+                -create-inject-auth-method=true \
                 {{- end }}
                 {{- if .Values.meshGateway.enabled }}
                 -create-mesh-gateway-token=true \
@@ -105,6 +105,7 @@ spec:
                 {{- end }}
                 {{- /* connectInject must be enabled to set inject flags */}}
                 {{- if (or (and (ne (.Values.connectInject.enabled | toString) "-") .Values.connectInject.enabled) (and (eq (.Values.connectInject.enabled | toString) "-") .Values.global.enabled)) }}
+                -create-inject-namespace-token=true \
                 {{- if .Values.connectInject.consulNamespaces.consulDestinationNamespace }}
                 -consul-inject-destination-namespace={{ .Values.connectInject.consulNamespaces.consulDestinationNamespace }} \
                 {{- end }}

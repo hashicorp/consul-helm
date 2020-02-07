@@ -572,7 +572,7 @@ connectInject:
   # sidecar injection. This list takes precedence over `k8sAllowNamespaces`.
   # `*` is not supported because then nothing would be allowed to be injected.
   #
-  # For example, if `k8sAllowNamespaces is `["*"]` and k8sDenyNamespaces is
+  # For example, if `k8sAllowNamespaces` is `["*"]` and k8sDenyNamespaces is
   # `["namespace1", "namespace2"]`, then all k8s namespaces besides "namespace1"
   # and "namespace2" will be injected.
   # Note: `namespaceSelector` takes precedence over this since it is applied first.

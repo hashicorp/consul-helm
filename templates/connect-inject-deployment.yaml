@@ -57,7 +57,7 @@ spec:
             - name: CONSUL_HTTP_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: "{{ template "consul.fullname" . }}-connect-injector-acl-token"
+                  name: "{{ template "consul.fullname" . }}-connect-inject-acl-token"
                   key: "token"
             {{- end }}
             {{- if .Values.global.tls.enabled }}

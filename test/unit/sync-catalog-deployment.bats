@@ -444,7 +444,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "syncCatalog/Deployment: can set allow and deny {
+@test "syncCatalog/Deployment: can set allow and deny namespaces {
   cd `chart_dir`
   local object=$(helm template \
       -x templates/sync-catalog-deployment.yaml  \

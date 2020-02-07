@@ -262,6 +262,10 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
+    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
     yq 'any(contains("consul-inject-destination-namespace"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
@@ -305,6 +309,10 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
+    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
     yq 'any(contains("consul-inject-destination-namespace"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
@@ -341,6 +349,10 @@ load _helpers
 
   local actual=$(echo $object |
     yq 'any(contains("sync-k8s-namespace-mirroring-prefix"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
@@ -384,6 +396,10 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
+    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
     yq 'any(contains("consul-inject-destination-namespace"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
@@ -423,6 +439,10 @@ load _helpers
   local actual=$(echo $object |
     yq 'any(contains("sync-k8s-namespace-mirroring-prefix=k8s-"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
     yq 'any(contains("consul-inject-destination-namespace"))' | tee /dev/stderr)
@@ -468,6 +488,10 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
+    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
     yq 'any(contains("consul-inject-destination-namespace"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
@@ -505,6 +529,10 @@ load _helpers
   local actual=$(echo $object |
     yq 'any(contains("sync-k8s-namespace-mirroring-prefix"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
     yq 'any(contains("consul-inject-destination-namespace"))' | tee /dev/stderr)
@@ -547,6 +575,10 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
+    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object |
     yq 'any(contains("consul-inject-destination-namespace"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
@@ -586,6 +618,10 @@ load _helpers
   local actual=$(echo $object |
     yq 'any(contains("sync-k8s-namespace-mirroring-prefix=k8s-"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
+
+  local actual=$(echo $object |
+    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
     yq 'any(contains("consul-inject-destination-namespace"))' | tee /dev/stderr)
