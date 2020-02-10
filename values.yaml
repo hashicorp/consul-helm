@@ -640,7 +640,7 @@ meshGateway:
     additionalSpec: null
 
   # Envoy image to use.
-  imageEnvoy: envoyproxy/envoy:v1.10.0
+  imageEnvoy: envoyproxy/envoy:v1.13.0
 
   # If set to true, gateway Pods will run on the host network.
   hostNetwork: false
