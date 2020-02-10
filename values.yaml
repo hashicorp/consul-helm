@@ -761,8 +761,8 @@ meshGateway:
     # Optional YAML string that will be appended to the Service spec.
     additionalSpec: null
 
-  # Envoy image to use.
-  imageEnvoy: envoyproxy/envoy:v1.10.0
+  # Envoy image to use. For Consul v1.7+, Envoy version 1.13+ is required.
+  imageEnvoy: envoyproxy/envoy:v1.13.0
 
   # If set to true, gateway Pods will run on the host network.
   hostNetwork: false
