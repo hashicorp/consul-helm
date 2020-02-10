@@ -1,5 +1,11 @@
 ## Unreleased
 
+## 0.16.2 (Jan 15, 2020)
+
+BUG FIXES:
+
+  * Fix Helm Chart version.
+
 ## 0.16.1 (Jan 14, 2020)
 
 BUG FIXES:
@@ -196,6 +202,10 @@ IMPROVEMENTS:
   * Remove the `gossipEncryption.enabled` option and instead have the implementation based on the existence of the secretName and secretKey.
 
 ## 0.7.0 (March 21, 2019)
+
+BREAKING CHANGES:
+
+  * If previously setting the release name to `consul`, you must now set `fullnameOverride: consul` in your config to prevent all resources being renamed.
 
 IMPROVEMENTS:
 
