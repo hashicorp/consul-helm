@@ -579,3 +579,29 @@ load _helpers
     yq 'any(contains("k8s-namespace-mirroring-prefix=k8s-"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# namespaces + global.bootstrapACLs
+
+@test "syncCatalog/Deployment: cross namespace policy is not added when global.bootstrapACLs=false" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/sync-catalog-deployment.yaml \
+      --set 'syncCatalog.enabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-consul-cross-namespace-acl-policy"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "syncCatalog/Deployment: cross namespace policy is added when global.bootstrapACLs=true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/sync-catalog-deployment.yaml \
+      --set 'syncCatalog.enabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
+      --set 'global.bootstrapACLs=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-consul-cross-namespace-acl-policy"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}

@@ -413,7 +413,7 @@ load _helpers
 #--------------------------------------------------------------------
 # k8sAllowNamespaces & k8sDenyNamespaces
 
-@test "connectInject/Deployment: default is allow `*`, deny nothing" {
+@test "connectInject/Deployment: default is allow '*', deny nothing" {
   cd `chart_dir`
   local object=$(helm template \
       -x templates/connect-inject-deployment.yaml  \
@@ -666,6 +666,29 @@ load _helpers
 
   local actual=$(echo $object |
       yq -r '.command | any(contains("consul-k8s acl-init"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "connectInject/Deployment: cross namespace policy is not added when global.bootstrapACLs=false" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-consul-cross-namespace-acl-policy"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "connectInject/Deployment: cross namespace policy is added when global.bootstrapACLs=true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
+      --set 'global.bootstrapACLs=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-consul-cross-namespace-acl-policy"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 

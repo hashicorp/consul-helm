@@ -134,6 +134,9 @@ spec:
                 -k8s-namespace-mirroring-prefix={{ .Values.syncCatalog.consulNamespaces.mirroringK8SPrefix }} \
                 {{- end }}
                 {{- end }}
+                {{- if .Values.global.bootstrapACLs }}
+                -consul-cross-namespace-acl-policy=cross-namespace-policy \
+                {{- end }}
                 {{- end }}
           livenessProbe:
             httpGet:

@@ -89,6 +89,7 @@ spec:
                 {{ else if .Values.global.bootstrapACLs }}
                 -acl-auth-method="{{ template "consul.fullname" . }}-k8s-auth-method" \
                 {{- end }}
+
                 {{- if .Values.global.tls.enabled }}
                 -consul-ca-cert=/consul/tls/ca/tls.crt \
                 {{- end }}
@@ -114,6 +115,9 @@ spec:
                 {{- if .Values.connectInject.consulNamespaces.mirroringK8SPrefix }}
                 -k8s-namespace-mirroring-prefix={{ .Values.connectInject.consulNamespaces.mirroringK8SPrefix }} \
                 {{- end }}
+                {{- end }}
+                {{- if .Values.global.bootstrapACLs }}
+                -consul-cross-namespace-acl-policy=cross-namespace-policy \
                 {{- end }}
                 {{- end }}
                 {{- if .Values.connectInject.certs.secretName }}
