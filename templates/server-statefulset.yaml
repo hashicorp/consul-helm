@@ -186,9 +186,17 @@ spec:
               name: https
             {{- end }}
             - containerPort: 8301
-              name: serflan
+              name: serflan-tcp
+              protocol: "TCP"
+            - containerPort: 8301
+              name: serflan-udp
+              protocol: "UDP"
             - containerPort: 8302
-              name: serfwan
+              name: serfwan-tcp
+              protocol: "TCP"
+            - containerPort: 8302
+              name: serfwan-udp
+              protocol: "UDP"
             - containerPort: 8300
               name: server
             - containerPort: 8600
