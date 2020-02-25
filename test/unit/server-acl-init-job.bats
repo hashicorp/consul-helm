@@ -212,6 +212,54 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# client.createACLToken
+
+@test "serverACLInit/Job: client acl option disabled in the absence of clients" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      --set 'client.enabled=false' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-create-client-token"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "serverACLInit/Job: client acl option enabled by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-create-client-token"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "serverACLInit/Job: client acl option enabled with even if not creating clients" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      --set 'client.enabled=false' \
+      --set 'client.createACLToken=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-create-client-token"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "serverACLInit/Job: client acl option enabled when creating clients" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      --set 'client.enabled=true' \
+      --set 'client.createACLToken=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-create-client-token"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+#--------------------------------------------------------------------
 # global.tls.enabled
 
 @test "serverACLInit/Job: sets TLS flags when global.tls.enabled" {

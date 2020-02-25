@@ -235,6 +235,11 @@ client:
   image: null
   join: null
 
+  # createACLToken is a way to force the creation of the client ACL token
+  # in the case where the client is an external deployment, such as Vault
+  # Only being considered when `global.bootstrapACLs` is set to `true`.
+  createACLToken: false
+
   # dataDirectoryHostPath is an absolute path to a directory on the host machine
   # to use as the Consul client data directory.
   # If set to the empty string or null, the Consul agent will store its data
