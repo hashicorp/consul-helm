@@ -146,7 +146,7 @@ spec:
               exec /consul-bin/consul connect envoy \
                 -mesh-gateway \
                 -register \
-                -address="${POD_IP}:{{ .Values.meshGateway.containerPort }}" \
+                -address="$(POD_IP):{{ .Values.meshGateway.containerPort }}" \
                 {{- if .Values.meshGateway.wanAddress.host }}
                 -wan-address="{{ .Values.meshGateway.wanAddress.host }}:{{ .Values.meshGateway.wanAddress.port }}" \
                 {{- else if .Values.meshGateway.wanAddress.useNodeName }}
