@@ -187,8 +187,6 @@ spec:
             {{- end }}
             - containerPort: 8301
               name: serflan
-            - containerPort: 8301
-              name: serflan
             - containerPort: 8302
               name: serfwan
             - containerPort: 8300
