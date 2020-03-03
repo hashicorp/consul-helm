@@ -111,7 +111,7 @@ spec:
               CONSUL_FULLNAME="{{template "consul.fullname" . }}"
 
               exec /bin/consul agent \
-                -advertise="${POD_IP}" \
+                -advertise=$(POD_IP) \
                 -bind=0.0.0.0 \
                 -bootstrap-expect={{ .Values.server.bootstrapExpect }} \
                 {{- if .Values.global.tls.enabled }}
