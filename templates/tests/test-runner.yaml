@@ -14,7 +14,7 @@ metadata:
 spec:
   {{- if .Values.global.tls.enabled }}
   volumes:
-    - name: tls-ca-cert
+    - name: consul-ca-cert
       secret:
         {{- if .Values.global.tls.caCert.secretName }}
         secretName: {{ .Values.global.tls.caCert.secretName }}
@@ -24,6 +24,32 @@ spec:
         items:
         - key: {{ default "tls.crt" .Values.global.tls.caCert.secretKey }}
           path: tls.crt
+    - name: consul-client-ca-cert
+      emptyDir:
+        medium: "Memory"
+  {{- end }}
+  {{- if and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt }}
+  initContainers:
+  - name: get-consul-client-ca
+    image: {{ .Values.global.imageK8S }}
+    command:
+      - "/bin/sh"
+      - "-ec"
+      - |
+        consul-k8s get-consul-client-ca \
+          -output-file=/consul/tls/client/ca/tls.crt \
+          {{- if .Values.client.join }}
+          -server-addr={{ quote (first .Values.client.join) }} \
+          -tls-server-name=server.{{ .Values.global.datacenter }}.{{ .Values.global.domain }} \
+          {{- else }}
+          -server-addr=https://{{ template "consul.fullname" . }}-server:8501 \
+          {{- end }}
+          -ca-file=/consul/tls/ca/tls.crt
+    volumeMounts:
+      - name: consul-ca-cert
+        mountPath: /consul/tls/ca
+      - name: consul-client-ca-cert
+        mountPath: /consul/tls/client/ca
   {{- end }}
   containers:
     - name: consul-test
@@ -44,9 +70,15 @@ spec:
         {{- end }}
       {{- if .Values.global.tls.enabled }}
       volumeMounts:
-        - name: tls-ca-cert
-          mountPath: /consul/tls/ca
-          readOnly: true
+      {{- if .Values.global.tls.enableAutoEncrypt }}
+      - name: consul-client-ca-cert
+        mountPath: /consul/tls/ca
+        readOnly: true
+      {{- else }}
+      - name: consul-ca-cert
+        mountPath: /consul/tls/ca
+        readOnly: true
+      {{- end }}
       {{- end }}
       command:
         - "/bin/sh"

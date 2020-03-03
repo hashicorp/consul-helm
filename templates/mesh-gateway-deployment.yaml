@@ -59,6 +59,11 @@ spec:
             items:
             - key: {{ default "tls.crt" .Values.global.tls.caCert.secretKey }}
               path: tls.crt
+        {{- if .Values.global.tls.enableAutoEncrypt }}
+        - name: consul-client-ca-cert
+          emptyDir:
+            medium: "Memory"
+        {{- end }}
         {{- end }}
       {{- if .Values.meshGateway.hostNetwork }}
       hostNetwork: {{ .Values.meshGateway.hostNetwork }}
@@ -79,6 +84,28 @@ spec:
           volumeMounts:
           - name: consul-bin
             mountPath: /consul-bin
+        {{- if (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) }}
+        - name: get-consul-client-ca
+          image: {{ .Values.global.imageK8S }}
+          command:
+            - "/bin/sh"
+            - "-ec"
+            - |
+              consul-k8s get-consul-client-ca \
+                -output-file=/consul/tls/client/ca/tls.crt \
+                {{- if .Values.client.join }}
+                -server-addr={{ quote (first .Values.client.join) }} \
+                -tls-server-name=server.{{ .Values.global.datacenter }}.{{ .Values.global.domain }} \
+                {{- else }}
+                -server-addr=https://{{ template "consul.fullname" . }}-server:8501 \
+                {{- end }}
+                -ca-file=/consul/tls/ca/tls.crt
+          volumeMounts:
+            - name: consul-ca-cert
+              mountPath: /consul/tls/ca
+            - name: consul-client-ca-cert
+              mountPath: /consul/tls/client/ca
+        {{- end }}
         {{- if .Values.global.bootstrapACLs }}
         # Wait for secret containing acl token to be ready.
         # Doesn't do anything with it but when the main container starts we
@@ -105,7 +132,11 @@ spec:
           - name: consul-bin
             mountPath: /consul-bin
           {{- if .Values.global.tls.enabled }}
+          {{- if .Values.global.tls.enableAutoEncrypt }}
+          - name: consul-client-ca-cert
+          {{- else }}
           - name: consul-ca-cert
+          {{- end }}
             mountPath: /consul/tls/ca
             readOnly: true
           {{- end }}

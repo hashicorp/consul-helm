@@ -88,6 +88,12 @@ global:
   tls:
     enabled: false
 
+    # enableAutoEncrypt turns on the auto-encrypt feature on
+    # clients and servers.
+    # It also switches consul-k8s components to retrieve the CA
+    # from the servers via the API.
+    enableAutoEncrypt: false
+
     # serverAdditionalDNSSANs is a list of additional DNS names to
     # set as Subject Alternative Names (SANs) in the server certificate.
     # This is useful when you need to access the Consul server(s) externally,

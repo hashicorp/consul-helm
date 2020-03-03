@@ -444,6 +444,17 @@ load _helpers
   [ "${actual}" != "" ]
 }
 
+@test "client/DaemonSet: client certificate volume is not present when TLS with auto-encrypt is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.enableAutoEncrypt=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.volumes[] | select(.name == "tls-client-cert")' | tee /dev/stderr)
+  [ "${actual}" == "" ]
+}
+
 @test "client/DaemonSet: port 8501 is not exposed when TLS is disabled" {
   cd `chart_dir`
   local actual=$(helm template \
@@ -506,13 +517,13 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "client/DaemonSet: readiness checks use CA certificate when TLS is enabled" {
+@test "client/DaemonSet: readiness checks skip TLS verification when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("--cacert /consul/tls/ca/tls.crt")' | tee /dev/stderr)
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("-k")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -593,7 +604,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "client/DaemonSet: doesn't set the verify_* flags by default when global.tls.enabled and global.tls.verify is false" {
+@test "client/DaemonSet: doesn't set the verify_* flags when global.tls.enabled is true and global.tls.verify is false" {
   cd `chart_dir`
   local command=$(helm template \
       -x templates/client-daemonset.yaml  \
@@ -656,19 +667,11 @@ load _helpers
       yq -r '.spec.template.spec.containers[0].env' | tee /dev/stderr)
 
   local actual=$(echo $object |
-      yq -r '.[3].name' | tee /dev/stderr)
-  [ "${actual}" = "custom_proxy" ]
-
-  local actual=$(echo $object |
-      yq -r '.[3].value' | tee /dev/stderr)
+      yq -r '.[] | select(.name=="custom_proxy").value' | tee /dev/stderr)
   [ "${actual}" = "fakeproxy" ]
 
   local actual=$(echo $object |
-      yq -r '.[4].name' | tee /dev/stderr)
-  [ "${actual}" = "no_proxy" ]
-
-  local actual=$(echo $object |
-      yq -r '.[4].value' | tee /dev/stderr)
+      yq -r '.[] | select(.name=="no_proxy").value' | tee /dev/stderr)
   [ "${actual}" = "custom_no_proxy" ]
 }
 
