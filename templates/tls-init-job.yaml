@@ -49,10 +49,10 @@ spec:
                 -domain={{ .Values.global.domain }}
               consul tls cert create -server \
                 -days=730 \
-                -additional-dnsname='{{ template "consul.fullname" . }}-server' \
-                -additional-dnsname='*.{{ template "consul.fullname" . }}-server' \
-                -additional-dnsname='*.{{ template "consul.fullname" . }}-server.{{ .Release.Namespace }}' \
-                -additional-dnsname='*.{{ template "consul.fullname" . }}-server.{{ .Release.Namespace }}.svc' \
+                -additional-dnsname='{{ template "consul.server.fullname" . }}' \
+                -additional-dnsname='*.{{ template "consul.server.fullname" . }}' \
+                -additional-dnsname='*.{{ template "consul.server.fullname" . }}.{{ .Release.Namespace }}' \
+                -additional-dnsname='*.{{ template "consul.server.fullname" . }}.{{ .Release.Namespace }}.svc' \
                 {{- range .Values.global.tls.serverAdditionalIPSANs }}
                 -additional-ipaddress={{ . }} \
                 {{- end }}
