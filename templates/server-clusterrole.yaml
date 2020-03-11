@@ -2,7 +2,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ template "consul.server.fullname" . }}
+  name: {{ template "consul.fullname" . }}-server
   labels:
     app: {{ template "consul.name" . }}
     chart: {{ template "consul.chart" . }}
@@ -13,7 +13,7 @@ rules:
 - apiGroups: ["policy"]
   resources: ["podsecuritypolicies"]
   resourceNames:
-  - {{ template "consul.server.fullname" . }}
+  - {{ template "consul.fullname" . }}-server
   verbs:
   - use
 {{- else }}

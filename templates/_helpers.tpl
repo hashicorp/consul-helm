@@ -61,32 +61,3 @@ Inject extra environment vars in the format key:value, if populated
 {{- end -}}
 {{- end -}}
 {{- end -}}
-
-{{/*
-Create a VolumeClaimTemplate name. Supports overriding.
-*/}}
-{{- define "consul.server.volumeClaimName" -}}
-{{- if .Values.server.volumeClaimTemplate.nameOverride -}}
-{{- .Values.server.volumeClaimTemplate.nameOverride -}}
-{{- else -}}
-{{- printf "data-%s" .Release.Namespace -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Create a default Consul server name. Supports overriding.
-We truncate at 63 chars because some Kubernetes name fields are limited to
-this (by the DNS naming spec).
-*/}}
-{{- define "consul.server.fullname" -}}
-{{- if .Values.server.fullnameOverride -}}
-{{- .Values.server.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else if .Values.fullnameOverride -}}
-{{- printf "%s-server" .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else if .Values.global.name -}}
-{{- printf "%s-server" .Values.global.name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- printf "%s-%s-server" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}

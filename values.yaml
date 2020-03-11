@@ -227,11 +227,6 @@ server:
     # https_proxy: http://localhost:3128,
     # no_proxy: internal.domain.com
 
-  # volumeClaimTemplate.nameOverride is used to override the default template name of the
-  # server PVC.
-  volumeClaimTemplate:
-    nameOverride:
-
 # Client, when enabled, configures Consul clients to run on every node
 # within the Kube cluster. The current deployment model follows a traditional
 # DC where a single agent is deployed per node.

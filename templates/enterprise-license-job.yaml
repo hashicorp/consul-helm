@@ -50,9 +50,9 @@ spec:
                   key: {{ .Values.server.enterpriseLicense.secretKey }}
             - name: CONSUL_HTTP_ADDR
               {{- if .Values.global.tls.enabled }}
-              value: https://{{ template "consul.server.fullname" . }}:8501
+              value: https://{{ template "consul.fullname" . }}-server:8501
               {{- else }}
-              value: http://{{ template "consul.server.fullname" . }}:8500
+              value: http://{{ template "consul.fullname" . }}-server:8500
               {{- end }}
             {{- if .Values.global.tls.enabled }}
             - name:  CONSUL_CACERT

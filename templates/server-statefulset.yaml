@@ -3,7 +3,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ template "consul.server.fullname" . }}
+  name: {{ template "consul.fullname" . }}-server
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "consul.name" . }}
@@ -12,7 +12,7 @@ metadata:
     release: {{ .Release.Name }}
     component: server
 spec:
-  serviceName: {{ template "consul.server.fullname" . }}
+  serviceName: {{ template "consul.fullname" . }}-server
   podManagementPolicy: Parallel
   replicas: {{ .Values.server.replicas }}
   {{- if (gt (int .Values.server.updatePartition) 0) }}
@@ -51,7 +51,7 @@ spec:
         {{ tpl .Values.server.tolerations . | nindent 8 | trim }}
     {{- end }}
       terminationGracePeriodSeconds: 30
-      serviceAccountName: {{ template "consul.server.fullname" . }}
+      serviceAccountName: {{ template "consul.fullname" . }}-server
       securityContext:
         fsGroup: 1000
       volumes:
@@ -108,7 +108,7 @@ spec:
             - "/bin/sh"
             - "-ec"
             - |
-              CONSUL_FULLNAME="{{template "consul.server.fullname" . }}"
+              CONSUL_FULLNAME="{{template "consul.fullname" . }}"
 
               exec /bin/consul agent \
                 -advertise="${POD_IP}" \
@@ -148,11 +148,11 @@ spec:
                 -ui \
                 {{- end }}
                 {{- range $index := until (.Values.server.replicas | int) }}
-                -retry-join=${CONSUL_FULLNAME}-{{ $index }}.${CONSUL_FULLNAME}.${NAMESPACE}.svc \
+                -retry-join=${CONSUL_FULLNAME}-server-{{ $index }}.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc \
                 {{- end }}
                 -server
           volumeMounts:
-            - name: {{ template "consul.server.volumeClaimName" . }}
+            - name: data-{{ .Release.Namespace }}
               mountPath: /consul/data
             - name: config
               mountPath: /consul/config
@@ -228,7 +228,7 @@ spec:
       {{- end }}
   volumeClaimTemplates:
     - metadata:
-        name: {{ template "consul.server.volumeClaimName" . }}
+        name: data-{{ .Release.Namespace }}
       spec:
         accessModes:
           - ReadWriteOnce
