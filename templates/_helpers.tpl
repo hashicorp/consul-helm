@@ -71,3 +71,4 @@ Create a VolumeClaimTemplate name. Supports overriding
 {{- else -}}
 {{- printf "data-%s" .Release.Namespace -}}
 {{- end -}}
+{{- end -}}
