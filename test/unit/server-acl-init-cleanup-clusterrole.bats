@@ -47,7 +47,7 @@ load _helpers
 @test "serverACLInitCleanup/ClusterRole: ClusterRole by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-cleanup-job.yaml  \
+      -x templates/server-acl-init-cleanup-clusterrole.yaml  \
       --set 'global.bootstrapACLs=true' \
       . | tee /dev/stderr |
       yq -c '.kind' | tee /dev/stderr)
@@ -57,7 +57,7 @@ load _helpers
 @test "serverACLInitCleanup/ClusterRole: Role created with server.rbac.clusterWide=false" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-cleanup-job.yaml  \
+      -x templates/server-acl-init-cleanup-clusterrole.yaml  \
       --set 'global.bootstrapACLs=true' \
       --set 'server.rbac.clusterWide=false' \
       . | tee /dev/stderr |
