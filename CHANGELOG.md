@@ -1,5 +1,14 @@
 ## Unreleased
 
+BREAKING CHANGES:
+
+* `meshGateway.consulServiceName` is no longer supported. If you have been
+  setting this name, on `helm upgrade` the mesh gateways will be redeployed
+  with the name `mesh-gateway` instead of the name you set.
+  This change was made because some features were not supported when this value
+  was set. If you were using this value please open an issue describing
+  your use-case and we can re-evaluate its removal.
+
 ## 0.17.0 (Feb 21, 2020)
 
 BREAKING CHANGES:

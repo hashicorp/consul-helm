@@ -161,10 +161,6 @@ spec:
                 {{- else if .Values.meshGateway.wanAddress.useNodeIP }}
                 -wan-address="${HOST_IP}:{{ .Values.meshGateway.wanAddress.port }}" \
                 {{- end }}
-                {{- if and .Values.meshGateway.consulServiceName }}
-                {{- if and .Values.global.bootstrapACLs (ne .Values.meshGateway.consulServiceName "mesh-gateway") }}{{ fail "if global.bootstrapACLs is true, meshGateway.consulServiceName cannot be set" }}{{ end }}
-                -service={{ .Values.meshGateway.consulServiceName | quote }} \
-                {{- end }}
           {{- if .Values.meshGateway.enableHealthChecks }}
           livenessProbe:
             tcpSocket:
@@ -192,7 +188,7 @@ spec:
           lifecycle:
             preStop:
               exec:
-                command: ["/bin/sh", "-ec", "/consul-bin/consul services deregister -id=\"{{ default "mesh-gateway" .Values.meshGateway.consulServiceName }}\""]
+                command: ["/bin/sh", "-ec", "/consul-bin/consul services deregister -id=\"mesh-gateway\""]
 
       {{- if .Values.meshGateway.priorityClassName }}
       priorityClassName: {{ .Values.meshGateway.priorityClassName | quote }}

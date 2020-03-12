@@ -432,54 +432,6 @@ key2: value2' \
 }
 
 #--------------------------------------------------------------------
-# consulServiceName
-
-@test "meshGateway/Deployment: fails if consulServiceName is set and bootstrapACLs is true" {
-  cd `chart_dir`
-  run helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
-      --set 'meshGateway.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'meshGateway.consulServiceName=override' \
-      --set 'global.bootstrapACLs=true' \
-      .
-  [ "$status" -eq 1 ]
-  [[ "$output" =~ "if global.bootstrapACLs is true, meshGateway.consulServiceName cannot be set" ]]
-}
-
-@test "meshGateway/Deployment: does not fail if consulServiceName is set to mesh-gateway and bootstrapACLs is true" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
-      --set 'meshGateway.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'meshGateway.consulServiceName=mesh-gateway' \
-      --set 'global.bootstrapACLs=true' \
-      . | tee /dev/stderr \
-      | yq '.spec.template.spec.containers[0]' | tee /dev/stderr )
-
-  [[ $(echo "${actual}" | yq -r '.command[2]' ) =~ '-service="mesh-gateway"' ]]
-  [[ $(echo "${actual}" | yq -r '.lifecycle.preStop.exec.command' ) =~ '-id=\"mesh-gateway\"' ]]
-}
-
-@test "meshGateway/Deployment: consulServiceName can be set" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
-      --set 'meshGateway.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'meshGateway.consulServiceName=overridden' \
-      . | tee /dev/stderr \
-      | yq '.spec.template.spec.containers[0]' | tee /dev/stderr )
-
-  [[ $(echo "${actual}" | yq -r '.command[2]' ) =~ '-service="overridden"' ]]
-  [[ $(echo "${actual}" | yq -r '.lifecycle.preStop.exec.command' ) =~ '-id=\"overridden\"' ]]
-}
-
-#--------------------------------------------------------------------
 # healthchecks
 
 @test "meshGateway/Deployment: healthchecks are on by default" {

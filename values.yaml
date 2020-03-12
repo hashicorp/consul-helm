@@ -817,11 +817,6 @@ meshGateway:
   # dnsPolicy to use.
   dnsPolicy: null
 
-  # Override the default 'mesh-gateway' service name registered in Consul.
-  # Cannot be used if bootstrapACLs is true since the ACL token generated
-  # is only for the name 'mesh-gateway'.
-  consulServiceName: ""
-
   # Port that the gateway will run on inside the container.
   containerPort: 443
 
