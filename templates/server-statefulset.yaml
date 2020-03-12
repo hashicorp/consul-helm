@@ -152,7 +152,7 @@ spec:
                 {{- end }}
                 -server
           volumeMounts:
-            - name: data-{{ .Release.Namespace }}
+            - name: {{ template "consul.server.volumeClaimName" . }}
               mountPath: /consul/data
             - name: config
               mountPath: /consul/config
@@ -228,7 +228,7 @@ spec:
       {{- end }}
   volumeClaimTemplates:
     - metadata:
-        name: data-{{ .Release.Namespace }}
+        name: {{ template "consul.server.volumeClaimName" . }}
       spec:
         accessModes:
           - ReadWriteOnce

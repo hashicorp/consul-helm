@@ -586,6 +586,16 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
+@test "server/StatefulSet: Override the Server PVC name" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'server.volumeClaimTemplate.nameOverride=datadir' \
+      . | tee /dev/stderr |
+      yq -r '.spec.volumeClaimTemplates[0].metadata.name' | tee /dev/stderr)
+  [ "${actual}" == "datadir" ]
+}
+
 @test "server/StatefulSet: sets Consul environment variables when global.tls.enabled" {
   cd `chart_dir`
   local env=$(helm template \

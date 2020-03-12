@@ -61,3 +61,13 @@ Inject extra environment vars in the format key:value, if populated
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Create a VolumeClaimTemplate name. Supports overriding
+*/}}
+{{- define "consul.server.volumeClaimName" -}}
+{{- if .Values.server.volumeClaimTemplate.nameOverride -}}
+{{- .Values.server.volumeClaimTemplate.nameOverride -}}
+{{- else -}}
+{{- printf "data-%s" .Release.Namespace -}}
+{{- end -}}
