@@ -129,6 +129,11 @@ server:
   replicas: 3
   bootstrapExpect: 3 # Should <= replicas count
 
+  # rbac.clusterWide indicates whether all the server serviceAccounts are created 
+  # with ClusterRoles or with Roles which are limited to the same namespace as the release.
+  rbac:
+    clusterWide: true
+
   # enterpriseLicense refers to a Kubernetes secret that you have created that
   # contains your enterprise license. It is required if you are using an
   # enterprise binary. Defining it here applies it to your cluster once a leader
