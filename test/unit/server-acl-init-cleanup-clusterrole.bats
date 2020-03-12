@@ -50,7 +50,7 @@ load _helpers
       -x templates/server-acl-init-cleanup-clusterrole.yaml  \
       --set 'global.bootstrapACLs=true' \
       . | tee /dev/stderr |
-      yq -c '.kind' | tee /dev/stderr)
+      yq -r '.kind' | tee /dev/stderr)
   [ "${actual}" = "ClusterRole" ]
 }
 
@@ -61,7 +61,7 @@ load _helpers
       --set 'global.bootstrapACLs=true' \
       --set 'server.rbac.clusterWide=false' \
       . | tee /dev/stderr |
-      yq -c '.kind' | tee /dev/stderr)
+      yq -r '.kind' | tee /dev/stderr)
   [ "${actual}" = "Role" ]
 }
 
