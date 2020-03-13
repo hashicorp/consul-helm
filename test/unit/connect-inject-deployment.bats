@@ -433,7 +433,10 @@ load _helpers
   [ "${actual}" = "key" ]
 }
 
-@test "connectInject/Deployment: consul-client-ca-cert volume is added when TLS with auto-encrypt is enabled" {
+#--------------------------------------------------------------------
+# global.tls.enableAutoEncrypt
+
+@test "connectInject/Deployment: consul-auto-encrypt-ca-cert volume is added when TLS with auto-encrypt is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/connect-inject-deployment.yaml  \
@@ -441,11 +444,11 @@ load _helpers
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.volumes[] | select(.name == "consul-client-ca-cert") | length > 0' | tee /dev/stderr)
+      yq '.spec.template.spec.volumes[] | select(.name == "consul-auto-encrypt-ca-cert") | length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
-@test "connectInject/Deployment: consul-client-ca-cert volumeMount is added when TLS with auto-encrypt is enabled" {
+@test "connectInject/Deployment: consul-auto-encrypt-ca-cert volumeMount is added when TLS with auto-encrypt is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/connect-inject-deployment.yaml  \
@@ -453,11 +456,11 @@ load _helpers
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "consul-client-ca-cert") | length > 0' | tee /dev/stderr)
+      yq '.spec.template.spec.containers[0].volumeMounts[] | select(.name == "consul-auto-encrypt-ca-cert") | length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
-@test "connectInject/Deployment: get-consul-client-ca init container is created when TLS with auto-encrypt is enabled" {
+@test "connectInject/Deployment: get-auto-encrypt-client-ca init container is created when TLS with auto-encrypt is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/connect-inject-deployment.yaml  \
@@ -465,7 +468,7 @@ load _helpers
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.initContainers[] | select(.name == "get-consul-client-ca") | length > 0' | tee /dev/stderr)
+      yq '.spec.template.spec.initContainers[] | select(.name == "get-auto-encrypt-client-ca") | length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 

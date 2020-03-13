@@ -61,3 +61,29 @@ Inject extra environment vars in the format key:value, if populated
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Get Consul client CA to use when auto-encrypt is enabled
+*/}}
+{{- define "consul.getAutoEncryptClientCA" -}}
+- name: get-auto-encrypt-client-ca
+  image: {{ .Values.global.imageK8S }}
+  command:
+    - "/bin/sh"
+    - "-ec"
+    - |
+      consul-k8s get-consul-client-ca \
+        -output-file=/consul/tls/client/ca/tls.crt \
+        {{- if .Values.client.join }}
+        -server-addr={{ quote (first .Values.client.join) }} \
+        -tls-server-name=server.{{ .Values.global.datacenter }}.{{ .Values.global.domain }} \
+        {{- else }}
+        -server-addr=https://{{ template "consul.fullname" . }}-server:8501 \
+        {{- end }}
+        -ca-file=/consul/tls/ca/tls.crt
+  volumeMounts:
+    - name: consul-ca-cert
+      mountPath: /consul/tls/ca
+    - name: consul-auto-encrypt-ca-cert
+      mountPath: /consul/tls/client/ca
+{{- end -}}

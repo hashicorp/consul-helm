@@ -100,3 +100,33 @@ load _helpers
   local actual=$(grep -r '{{ .Release.Name }}' templates/*.yaml | grep -v 'release: ' | tee /dev/stderr )
   [ "${actual}" = 'templates/server-acl-init-job.yaml:                -server-label-selector=component=server,app={{ template "consul.name" . }},release={{ .Release.Name }} \' ]
 }
+
+
+#--------------------------------------------------------------------
+# consul.getAutoEncryptClientCA
+# Similarly to consul.fullname tests, these tests use test-runner.yaml to test the
+# consul.getAutoEncryptClientCA helper since we need an existing template that calls
+# the consul.getAutoEncryptClientCA helper.
+
+@test "helper/consul.getAutoEncryptClientCA: get-auto-encrypt-client-ca uses server's stateful set address by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/tests/test-runner.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.enableAutoEncrypt=true' \
+      . | tee /dev/stderr |
+      yq '.spec.initContainers[] | select(.name == "get-auto-encrypt-client-ca").command | join(" ") | contains("-server-addr=https://release-name-consul-server:8501")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "helper/consul.getAutoEncryptClientCA: get-auto-encrypt-client-ca uses client.join value when provided" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/tests/test-runner.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.enableAutoEncrypt=true' \
+      --set 'client.join[0]=consul-server.com' \
+      . | tee /dev/stderr |
+      yq '.spec.initContainers[] | select(.name == "get-auto-encrypt-client-ca").command | join(" ") | contains("-server-addr=\"consul-server.com\"")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}

@@ -42,7 +42,7 @@ spec:
           - key: {{ default "tls.crt" .Values.global.tls.caCert.secretKey }}
             path: tls.crt
       {{- if .Values.global.tls.enableAutoEncrypt }}
-      - name: consul-client-ca-cert
+      - name: consul-auto-encrypt-ca-cert
         emptyDir:
           medium: "Memory"
       {{- end }}
@@ -85,7 +85,7 @@ spec:
           {{- if .Values.global.tls.enabled }}
           volumeMounts:
             {{- if .Values.global.tls.enableAutoEncrypt }}
-            - name: consul-client-ca-cert
+            - name: consul-auto-encrypt-ca-cert
             {{- else }}
             - name: consul-ca-cert
             {{- end }}
@@ -189,26 +189,7 @@ spec:
               -init-type="sync"
       {{- end }}
       {{- if (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) }}
-      - name: get-consul-client-ca
-        image: {{ .Values.global.imageK8S }}
-        command:
-          - "/bin/sh"
-          - "-ec"
-          - |
-            consul-k8s get-consul-client-ca \
-              -output-file=/consul/tls/client/ca/tls.crt \
-              {{- if .Values.client.join }}
-              -server-addr={{ quote (first .Values.client.join) }} \
-              -tls-server-name=server.{{ .Values.global.datacenter }}.{{ .Values.global.domain }} \
-              {{- else }}
-              -server-addr=https://{{ template "consul.fullname" . }}-server:8501 \
-              {{- end }}
-              -ca-file=/consul/tls/ca/tls.crt
-        volumeMounts:
-          - name: consul-ca-cert
-            mountPath: /consul/tls/ca
-          - name: consul-client-ca-cert
-            mountPath: /consul/tls/client/ca
+      {{- include "consul.getAutoEncryptClientCA" . | nindent 6 }}
       {{- end }}
       {{- end }}
       {{- if .Values.syncCatalog.nodeSelector }}
