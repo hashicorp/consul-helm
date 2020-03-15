@@ -257,6 +257,24 @@ spec:
             - containerPort: 8600
               name: dns-udp
               protocol: "UDP"
+          livenessProbe:
+            exec:
+              command:
+                - "/bin/sh"
+                - "-ec"
+                - |
+                  curl \
+                    -k -s --show-error --fail \
+                  {{- if .Values.global.tls.enabled }}
+                    https://127.0.0.1:8501/v1/health/node/$NODE
+                  {{- else }}
+                    http://127.0.0.1:8500/v1/health/node/$NODE
+                  {{- end }}
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            failureThreshold: 2
+            successThreshold: 1
+            timeoutSeconds: 1
           readinessProbe:
             # NOTE(mitchellh): when our HTTP status endpoints support the
             # proper status codes, we should switch to that. This is temporary.
