@@ -293,7 +293,7 @@ client:
 
   # Setting this to true will enable hostNetwork mode on the client daemonset.
   # Note the pod shares a network namespace with the host in this mode.
-  # It is preferred to sue  exposeGossipPorts: true in most cases.
+  # It is preferred to use  exposeGossipPorts: true in most cases.
   # If your CNI plugin does not work with that setup this can be used as a fallback.
   enableHostNetworkMode: false
 
