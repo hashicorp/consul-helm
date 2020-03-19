@@ -779,7 +779,7 @@ load _helpers
 #--------------------------------------------------------------------
 # client.enableHostNetworkMode
 
-@test "client/DaemonSet: host network mode is node enabled by default" {
+@test "client/DaemonSet: host network mode is disabled by default" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
