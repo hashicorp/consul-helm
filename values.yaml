@@ -291,6 +291,12 @@ client:
   # also changes the clients' advertised IP to the hostIP rather than podIP.
   exposeGossipPorts: false
 
+  # Setting this to true will enable hostNetwork mode on the client daemonset.
+  # Note the pod shares a network namespace with the host in this mode.
+  # It is preferred to sue  exposeGossipPorts: true in most cases.
+  # If your CNI plugin does not work with that setup this can be used as a fallback.
+  enableHostNetworkMode: false
+
   # Resource requests, limits, etc. for the client cluster placement. This
   # should map directly to the value of the resources field for a PodSpec,
   # formatted as a multi-line string. By default no direct resource request

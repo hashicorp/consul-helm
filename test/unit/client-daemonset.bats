@@ -777,6 +777,31 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# client.enableHostNetworkMode
+
+@test "client/DaemonSet: host network mode is node enabled by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'client.enabled=true' \
+      . | tee /dev/stderr |
+       yq '.spec.template.spec.hostNetwork == null' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: client uses host network namespace when client.enableHostNetworkMode=true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'client.enabled=true' \
+      --set 'client.enableHostNetworkMode=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.hostNetwork' |
+      tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
 # dataDirectoryHostPath
 
 @test "client/DaemonSet: data directory is emptyDir by defaut" {
