@@ -92,6 +92,7 @@ global:
     # clients and servers.
     # It also switches consul-k8s components to retrieve the CA
     # from the servers via the API.
+    # Requires Consul 1.7.1+ and consul-k8s 0.13.0
     enableAutoEncrypt: false
 
     # serverAdditionalDNSSANs is a list of additional DNS names to
