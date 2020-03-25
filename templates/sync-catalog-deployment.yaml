@@ -31,6 +31,7 @@ spec:
       serviceAccountName: {{ template "consul.fullname" . }}-sync-catalog
       {{- if .Values.global.tls.enabled }}
       volumes:
+      {{- if not (and .Values.externalServer.enabled .Values.externalServer.https.useSystemRoots) }}
       - name: consul-ca-cert
         secret:
           {{- if .Values.global.tls.caCert.secretName }}
@@ -41,6 +42,7 @@ spec:
           items:
           - key: {{ default "tls.crt" .Values.global.tls.caCert.secretKey }}
             path: tls.crt
+      {{- end }}
       {{- if .Values.global.tls.enableAutoEncrypt }}
       - name: consul-auto-encrypt-ca-cert
         emptyDir:

@@ -486,6 +486,21 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
+@test "connectInject/Deployment: consul-ca-cert volume is not added if externalServer.enabled=true and externalServer.https.useSystemRoots=true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.enableAutoEncrypt=true' \
+      --set 'externalServer.enabled=true' \
+      --set 'externalServer.https.address=foo.com' \
+      --set 'externalServer.https.useSystemRoots=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.volumes[] | select(.name == "consul-ca-cert")' | tee /dev/stderr)
+  [ "${actual}" = "" ]
+}
+
 #--------------------------------------------------------------------
 # k8sAllowNamespaces & k8sDenyNamespaces
 

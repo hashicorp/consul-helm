@@ -74,16 +74,30 @@ Get Consul client CA to use when auto-encrypt is enabled
     - |
       consul-k8s get-consul-client-ca \
         -output-file=/consul/tls/client/ca/tls.crt \
-        {{- if .Values.client.join }}
-        -server-addr={{ quote (first .Values.client.join) }} \
-        -tls-server-name=server.{{ .Values.global.datacenter }}.{{ .Values.global.domain }} \
+        {{- if .Values.externalServer.enabled }}
+        {{- if not (or .Values.externalServer.https.address .Values.client.join)}}{{ fail "either client.join or externalServer.https.address must be set if externalServer.enabled is true" }}{{ end -}}
+        {{- if .Values.externalServer.https.address }}
+        -server-addr={{ .Values.externalServer.https.address }} \
         {{- else }}
-        -server-addr=https://{{ template "consul.fullname" . }}-server:8501 \
+        -server-addr={{ quote (first .Values.client.join) }} \
         {{- end }}
+        -server-port={{ .Values.externalServer.https.port }} \
+        {{- if .Values.externalServer.https.tlsServerName }}
+        -tls-server-name={{ .Values.externalServer.https.tlsServerName }} \
+        {{- end }}
+        {{- if not .Values.externalServer.https.useSystemRoots }}
         -ca-file=/consul/tls/ca/tls.crt
+        {{- end }}
+        {{- else }}
+        -server-addr={{ template "consul.fullname" . }}-server \
+        -server-port=8501 \
+        -ca-file=/consul/tls/ca/tls.crt
+        {{- end }}
   volumeMounts:
+    {{- if not (and .Values.externalServer.enabled .Values.externalServer.https.useSystemRoots) }}
     - name: consul-ca-cert
       mountPath: /consul/tls/ca
+    {{- end }}
     - name: consul-auto-encrypt-ca-cert
       mountPath: /consul/tls/client/ca
 {{- end -}}
