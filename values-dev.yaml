@@ -411,12 +411,12 @@ client:
 # for this to have any effect:
 # https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/#configure-stub-domain-and-upstream-dns-servers
 dns:
-  enabled: "-"
+  enabled: true
 
   # Set a predefined cluster IP for the DNS service.
   # Useful if you need to reference the DNS service's IP
   # address in CoreDNS config.
-  clusterIP: null
+  clusterIP: "10.4.7.91"
 
   # Extra annotations to attach to the dns service
   # This should be a multi-line string of
@@ -468,7 +468,7 @@ syncCatalog:
   # toConsul and toK8S control whether syncing is enabled to Consul or K8S
   # as a destination. If both of these are disabled, the sync will do nothing.
   toConsul: true
-  toK8S: true
+  toK8S: false
 
   # k8sPrefix is the service prefix to prepend to services before registering
   # with Kubernetes. For example "consul-" will register all services
