@@ -145,7 +145,10 @@ spec:
             {{- if .Values.global.tls.enabled }}
             - name: CONSUL_HTTP_ADDR
               value: https://localhost:8501
-            {{- if not .Values.global.tls.enableAutoEncrypt }}
+            {{- if .Values.global.tls.enableAutoEncrypt }}
+            - name: CONSUL_HTTP_SSL_VERIFY
+              value: false
+            {{- else }}
             - name: CONSUL_CACERT
               value: /consul/tls/ca/tls.crt
             {{- end }}

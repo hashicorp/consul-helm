@@ -49,7 +49,7 @@ spec:
         - name: consul-bin
           emptyDir: {}
         {{- if .Values.global.tls.enabled }}
-        {{- if not (and .Values.externalServer.enabled .Values.externalServer.https.useSystemRoots) }}
+        {{- if not (and .Values.externalServers.enabled .Values.externalServers.https.useSystemRoots) }}
         - name: consul-ca-cert
           secret:
             {{- if .Values.global.tls.caCert.secretName }}

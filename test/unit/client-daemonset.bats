@@ -724,15 +724,15 @@ load _helpers
   [ "${actual}" == "" ]
 }
 
-@test "client/DaemonSet: doesn't set CONSUL_CACERT environment variable when global.tls.enabled and global.tls.enableAutoEncrypt=true" {
+@test "client/DaemonSet: sets CONSUL_HTTP_SSL_VERIFY environment variable to false when global.tls.enabled and global.tls.enableAutoEncrypt=true" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
       . | tee /dev/stderr |
-      yq -r '.spec.template.spec.containers[0].env[] | select(.name == "CONSUL_CACERT")' | tee /dev/stderr)
-  [ "${actual}" == "" ]
+      yq -r '.spec.template.spec.containers[0].env[] | select(.name == "CONSUL_HTTP_SSL_VERIFY") | .value' | tee /dev/stderr)
+  [ "${actual}" == "false" ]
 }
 
 #--------------------------------------------------------------------
