@@ -468,7 +468,7 @@ syncCatalog:
   # toConsul and toK8S control whether syncing is enabled to Consul or K8S
   # as a destination. If both of these are disabled, the sync will do nothing.
   toConsul: true
-  toK8S: true
+  toK8S: false
 
   # k8sPrefix is the service prefix to prepend to services before registering
   # with Kubernetes. For example "consul-" will register all services
