@@ -207,27 +207,14 @@ spec:
             - containerPort: 8600
               name: dns-udp
               protocol: "UDP"
+          {{- with .Values.server.readinessProbe }}
           readinessProbe:
-            # NOTE(mitchellh): when our HTTP status endpoints support the
-            # proper status codes, we should switch to that. This is temporary.
-            exec:
-              command:
-                - "/bin/sh"
-                - "-ec"
-                - |
-                  {{- if .Values.global.tls.enabled }}
-                  curl \
-                    --cacert /consul/tls/ca/tls.crt \
-                    https://127.0.0.1:8501/v1/status/leader \
-                  {{- else }}
-                  curl http://127.0.0.1:8500/v1/status/leader \
-                  {{- end }}
-                  2>/dev/null | grep -E '".+"'
-            failureThreshold: 2
-            initialDelaySeconds: 5
-            periodSeconds: 3
-            successThreshold: 1
-            timeoutSeconds: 5
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.server.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- if .Values.server.resources }}
           resources:
             {{ tpl .Values.server.resources . | nindent 12 | trim }}
