@@ -43,6 +43,18 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
+@test "serverACLInitCleanup/ServiceAccount: enabled with externalServers.enabled=true and global.acls.manageSystemACLs=true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-cleanup-serviceaccount.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'externalServers.enabled=true' \
+      --set 'externalServers.https.address=foo.com' \
+      . | tee /dev/stderr |
+      yq 'length > 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
 #--------------------------------------------------------------------
 # global.imagePullSecrets
 
@@ -63,3 +75,4 @@ load _helpers
       yq -r '.imagePullSecrets[1].name' | tee /dev/stderr)
   [ "${actual}" = "my-secret2" ]
 }
+

@@ -32,3 +32,16 @@ load _helpers
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+@test "serverACLInit/PodSecurityPolicy: enabled with externalServers.enabled=true and global.acls.manageSystemACLs=true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-podsecuritypolicy.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'global.enablePodSecurityPolicies=true' \
+      --set 'externalServers.enabled=true' \
+      --set 'externalServers.https.address=foo.com' \
+      . | tee /dev/stderr |
+      yq 'length > 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}

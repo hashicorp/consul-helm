@@ -800,3 +800,179 @@ load _helpers
     yq '.spec.template.spec.containers[0].volumeMounts | map(select(.name == "acl-replication-token")) | length == 1' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# externalServers.enabled
+
+@test "serverACLInit/Job: fails if external servers are enabled but neither externalServers.https.address nor client.join are set" {
+  cd `chart_dir`
+  run helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'externalServers.enabled=true' .
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "either client.join or externalServers.https.address must be set if externalServers.enabled is true" ]]
+}
+
+@test "serverACLInit/Job: sets server address if externalServers.https.address is set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'externalServers.enabled=true' \
+      --set 'externalServers.https.address=foo.com' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-server-address=foo.com"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "serverACLInit/Job: sets server address to the client.join value if externalServers.https.address is set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'externalServers.enabled=true' \
+      --set 'client.join[0]=1.1.1.1' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-server-address=1.1.1.1"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "serverACLInit/Job: can override externalServers.https.port" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'externalServers.enabled=true' \
+      --set 'client.join[0]=1.1.1.1' \
+      --set 'externalServers.https.port=8501' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-server-port=8501"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "serverACLInit/Job: doesn't set server port to 8501 if TLS is enabled and externalServers.enabled is true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'global.tls.enabled=true' \
+      --set 'externalServers.enabled=true' \
+      --set 'client.join[0]=1.1.1.1' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-server-port=8501"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "serverACLInit/Job: doesn't set the CA cert if TLS is enabled and externalServers.https.useSystemRoots is true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'global.tls.enabled=true' \
+      --set 'externalServers.enabled=true' \
+      --set 'client.join[0]=1.1.1.1' \
+      --set 'externalServers.https.useSystemRoots=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-consul-ca-cert=/consul/tls/ca/tls.crt"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+#--------------------------------------------------------------------
+# global.acls.bootstrapToken
+
+@test "serverACLInit/Job: -bootstrap-token-file is not set by default" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      . | tee /dev/stderr)
+
+  # Test the flag is not set.
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].command | any(contains("-bootstrap-token-file"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  # Test the volume doesn't exist
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.volumes | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  # Test the volume mount doesn't exist
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].volumeMounts | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "serverACLInit/Job: -bootstrap-token-file is not set when acls.bootstrapToken.secretName is set but secretKey is not" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'global.acls.bootstrapToken.secretName=name' \
+      . | tee /dev/stderr)
+
+  # Test the flag is not set.
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].command | any(contains("-bootstrap-token-file"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  # Test the volume doesn't exist
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.volumes | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  # Test the volume mount doesn't exist
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].volumeMounts | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "serverACLInit/Job: -bootstrap-token-file is not set when acls.bootstrapToken.secretKey is set but secretName is not" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'global.acls.bootstrapToken.secretKey=key' \
+      . | tee /dev/stderr)
+
+  # Test the flag is not set.
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].command | any(contains("-bootstrap-token-file"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  # Test the volume doesn't exist
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.volumes | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  # Test the volume mount doesn't exist
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].volumeMounts | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "serverACLInit/Job: -bootstrap-token-file is set when acls.bootstrapToken.secretKey and secretName are set" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'global.acls.bootstrapToken.secretName=name' \
+      --set 'global.acls.bootstrapToken.secretKey=key' \
+      . | tee /dev/stderr)
+
+  # Test the -bootstrap-token-file flag is set.
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].command | any(contains("-bootstrap-token-file=/consul/acl/tokens/bootstrap-token"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  # Test the volume exists
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.volumes | map(select(.name == "bootstrap-token")) | length == 1' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  # Test the volume mount exists
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].volumeMounts | map(select(.name == "bootstrap-token")) | length == 1' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
