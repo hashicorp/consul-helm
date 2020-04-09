@@ -84,7 +84,7 @@ spec:
 
               consul-k8s server-acl-init \
                 {{- range $index := until (.Values.server.replicas | int) }}
-                -server-address=${CONSUL_FULLNAME}-server-{{ $index }}.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc \
+                -server-address="${CONSUL_FULLNAME}-server-{{ $index }}.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc" \
                 {{- end }}
                 -resource-prefix={{ template "consul.fullname" . }} \
                 -k8s-namespace={{ .Release.Namespace }} \
