@@ -666,7 +666,7 @@ connectInject:
   imageConsul: null
 
   # The Docker image for envoy to use as the proxy sidecar when performing
-  # Connect injection. If using Consul 1.7+, the envoy version must be 1.13+.
+  # Connect injection. If using Consul 1.8+, the envoy version must be 1.14+.
   # If not set, the image used depends on the consul-k8s version. For
   # consul-k8s 0.12.0 the default is envoyproxy/envoy-alpine:v1.13.0.
   imageEnvoy: null
@@ -895,8 +895,8 @@ meshGateway:
     # Optional YAML string that will be appended to the Service spec.
     additionalSpec: null
 
-  # Envoy image to use. For Consul v1.7+, Envoy version 1.13+ is required.
-  imageEnvoy: envoyproxy/envoy:v1.13.0
+  # Envoy image to use. For Consul v1.8+, Envoy version 1.14+ is required.
+  imageEnvoy: envoyproxy/envoy:v1.14.1
 
   # If set to true, gateway Pods will run on the host network.
   hostNetwork: false
