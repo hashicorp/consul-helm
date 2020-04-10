@@ -30,10 +30,13 @@ spec:
         chart: {{ template "consul.chart" . }}
         release: {{ .Release.Name }}
         component: mesh-gateway
+        {{- if .Values.meshGateway.labels -}}
+        {{- tpl .Values.meshGateway.labels . | trim | nindent 8 -}}
+        {{- end }}
       annotations:
         "consul.hashicorp.com/connect-inject": "false"
         {{- if .Values.meshGateway.annotations }}
-        {{- tpl .Values.meshGateway.annotations . | nindent 8 }}
+        {{- tpl .Values.meshGateway.annotations . | trim | nindent 8 -}}
         {{- end }}
     spec:
       {{- if .Values.meshGateway.affinity }}

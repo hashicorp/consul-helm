@@ -10,6 +10,9 @@ metadata:
     chart: {{ template "consul.chart" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
+    {{- if .Values.dns.labels -}}
+      {{- tpl .Values.dns.labels . | trim | nindent 4 -}}
+    {{- end }}
   {{- if .Values.dns.annotations }}
   annotations:
     {{ tpl .Values.dns.annotations . | nindent 4 | trim }}

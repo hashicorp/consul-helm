@@ -10,6 +10,9 @@ metadata:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
     component: mesh-gateway
+    {{- if .Values.meshGateway.service.labels -}}
+    {{- tpl .Values.meshGateway.service.labels . | trim | nindent 4 -}}
+    {{- end }}
   {{- if .Values.meshGateway.service.annotations }}
   annotations:
     {{ tpl .Values.meshGateway.service.annotations . | nindent 4 | trim }}

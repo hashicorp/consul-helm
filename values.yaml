@@ -284,6 +284,13 @@ server:
   # ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
   priorityClassName: ""
 
+  # Extra labels to attach to the server pods.
+  # This should be a multi-line YAML string.
+  # Example:
+  #   labels: |
+  #     "label-key": "label-value"
+  labels: null
+
   # Extra annotations to attach to the server pods.
   # This should be a multi-line YAML string.
   # Example:
@@ -292,6 +299,12 @@ server:
   annotations: null
 
   service:
+    # Labels to apply to the server service.
+    # Example:
+    #   labels: |
+    #     "label-key": "label-value"
+    labels: null
+
     # Annotations to apply to the server service.
     # Example:
     #   annotations: |
@@ -420,6 +433,13 @@ client:
   # ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
   priorityClassName: ""
 
+  # Extra labels to attach to the client pods.
+  # This should be a multi-line YAML string.
+  # Example:
+  #   labels: |
+  #     "label-key": "label-value"
+  labels: null
+
   # Extra annotations to attach to the client pods
   # Example:
   #   annotations: |
@@ -483,6 +503,14 @@ dns:
   # address in CoreDNS config.
   clusterIP: null
 
+  # Extra labels to attach to the dns service
+  # This should be a multi-line string of
+  # labels to apply to the dns Service
+  # Example:
+  #   labels: |
+  #     "label-key": "label-value"
+  labels: null
+
   # Extra annotations to attach to the dns service
   # This should be a multi-line string of
   # annotations to apply to the dns Service
@@ -503,6 +531,12 @@ ui:
   service:
     enabled: true
     type: null
+
+    # Labels to apply to the UI service.
+    # Example:
+    #   labels: |
+    #     "label-key": "label-value"
+    labels: null
 
     # Annotations to apply to the UI service.
     # Example:
@@ -886,6 +920,12 @@ meshGateway:
     # a port.
     nodePort: null
 
+    # Labels to apply to the mesh gateway service.
+    # Example:
+    #   labels: |
+    #     "label-key": "label-value"
+    labels: null
+
     # Annotations to apply to the mesh gateway service.
     # Example:
     #   annotations: |
@@ -955,6 +995,12 @@ meshGateway:
 
   # Optional priorityClassName.
   priorityClassName: ""
+
+  # Labels to apply to the mesh gateway deployment.
+  # Example:
+  #   labels: |
+  #     "label-key": "label-value"
+  labels: null
 
   # Annotations to apply to the mesh gateway deployment.
   # Example:
