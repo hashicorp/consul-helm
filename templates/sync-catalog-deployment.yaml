@@ -54,9 +54,13 @@ spec:
           image: "{{ default .Values.global.imageK8S .Values.syncCatalog.image }}"
           env:
             - name: HOST_IP
+            {{- if .Values.global.externalHostIP }}
+              value: {{ .Values.global.externalHostIP }}
+            {{- else }}
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            {{- end }}
             - name: NAMESPACE
               valueFrom:
                 fieldRef:
