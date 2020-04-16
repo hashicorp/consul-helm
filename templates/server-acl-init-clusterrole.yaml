@@ -31,11 +31,8 @@ rules:
   - apiGroups: [""]
     resources:
       - serviceaccounts
-    verbs:
-      - get
-  - apiGroups: [""]
-    resources:
-      - services
+    resourceNames:
+      - {{ template "consul.fullname" . }}-connect-injector-authmethod-svc-account
     verbs:
       - get
 {{- end }}

@@ -129,6 +129,8 @@ spec:
                 {{- end }}
                 {{- if .Values.connectInject.enabled }}
                 -create-inject-auth-method=true \
+                -inject-auth-method-host={{ .Values.connectInject.authMethodConfig.host }} \
+                -inject-auth-method-ca-cert={{ .Values.connectInject.authMethodConfig.caCert | quote }} \
                 {{- end }}
                 {{- if .Values.meshGateway.enabled }}
                 -create-mesh-gateway-token=true \

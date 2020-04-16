@@ -790,6 +790,21 @@ connectInject:
   # auth method for Connect inject, set this to the name of your auth method.
   overrideAuthMethodName: ""
 
+  # Custom configuration for the Kubernetes auth method to be used when
+  # global.acls.manageSystemACLs is set to true. Please see
+  # https://www.consul.io/docs/acl/auth-methods/kubernetes.html.
+  #
+  # This is useful when Consul servers are deployed outside of
+  # the Kubernetes cluster. Requires consul-k8s >= 0.14.0.
+  authMethodConfig:
+    # host corresponds to the Consul's Host configuration parameter
+    # ref: https://www.consul.io/docs/acl/auth-methods/kubernetes.html#host.
+    host: ""
+
+    # caCert is the base64-encoded PEM-encoded CA certificate string
+    # for this Kubernetes cluster.
+    caCert: ""
+
   # aclInjectToken refers to a Kubernetes secret that you have created that contains
   # an ACL token for your Consul cluster which allows the Connect injector the correct
   # permissions. This is only needed if Consul namespaces [Enterprise only] and ACLs

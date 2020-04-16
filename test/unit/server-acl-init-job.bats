@@ -890,17 +890,17 @@ load _helpers
 
   # Test the flag is not set.
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.containers[0].command | any(contains("-bootstrap-token-file"))' | tee /dev/stderr)
+  yq '.spec.template.spec.containers[0].command | any(contains("-bootstrap-token-file"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   # Test the volume doesn't exist
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.volumes | length == 0' | tee /dev/stderr)
+  yq '.spec.template.spec.volumes | length == 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   # Test the volume mount doesn't exist
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.containers[0].volumeMounts | length == 0' | tee /dev/stderr)
+  yq '.spec.template.spec.containers[0].volumeMounts | length == 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -914,17 +914,17 @@ load _helpers
 
   # Test the flag is not set.
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.containers[0].command | any(contains("-bootstrap-token-file"))' | tee /dev/stderr)
+  yq '.spec.template.spec.containers[0].command | any(contains("-bootstrap-token-file"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   # Test the volume doesn't exist
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.volumes | length == 0' | tee /dev/stderr)
+  yq '.spec.template.spec.volumes | length == 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   # Test the volume mount doesn't exist
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.containers[0].volumeMounts | length == 0' | tee /dev/stderr)
+  yq '.spec.template.spec.containers[0].volumeMounts | length == 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -943,12 +943,12 @@ load _helpers
 
   # Test the volume doesn't exist
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.volumes | length == 0' | tee /dev/stderr)
+  yq '.spec.template.spec.volumes | length == 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   # Test the volume mount doesn't exist
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.containers[0].volumeMounts | length == 0' | tee /dev/stderr)
+  yq '.spec.template.spec.containers[0].volumeMounts | length == 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -963,16 +963,38 @@ load _helpers
 
   # Test the -bootstrap-token-file flag is set.
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.containers[0].command | any(contains("-bootstrap-token-file=/consul/acl/tokens/bootstrap-token"))' | tee /dev/stderr)
+  yq '.spec.template.spec.containers[0].command | any(contains("-bootstrap-token-file=/consul/acl/tokens/bootstrap-token"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   # Test the volume exists
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.volumes | map(select(.name == "bootstrap-token")) | length == 1' | tee /dev/stderr)
+  yq '.spec.template.spec.volumes | map(select(.name == "bootstrap-token")) | length == 1' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   # Test the volume mount exists
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.containers[0].volumeMounts | map(select(.name == "bootstrap-token")) | length == 1' | tee /dev/stderr)
+  yq '.spec.template.spec.containers[0].volumeMounts | map(select(.name == "bootstrap-token")) | length == 1' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
+# connectInject.authMethodConfig
+
+@test "serverACLInit/Job: can provide custom auth method configuration" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.authMethodConfig.host=foo.com' \
+      --set 'connectInject.authMethodConfig.caCert=ca-cert' \
+      . | tee /dev/stderr)
+
+  local actual=$(echo "$object" |
+  yq '.spec.template.spec.containers[0].command | any(contains("-inject-auth-method-host=foo.com"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo "$object" |
+  yq '.spec.template.spec.containers[0].command | any(contains("-inject-auth-method-ca-cert=\"ca-cert\""))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
