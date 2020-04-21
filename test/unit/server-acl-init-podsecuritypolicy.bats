@@ -33,10 +33,11 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "serverACLInit/PodSecurityPolicy: enabled with externalServers.enabled=true and global.acls.manageSystemACLs=true" {
+@test "serverACLInit/PodSecurityPolicy: enabled with externalServers.enabled=true and global.acls.manageSystemACLs=true, but server.enabled=false" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/server-acl-init-podsecuritypolicy.yaml  \
+      --set 'server.enabled=false' \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       --set 'externalServers.enabled=true' \
@@ -44,4 +45,25 @@ load _helpers
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
+}
+
+@test "serverACLInit/PodSecurityPolicy: fails if both externalServers.enabled=true and server.enabled=true" {
+  cd `chart_dir`
+  run helm template \
+      -x templates/server-acl-init-podsecuritypolicy.yaml  \
+      --set 'global.enablePodSecurityPolicies=true' \
+      --set 'server.enabled=true' \
+      --set 'externalServers.enabled=true' .
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "only one of server.enabled or externalServers.enabled can be set" ]]
+}
+
+@test "serverACLInit/PodSecurityPolicy: fails if both externalServers.enabled=true and server.enabled not set to false" {
+  cd `chart_dir`
+  run helm template \
+      -x templates/server-acl-init-podsecuritypolicy.yaml  \
+      --set 'global.enablePodSecurityPolicies=true' \
+      --set 'externalServers.enabled=true' .
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "only one of server.enabled or externalServers.enabled can be set" ]]
 }

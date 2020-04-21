@@ -168,8 +168,7 @@ global:
   acls:
 
     # If true, the Helm chart will automatically manage ACL tokens and policies
-    # for all Consul and consul-k8s components. This requires servers to be running inside Kubernetes.
-    # Additionally, requires Consul >= 1.4 and consul-k8s >= 0.14.0.
+    # for all Consul and consul-k8s components. This requires Consul >= 1.4 and consul-k8s >= 0.14.0.
     manageSystemACLs: false
 
     # bootstrapToken references a Kubernetes secret containing the bootstrap token to use
@@ -187,11 +186,14 @@ global:
     # datacenter.
     # In secondary datacenters, the secret needs to be imported from the primary
     # datacenter and referenced via global.acls.replicationToken.
+    # Requires consul-k8s >= 0.13.0
     createReplicationToken: false
 
     # replicationToken references a secret containing the replication ACL token.
     # This token will be used by secondary datacenters to perform ACL replication
     # and create ACL tokens and policies.
+    # # This value is ignored if bootstrapToken is also set.
+    # Requires consul-k8s >= 0.13.0
     replicationToken:
       secretName: null
       secretKey: null
@@ -316,11 +318,13 @@ server:
     # https_proxy: http://localhost:3128,
     # no_proxy: internal.domain.com
 
-# Add configuration for Consul servers running outside of Kubernetes.
-# This configuration is recommended if setting global.tls.enableAutoEncrypt to true (requires consul-k8s >= 0.13.0)
-# or global.acls.manageSystemACLs to true (requires consul-k8s >= 0.14.0) and running
-# Consul servers outside of the current Kubernetes cluster.
+# Configuration for Consul servers when the servers are running outside of Kubernetes.
+# When running external servers, configuring these values is recommended
+# if setting global.tls.enableAutoEncrypt to true (requires consul-k8s >= 0.13.0)
+# or global.acls.manageSystemACLs to true (requires consul-k8s >= 0.14.0).
 externalServers:
+  # If true, the Helm chart will be configured to talk to the external servers.
+  # If setting this to true, you must also set server.enabled to false.
   enabled: false
 
   # HTTPS configuration for external servers.
@@ -786,24 +790,16 @@ connectInject:
   # Requires Consul >= v1.5 and consul-k8s >= v0.8.0.
   aclBindingRuleSelector: "serviceaccount.name!=default"
 
-  # If not using global.acls.manageSystemACLs and instead manually setting up an
+  # If you are not using global.acls.manageSystemACLs and instead manually setting up an
   # auth method for Connect inject, set this to the name of your auth method.
   overrideAuthMethodName: ""
 
-  # Custom configuration for the Kubernetes auth method to be used when
-  # global.acls.manageSystemACLs is set to true. Please see
-  # https://www.consul.io/docs/acl/auth-methods/kubernetes.html.
-  #
-  # This is useful when Consul servers are deployed outside of
-  # the Kubernetes cluster. Requires consul-k8s >= 0.14.0.
-  authMethodConfig:
-    # host corresponds to the Consul's Host configuration parameter
-    # ref: https://www.consul.io/docs/acl/auth-methods/kubernetes.html#host.
-    host: ""
-
-    # caCert is the base64-encoded PEM-encoded CA certificate string
-    # for this Kubernetes cluster.
-    caCert: ""
+  # If you are using global.acls.manageSystemACLs but also setting externalServers.enabled
+  # to true, set overrideAuthMethodHost to the address of the Kubernetes API server.
+  # This address must to be reachable from the Consul servers.
+  # Please see https://www.consul.io/docs/acl/auth-methods/kubernetes.html.
+  # Requires consul-k8s >= 0.14.0.
+  overrideAuthMethodHost: ""
 
   # aclInjectToken refers to a Kubernetes secret that you have created that contains
   # an ACL token for your Consul cluster which allows the Connect injector the correct
