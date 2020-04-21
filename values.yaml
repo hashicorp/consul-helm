@@ -332,6 +332,7 @@ externalServers:
   # not supported.
   https:
     # IP, DNS name, or Cloud auto-join string pointing to the external Consul servers.
+    # Port must be provided separately with the externalServers.https.port property.
     # Note that if you’re providing the cloud auto-join string and multiple addresses
     # can be returned, only the first address will be used.
     # This value is required only if you would like to use
