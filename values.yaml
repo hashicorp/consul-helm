@@ -325,6 +325,7 @@ server:
 externalServers:
   # If true, the Helm chart will be configured to talk to the external servers.
   # If setting this to true, you must also set server.enabled to false.
+  # Note that if you are setting client.join property, https.address property is not required.
   enabled: false
 
   # HTTPS configuration for external servers.
