@@ -192,7 +192,7 @@ global:
     # replicationToken references a secret containing the replication ACL token.
     # This token will be used by secondary datacenters to perform ACL replication
     # and create ACL tokens and policies.
-    # # This value is ignored if bootstrapToken is also set.
+    # This value is ignored if bootstrapToken is also set.
     # Requires consul-k8s >= 0.13.0
     replicationToken:
       secretName: null
