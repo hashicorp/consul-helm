@@ -1108,7 +1108,7 @@ load _helpers
       --set 'global.acls.manageSystemACLs=true' \
       --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].command | any(contains("-inject-auth-method-host=foo.com"))' | tee /dev/stderr)
+      yq '.spec.template.spec.containers[0].command | any(contains("-inject-auth-method-host"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
