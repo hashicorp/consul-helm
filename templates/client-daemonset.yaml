@@ -212,7 +212,7 @@ spec:
                 {{- end }}
                 {{- else }}
                 {{- $serfPort := (.Values.externalServers.serfLANPort | int) -}}
-                {{- range $value := .Values.externalServers.hosts }}
+                {{- range $host := .Values.externalServers.hosts }}
                 -retry-join={{ printf "%s:%d" $value $serfPort | quote}} \
                 {{- end }}
                 {{- end }}
