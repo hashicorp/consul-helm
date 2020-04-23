@@ -149,7 +149,7 @@ load _helpers
   [ "${actual}" = "true" ]
 
   # check the default server port is 443 if not provided
-  actual=$(echo $command | jq ' . | contains("-server-port=443")')
+  actual=$(echo $command | jq ' . | contains("-server-port=8501")')
   [ "${actual}" = "true" ]
 
   # check server's CA cert
@@ -174,7 +174,7 @@ load _helpers
   [ "${actual}" = "true" ]
 
   # check the default server port is 443 if not provided
-  actual=$(echo $command | jq ' . | contains("-server-port=443")')
+  actual=$(echo $command | jq ' . | contains("-server-port=8501")')
   [ "${actual}" = "true" ]
 
   # check server's CA cert
@@ -202,7 +202,7 @@ load _helpers
       --set 'server.enabled=false' \
       --set 'externalServers.enabled=true' \
       --set 'externalServers.hosts[0]=consul.io' \
-      --set 'externalServers.httpsPort=8501' \
+      --set 'externalServers.httpsPort=443' \
       . | tee /dev/stderr |
       yq '.spec.initContainers[] | select(.name == "get-auto-encrypt-client-ca").command | join(" ")' | tee /dev/stderr)
 
@@ -211,7 +211,7 @@ load _helpers
   [ "${actual}" = "true" ]
 
   # check the default server port is 443 if not provided
-  actual=$(echo $command | jq ' . | contains("-server-port=8501")')
+  actual=$(echo $command | jq ' . | contains("-server-port=443")')
   [ "${actual}" = "true" ]
 
   # check server's CA cert

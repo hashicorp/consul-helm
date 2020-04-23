@@ -337,7 +337,7 @@ externalServers:
   serfLANPort: 8301
 
   # The HTTPS port of the Consul servers.
-  httpsPort: 443
+  httpsPort: 8501
 
   # tlsServerName is the server name to use as the SNI
   # host header when connecting with HTTPS.
@@ -354,6 +354,10 @@ externalServers:
   # This address must to be reachable from the Consul servers.
   # Please see https://www.consul.io/docs/acl/auth-methods/kubernetes.html.
   # Requires consul-k8s >= 0.14.0.
+  #
+  # You could retrieve this value from your kubeconfig by running:
+  #   kubectl config view \
+  #        -o jsonpath="{.clusters[?(@.name=='<your cluster name>')].cluster.server}"
   k8sAuthMethodHost: null
 
 # Client, when enabled, configures Consul clients to run on every node

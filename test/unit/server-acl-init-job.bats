@@ -887,7 +887,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "serverACLInit/Job: port 443 is used by default" {
+@test "serverACLInit/Job: port 8501 is used by default" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/server-acl-init-job.yaml  \
@@ -896,7 +896,7 @@ load _helpers
       --set 'externalServers.enabled=true' \
       --set 'externalServers.hosts[0]=1.1.1.1' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].command | any(contains("-server-port=443"))' | tee /dev/stderr)
+      yq '.spec.template.spec.containers[0].command | any(contains("-server-port=8501"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -908,13 +908,13 @@ load _helpers
       --set 'server.enabled=false' \
       --set 'externalServers.enabled=true' \
       --set 'externalServers.hosts[0]=1.1.1.1' \
-      --set 'externalServers.httpsPort=8501' \
+      --set 'externalServers.httpsPort=443' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].command | any(contains("-server-port=8501"))' | tee /dev/stderr)
+      yq '.spec.template.spec.containers[0].command | any(contains("-server-port=443"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
-@test "serverACLInit/Job: doesn't set server port to 8501 if TLS is enabled and externalServers.enabled is true" {
+@test "serverACLInit/Job: uses only the port from externalServers.httpsPort if TLS is enabled and externalServers.enabled is false" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/server-acl-init-job.yaml  \
@@ -923,6 +923,7 @@ load _helpers
       --set 'server.enabled=false' \
       --set 'externalServers.enabled=true' \
       --set 'externalServers.hosts[0]=1.1.1.1' \
+      --set 'externalServers.httpsPort=443' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-server-port=8501"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
