@@ -327,11 +327,10 @@ externalServers:
   # If setting this to true, you must also set server.enabled to false.
   enabled: false
 
-  # An array of external Consul hosts.
+  # An array of external Consul server hosts that clients will use to join with servers
+  # as well as for HTTP/HTTPS connections from the components in this Helm chart.
   # Valid values include IPs, DNS names, or Cloud auto-join string.
   # Ports must be provided separately below.
-  # These hosts are used for clients to join the server cluster,
-  # as well as for HTTP/HTTPS connections from the components in this Helm chart.
   hosts: []
 
   # The Serf LAN port that the clients will use to join the server cluster.
