@@ -128,6 +128,10 @@ global:
 
     # caCert is a Kubernetes secret containing the certificate
     # of the CA to use for TLS communication within the Consul cluster.
+    # If that consul CA certificate is intermediate and created by another CA,
+    # make sure that you include complete CA chain in that secret
+    # To create bundle:
+    #   cat consul-ca.pem root-ca.pem > bundle.pem
     # If you have generated the CA yourself with the consul CLI,
     # you could use the following command to create the secret in Kubernetes:
     #
@@ -139,6 +143,7 @@ global:
 
     # caKey is a Kubernetes secret containing the private key
     # of the CA to use for TLS communications within the Consul cluster.
+    # At the moment of writing Consul tls commands support only ECDSA keys, not RSA.
     # If you have generated the CA yourself with the consul CLI,
     # you could use the following command to create the secret in Kubernetes:
     #
