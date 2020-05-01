@@ -153,6 +153,20 @@ global:
       secretName: null
       secretKey: null
 
+    # kubernetesCAchain is a Kubernetes secret containing Kubernetes CA chain.
+    # In some cases Kubernetes CA is an intermediate CA generate by main corporate CA.
+    # /var/run/secrets/kubernetes.io/serviceaccount/ca.crt contains only that, intermediate cluster CA.
+    # While at the same time curl requires complete certifacate-chain to verify kubernetes-API responses.
+    # Example:
+    #    cat root-ca.pem intermediate-cluster-ca.pem > bundle.pem
+    #    kubectl create secret generic k8s-ca-bundle \
+    #            --from-file='bundle.pem=./bundle.pem'
+    # secretName will be k8s-ca-bundle
+    # secretKey will be bundle.pem
+    kubernetesCAchain:
+      secretName: null
+      secretKey: null
+
   # [Enterprise Only] enableConsulNamespaces indicates that you are running
   # Consul Enterprise v1.7+ with a valid Consul Enterprise license and would like to
   # make use of configuration beyond registering everything into the `default` Consul

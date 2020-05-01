@@ -29,6 +29,15 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: {{ template "consul.fullname" . }}-tls-init-cleanup
+      {{- if (and .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName .Values.global.tls.kubernetesCAchain.secretName) }}
+      volumes:
+      - name: k8s-ca-chain
+        secret:
+          secretName: {{ .Values.global.tls.kubernetesCAchain.secretName }}
+          items:
+          - key: {{ default "k8s-ca-chain.crt" .Values.global.tls.kubernetesCAchain.secretKey }}
+            path: k8s-ca-chain.crt
+      {{- end }}
       containers:
         - name: tls-init-cleanup
           image: "{{ .Values.global.image }}"
@@ -42,15 +51,21 @@ spec:
             - "-ec"
             - |
               {{- if (not (and .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName)) }}
-              curl -s -X DELETE --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+              curl -s -X DELETE --cacert {{ template "consul.kubernetesCApath" . }} \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets/{{ template "consul.fullname" . }}-ca-cert \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )"
-              curl -s -X DELETE --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+              curl -s -X DELETE --cacert {{ template "consul.kubernetesCApath" . }} \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets/{{ template "consul.fullname" . }}-ca-key \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )"
               {{- end }}
-              curl -s -X DELETE --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+              curl -s -X DELETE --cacert {{ template "consul.kubernetesCApath" . }} \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets/{{ template "consul.fullname" . }}-server-cert \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )"
+          {{- if (and .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName .Values.global.tls.kubernetesCAchain.secretName) }}
+          volumeMounts:
+            - name: k8s-ca-chain
+              mountPath: /consul/tls/ca/k8s-ca-chain
+              readOnly: true
+          {{- end }}
 {{- end }}
 {{- end }}

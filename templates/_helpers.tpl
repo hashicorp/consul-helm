@@ -63,6 +63,19 @@ Inject extra environment vars in the format key:value, if populated
 {{- end -}}
 
 {{/*
+Calculate Kubernetes API CA path
+*/}}
+{{- define "consul.kubernetesCApath" -}}
+{{- if (and .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName) -}}
+{{- if .Values.global.tls.kubernetesCAchain.secretName -}}
+{{- print "/consul/tls/ca/k8s-ca-chain/k8s-ca-chain.crt" -}}
+{{- else -}}
+{{- print "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Get Consul client CA to use when auto-encrypt is enabled.
 This template is for an init container.
 */}}

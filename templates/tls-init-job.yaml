@@ -43,6 +43,14 @@ spec:
           items:
           - key: {{ default "tls.key" .Values.global.tls.caKey.secretKey }}
             path: tls.key
+      {{- if .Values.global.tls.kubernetesCAchain.secretName }}
+      - name: k8s-ca-chain
+        secret:
+          secretName: {{ .Values.global.tls.kubernetesCAchain.secretName }}
+          items:
+          - key: {{ default "k8s-ca-chain.crt" .Values.global.tls.kubernetesCAchain.secretKey }}
+            path: k8s-ca-chain.crt
+      {{- end }}
       {{- end }}
       containers:
         - name: tls-init
@@ -63,13 +71,13 @@ spec:
               {{- if (not (and .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName)) }}
               consul tls ca create \
                 -domain={{ .Values.global.domain }}
-              curl -s -X POST --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+              curl -s -X POST --cacert {{ template "consul.kubernetesCApath" . }} \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )" \
                 -H "Content-Type: application/json" \
                 -H "Accept: application/json" \
                 -d "{ \"kind\": \"Secret\", \"apiVersion\": \"v1\", \"metadata\": { \"name\": \"{{ template "consul.fullname" . }}-ca-cert\", \"namespace\": \"${NAMESPACE}\" }, \"type\": \"Opaque\", \"data\": { \"tls.crt\": \"$( cat {{ .Values.global.domain }}-agent-ca.pem | base64 | tr -d '\n' )\" }}" > /dev/null
-              curl -s -X POST --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+              curl -s -X POST --cacert {{ template "consul.kubernetesCApath" . }} \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )" \
                 -H "Content-Type: application/json" \
@@ -95,7 +103,7 @@ spec:
                  {{- end }}
                 -dc={{ .Values.global.datacenter }} \
                 -domain={{ .Values.global.domain }}
-              curl -s -X POST --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+              curl -s -X POST --cacert {{ template "consul.kubernetesCApath" . }} \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )" \
                 -H "Content-Type: application/json" \
@@ -109,6 +117,11 @@ spec:
             - name: consul-ca-key
               mountPath: /consul/tls/ca/key
               readOnly: true
+          {{- if .Values.global.tls.kubernetesCAchain.secretName }}
+            - name: k8s-ca-chain
+              mountPath: /consul/tls/ca/k8s-ca-chain
+              readOnly: true
+          {{- end }}
           {{- end }}
 {{- end }}
 {{- end }}
