@@ -29,7 +29,7 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: {{ template "consul.fullname" . }}-tls-init-cleanup
-      {{- if (and .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName .Values.global.tls.kubernetesCAchain.secretName) }}
+      {{- if .Values.global.tls.kubernetesCAchain.secretName }}
       volumes:
       - name: k8s-ca-chain
         secret:
@@ -61,7 +61,7 @@ spec:
               curl -s -X DELETE --cacert {{ template "consul.kubernetesCApath" . }} \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets/{{ template "consul.fullname" . }}-server-cert \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )"
-          {{- if (and .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName .Values.global.tls.kubernetesCAchain.secretName) }}
+          {{- if .Values.global.tls.kubernetesCAchain.secretName }}
           volumeMounts:
             - name: k8s-ca-chain
               mountPath: /consul/tls/ca/k8s-ca-chain

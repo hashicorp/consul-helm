@@ -29,8 +29,10 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: {{ template "consul.fullname" . }}-tls-init
-      {{- if (and .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName) }}
+      {{- if (or .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName .Values.global.tls.kubernetesCAchain.secretName) }}
       volumes:
+      {{- end }}
+      {{- if (and .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName) }}
       - name: consul-ca-cert
         secret:
           secretName: {{ .Values.global.tls.caCert.secretName }}
@@ -43,6 +45,7 @@ spec:
           items:
           - key: {{ default "tls.key" .Values.global.tls.caKey.secretKey }}
             path: tls.key
+      {{- end }}
       {{- if .Values.global.tls.kubernetesCAchain.secretName }}
       - name: k8s-ca-chain
         secret:
@@ -50,7 +53,6 @@ spec:
           items:
           - key: {{ default "k8s-ca-chain.crt" .Values.global.tls.kubernetesCAchain.secretKey }}
             path: k8s-ca-chain.crt
-      {{- end }}
       {{- end }}
       containers:
         - name: tls-init
@@ -117,11 +119,11 @@ spec:
             - name: consul-ca-key
               mountPath: /consul/tls/ca/key
               readOnly: true
+          {{- end }}
           {{- if .Values.global.tls.kubernetesCAchain.secretName }}
             - name: k8s-ca-chain
               mountPath: /consul/tls/ca/k8s-ca-chain
               readOnly: true
-          {{- end }}
           {{- end }}
 {{- end }}
 {{- end }}
