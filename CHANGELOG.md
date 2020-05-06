@@ -1,5 +1,9 @@
 ## Unreleased
 
+IMPROVEMENTS:
+
+* Default Consul Docker image is now `consul:1.7.3`
+
 ## 0.20.1 (Apr 27, 2020)
 
 BUG FIXES
