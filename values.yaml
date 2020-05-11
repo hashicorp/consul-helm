@@ -1004,6 +1004,55 @@ meshGateway:
   #     "annotation-key": "annotation-value"
   annotations: null
 
+terminatingGateways:
+  enabled: true
+
+  # Defaults sets default values for all gateway fields. With the exception
+  # of annotations, defining any of these values in the `gateways` list
+  # will override the default values provided here.
+  defaults:
+    replicas: 2
+    imageEnvoy: "envoyproxy/envoy:v1.13.0"
+
+    # extraVolumes is a list of extra volumes to mount. These will be exposed
+    # to Consul in the path `/consul/userconfig/<name>/`. The value below is
+    # an array of objects, examples are shown below.
+    #  extraVolumes:
+    #    - type: secret
+    #      name: my-secret
+    #      items:  # optional items array
+    #        - key: key
+    #          path: path  # secret will now mount to /consul/userconfig/my-secret/path
+    extraVolumes: []
+
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "250m"
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+    affinity: |
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+              app: {{ template "consul.name" . }}
+              release: "{{ .Release.Name }}"
+              component: terminating-gateway
+              topologyKey: kubernetes.io/hostname
+    tolerations: null
+    nodeSelector: null
+    priorityClassName: ""
+    annotations: null
+
+  # Gateways is a list of gateway objects. The only required field for
+  # each is `name`, though they can also contain any of the fields in
+  # `defaults`. Values defined here override the defaults except in the
+  # case of annotations where both will be applied.
+  gateways:
+    - name: terminating-gateway
+
 # Control whether a test Pod manifest is generated when running helm template.
 # When using helm install, the test Pod is not submitted to the cluster so this
 # is only useful when running helm template.
