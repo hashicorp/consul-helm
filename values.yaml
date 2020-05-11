@@ -1061,7 +1061,6 @@ meshGateway:
               release: "{{ .Release.Name }}"
               component: mesh-gateway
           topologyKey: kubernetes.io/hostname
-
   # Optional YAML string to specify tolerations.
   tolerations: null
 
@@ -1146,7 +1145,6 @@ ingressGateways:
                 release: "{{ .Release.Name }}"
                 component: ingress-gateway
             topologyKey: kubernetes.io/hostname
-
     # Optional YAML string to specify tolerations.
     tolerations: null
 
@@ -1177,6 +1175,87 @@ ingressGateways:
   # case of annotations where both will be applied.
   gateways:
     - name: ingress-gateway
+
+# Configuration options for terminating gateways. Default values for all
+# terminating gateways are defined in `terminatingGateways.defaults`. Any of
+# these values may be overridden in `terminatingGateways.gateways` for a
+# specific gateway with the exception of annotations. Annotations will
+# include both the default annotations and any additional ones defined
+# for a specific gateway.
+# Requirements: consul >= 1.8.0 and consul-k8s >= 0.16.0 if using
+# global.acls.manageSystemACLs.
+terminatingGateways:
+  enabled: false
+
+  # Defaults sets default values for all gateway fields. With the exception
+  # of annotations, defining any of these values in the `gateways` list
+  # will override the default values provided here.
+  defaults:
+    # Number of replicas for each terminating gateway defined.
+    replicas: 2
+
+    # extraVolumes is a list of extra volumes to mount. These will be exposed
+    # to Consul in the path `/consul/userconfig/<name>/`. The value below is
+    # an array of objects, examples are shown below.
+    #  extraVolumes:
+    #    - type: secret
+    #      name: my-secret
+    #      items:  # optional items array
+    #        - key: key
+    #          path: path  # secret will now mount to /consul/userconfig/my-secret/path
+    extraVolumes: []
+
+    resources:
+      requests:
+        memory: "100Mi"
+        cpu: "100m"
+      limits:
+        memory: "100Mi"
+        cpu: "100m"
+
+    # By default, we set an anti affinity so that two of the same gateway pods
+    # won't be on the same node. NOTE: Gateways require that Consul client agents are
+    # also running on the nodes alongside each gateway Pod.
+    affinity: |
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: {{ template "consul.name" . }}
+                release: "{{ .Release.Name }}"
+                component: terminating-gateway
+            topologyKey: kubernetes.io/hostname
+
+    # Optional YAML string to specify tolerations.
+    tolerations: null
+
+    # Optional YAML string to specify a nodeSelector config.
+    nodeSelector: null
+
+    # Optional priorityClassName.
+    priorityClassName: ""
+
+    # Annotations to apply to the terminating gateway deployment. Annotations defined
+    # here will be applied to all terminating gateway deployments in addition to any
+    # annotations defined for a specific gateway in `terminatingGateways.gateways`.
+    # Example:
+    #   annotations: |
+    #     "annotation-key": "annotation-value"
+    annotations: null
+
+    # [Enterprise Only] `consulNamespace` defines the Consul namespace to register
+    # the gateway into.  Requires `global.enableConsulNamespaces` to be true and
+    # Consul Enterprise v1.7+ with a valid Consul Enterprise license.
+    # Note: The Consul namespace MUST exist before the gateway is deployed or
+    # deployment will fail.
+    consulNamespace: "default"
+
+  # Gateways is a list of gateway objects. The only required field for
+  # each is `name`, though they can also contain any of the fields in
+  # `defaults`. Values defined here override the defaults except in the
+  # case of annotations where both will be applied.
+  gateways:
+    - name: terminating-gateway
 
 # Control whether a test Pod manifest is generated when running helm template.
 # When using helm install, the test Pod is not submitted to the cluster so this
