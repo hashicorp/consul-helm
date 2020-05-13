@@ -1,0 +1,53 @@
+{{- if .Values.ingressGateways.enabled }}
+
+{{- $root := . }}
+{{- $defaults := .Values.ingressGateways.defaults }}
+
+{{- range .Values.ingressGateways.gateways }}
+{{- $wanAddress := .wanAddress }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .name }}
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    app: {{ template "consul.name" $root }}
+    chart: {{ template "consul.chart" $root }}
+    heritage: {{ $root.Release.Service }}
+    release: {{ $root.Release.Name }}
+    component: ingress-gateway
+{{- $source := (default $defaults.wanAddress.source $wanAddress.source) }}
+{{- if (or $root.Values.global.acls.manageSystemACLs $root.Values.global.bootstrapACLs $root.Values.global.enablePodSecurityPolicies (eq $source "Service")) }}
+rules:
+{{- if $root.Values.global.enablePodSecurityPolicies }}
+  - apiGroups: ["policy"]
+    resources: ["podsecuritypolicies"]
+    resourceNames:
+      - {{ .name }}
+    verbs:
+      - use
+{{- end }}
+{{- if (or $root.Values.global.acls.manageSystemACLs $root.Values.global.bootstrapACLs) }}
+  - apiGroups: [""]
+    resources:
+      - secrets
+    resourceNames:
+      - {{ .name }}-ingress-gateway-acl-token
+    verbs:
+      - get
+{{- end }}
+{{- if (eq $source "Service") }}
+  - apiGroups: [""]
+    resources:
+      - services
+    resourceNames:
+      - {{ .name }}
+    verbs:
+      - get
+{{- end }}
+{{- else }}
+rules: []
+{{- end }}
+---
+{{- end }}
+{{- end }}
