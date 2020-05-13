@@ -1,0 +1,52 @@
+{{- if .Values.ingressGateways.enabled }}
+
+{{- $root := . }}
+{{- $defaults := .Values.ingressGateways.defaults }}
+
+{{- range .Values.ingressGateways.gateways }}
+
+{{- $service := .service }}
+{{- $serviceEnabled := (ternary $defaults.service.enabled $service.enabled (kindIs "invalid" $service.enabled)) }}
+
+{{- if $serviceEnabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    app: {{ template "consul.name" $root }}
+    chart: {{ template "consul.chart" $root }}
+    heritage: {{ $root.Release.Service }}
+    release: {{ $root.Release.Name }}
+    component: ingress-gateway
+  {{- if (or $defaults.service.annotations $service.annotations) }}
+  # We allow both default annotations and gateway-specific annotations
+  annotations:
+    {{- if $defaults.service.annotations }}
+    {{ tpl $defaults.service.annotations $root | nindent 4 | trim }}
+    {{- end }}
+    {{- if $service.annotations }}
+    {{ tpl $service.annotations $root | nindent 4 | trim }}
+    {{- end }}
+  {{- end }}
+spec:
+  selector:
+    app: {{ template "consul.name" $root }}
+    release: "{{ $root.Release.Name }}"
+    component: ingress-gateway
+  ports:
+    - name: gateway
+      port: {{ default $defaults.service.port $service.port }}
+      targetPort: 8443
+      {{- if (default $defaults.service.nodePort $service.nodePort) }}
+      nodePort: {{ default $defaults.service.nodePort $service.nodePort }}
+      {{- end}}
+  type: {{ default $defaults.service.type $service.type }}
+  {{- if (default $defaults.service.additionalSpec $service.additionalSpec) }}
+  {{ tpl (default $defaults.service.additionalSpec $service.additionalSpec) $root | nindent 2 | trim }}
+  {{- end }}
+---
+{{- end }}
+{{- end }}
+{{- end }}
