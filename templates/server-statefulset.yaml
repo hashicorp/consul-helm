@@ -182,6 +182,9 @@ spec:
                 {{- range $index := until (.Values.server.replicas | int) }}
                 -retry-join=${CONSUL_FULLNAME}-server-{{ $index }}.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc \
                 {{- end }}
+                {{- range $cmd := .Values.server.extraArguments }}
+                {{ $cmd }} \
+                {{- end }}
                 -server
           volumeMounts:
             - name: data-{{ .Release.Namespace }}

@@ -796,6 +796,19 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# extraArguments
+
+@test "client/DaemonSet: custom command line arguments" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'client.extraArguments={-config-file=/vault/secrets/custom.json}' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("config-file=/vault/secrets/custom.json"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
 # global.acls.manageSystemACLs
 
 @test "client/DaemonSet: aclconfig volume is created when global.acls.manageSystemACLs=true" {

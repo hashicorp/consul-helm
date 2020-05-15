@@ -216,6 +216,9 @@ spec:
                 {{- end }}
                 {{- end }}
                 {{- end }}
+                {{- range $cmd := .Values.client.extraArguments }}
+                {{ $cmd }} \
+                {{- end }}
                 -domain={{ .Values.global.domain }}
           volumeMounts:
             - name: data

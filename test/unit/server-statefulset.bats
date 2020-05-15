@@ -475,6 +475,19 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# extraArguments
+
+@test "server/StatefulSet: custom command line arguments" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-statefulset.yaml  \
+      --set 'server.extraArguments={-config-file=/vault/secrets/custom.json}' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("config-file=/vault/secrets/custom.json"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
 # global.tls.enabled
 
 @test "server/StatefulSet: CA volume present when TLS is enabled" {

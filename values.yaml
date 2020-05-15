@@ -339,6 +339,10 @@ server:
     # https_proxy: http://localhost:3128,
     # no_proxy: internal.domain.com
 
+  # extraArguments is a list of additional command line switches that should be
+  # passed to the command start.
+  extraArguments: []
+
 # Configuration for Consul servers when the servers are running outside of Kubernetes.
 # When running external servers, configuring these values is recommended
 # if setting global.tls.enableAutoEncrypt to true (requires consul-k8s >= 0.13.0)
@@ -475,6 +479,10 @@ client:
     # http_proxy: http://localhost:3128,
     # https_proxy: http://localhost:3128,
     # no_proxy: internal.domain.com
+
+  # extraArguments is a list of additional command line switches that
+  # should be passed to the command start.
+  extraArguments: []
 
   # dnsPolicy to use.
   dnsPolicy: null
