@@ -386,6 +386,29 @@ load _helpers
       . | tee /dev/stderr |
       yq '.spec.template.spec | .tolerations == "foobar"' | tee /dev/stderr)
   [ "${actual}" = "true" ]
+
+#--------------------------------------------------------------------
+# annotations
+
+@test "syncCatalog/Deployment: no annotations defined by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/sync-catalog-deployment.yaml \
+      --set 'syncCatalog.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.metadata.annotations | del(."consul.hashicorp.com/connect-inject")' | tee /dev/stderr)
+  [ "${actual}" = "{}" ]
+}
+
+@test "syncCatalog/Deployment: annotations can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/sync-catalog-deployment.yaml \
+      --set 'syncCatalog.enabled=true' \
+      --set 'syncCatalog.annotations=foo: bar' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.metadata.annotations.foo' | tee /dev/stderr)
+  [ "${actual}" = "bar" ]
 }
 
 #--------------------------------------------------------------------

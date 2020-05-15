@@ -27,6 +27,9 @@ spec:
         component: sync-catalog
       annotations:
         "consul.hashicorp.com/connect-inject": "false"
+        {{- if .Values.syncCatalog.annotations }}
+          {{- tpl .Values.syncCatalog.annotations . | nindent 8 }}
+        {{- end }}
     spec:
       serviceAccountName: {{ template "consul.fullname" . }}-sync-catalog
       {{- if .Values.global.tls.enabled }}

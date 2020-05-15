@@ -740,6 +740,13 @@ syncCatalog:
       memory: "50Mi"
       cpu: "50m"
 
+  # Extra annotations to attach to the syncCatalog pods.
+  # This should be a multi-line YAML string.
+  # Example:
+  #   annotations: |
+  #     "annotation-key": "annotation-value"
+  annotations: null
+
   # Log verbosity level. One of "trace", "debug", "info", "warn", or "error".
   logLevel: info
 
