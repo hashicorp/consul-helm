@@ -692,3 +692,25 @@ load _helpers
       yq '.spec.template.spec.containers[0].command | any(contains("-consul-cross-namespace-acl-policy"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# extraEnvironmentVariables
+
+@test "syncCatalog/Deployment: custom environment variables" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/sync-catalog-deployment.yaml \
+      --set 'syncCatalog.enabled=true' \
+      --set 'syncCatalog.extraEnvironmentVars.custom_proxy=fakeproxy' \
+      --set 'syncCatalog.extraEnvironmentVars.no_proxy=custom_no_proxy' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].env' | tee /dev/stderr)
+
+  local actual=$(echo $object |
+      yq -r '.[] | select(.name=="custom_proxy").value' | tee /dev/stderr)
+  [ "${actual}" = "fakeproxy" ]
+
+  local actual=$(echo $object |
+      yq -r '.[] | select(.name=="no_proxy").value' | tee /dev/stderr)
+  [ "${actual}" = "custom_no_proxy" ]
+}

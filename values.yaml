@@ -693,6 +693,13 @@ syncCatalog:
   # Override the default interval to perform syncing operations creating Consul services.
   consulWriteInterval: null
 
+  # extraEnvVars is a list of extra environment variables to set with the deployment. These could be
+  # used to include proxy settings, custom token locations, or other settings.
+  extraEnvironmentVars: {}
+    # http_proxy: http://localhost:3128,
+    # https_proxy: http://localhost:3128,
+    # no_proxy: internal.domain.com
+
 # ConnectInject will enable the automatic Connect sidecar injector.
 connectInject:
   # True if you want to enable connect injection. Set to "-" to inherit from
