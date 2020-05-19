@@ -24,7 +24,7 @@ The versions required are:
 
 ## Usage
 
-Detailed installatiion instructions for Consul on Kubernetes are found [here](https://www.consul.io/docs/k8s/installation/overview#installing-consul). 
+Detailed installatiion instructions for Consul on Kubernetes are found [here](https://www.consul.io/docs/k8s/installation/overview). 
 
 Add the HashiCorp Helm Repository:
 
