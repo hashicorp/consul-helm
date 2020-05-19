@@ -9,8 +9,7 @@ use Consul with Kubernetes, please see the
 [Consul and Kubernetes documentation](https://www.consul.io/docs/platform/k8s/index.html).
 
 ## Prerequisites
-  * **Helm 2.10+ or Helm 3.0+** - This is the earliest version of Helm tested. It is possible
-    it works with earlier versions but this chart is untested for those versions.
+  * **Helm 2.10+ or Helm 3.0+**
   * **Kubernetes 1.9+** - This is the earliest version of Kubernetes tested.
     It is possible that this chart works with earlier versions but it is
     untested.
