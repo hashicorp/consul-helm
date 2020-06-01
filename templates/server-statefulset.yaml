@@ -123,6 +123,13 @@ spec:
             - name: CONSUL_CACERT
               value: /consul/tls/ca/tls.crt
             {{- end }}
+            {{- if .Values.global.hostNetwork }}
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.hostIP
+            {{- end }}
             {{- if (and .Values.global.acls.replicationToken.secretName .Values.global.acls.replicationToken.secretKey) }}
             - name: ACL_REPLICATION_TOKEN
               valueFrom:
@@ -136,13 +143,13 @@ spec:
             - "-ec"
             - |
               CONSUL_FULLNAME="{{template "consul.fullname" . }}"
-
               exec /bin/consul agent \
-                -advertise="${POD_IP}" \
                 {{- if .Values.global.hostNetwork }}
                 -bind=${NODE_IP} \
+                -advertise="${NODE_IP}" \
                 {{- else }}
                 -bind=0.0.0.0 \
+                -advertise="${POD_IP}" \
                 {{- end }}
                 -bootstrap-expect={{ .Values.server.bootstrapExpect }} \
                 {{- if .Values.global.tls.enabled }}
