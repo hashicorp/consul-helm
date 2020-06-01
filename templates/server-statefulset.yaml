@@ -52,6 +52,10 @@ spec:
       tolerations:
         {{ tpl .Values.server.tolerations . | nindent 8 | trim }}
     {{- end }}
+      {{- if .Values.global.hostNetwork }}
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      {{- end }}
       terminationGracePeriodSeconds: 30
       serviceAccountName: {{ template "consul.fullname" . }}-server
       securityContext:
@@ -135,7 +139,11 @@ spec:
 
               exec /bin/consul agent \
                 -advertise="${POD_IP}" \
+                {{- if .Values.global.hostNetwork }}
+                -bind=${NODE_IP} \
+                {{- else }}
                 -bind=0.0.0.0 \
+                {{- end }}
                 -bootstrap-expect={{ .Values.server.bootstrapExpect }} \
                 {{- if .Values.global.tls.enabled }}
                 -hcl='ca_file = "/consul/tls/ca/tls.crt"' \
@@ -179,8 +187,12 @@ spec:
                 {{- if .Values.ui.enabled }}
                 -ui \
                 {{- end }}
+                {{- if .Values.global.hostNetwork }}
+                -retry-join=${CONSUL_FULLNAME}-server.${NAMESPACE}.svc \
+                {{- else }}
                 {{- range $index := until (.Values.server.replicas | int) }}
                 -retry-join=${CONSUL_FULLNAME}-server-{{ $index }}.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc \
+                {{- end }}
                 {{- end }}
                 -server
           volumeMounts:
