@@ -66,11 +66,6 @@ global:
   # chart. See https://kubernetes.io/docs/concepts/policy/pod-security-policy/.
   enablePodSecurityPolicies: false
 
-  # hostNework Controls whether the pod may use the node network namespace. Doing so gives the pod access to the loopback device, services listening on localhost
-  # Enable hostNework to run the server on the node network. the server is reacheble by the node ip.
-  # This is usefull to support external-to-k8s Consul clients
-  hostNetwork: False
-  
   # gossipEncryption configures which Kubernetes secret to retrieve Consul's
   # gossip encryption key from (see https://www.consul.io/docs/agent/options.html#_encrypt).
   # If secretName or secretKey are not set, gossip encryption will not be enabled.
@@ -268,6 +263,11 @@ server:
   # of Consul. Please refer to the documentation for more information.
   updatePartition: 0
 
+  # hostNework Controls whether the pod may use the node network namespace. Doing so gives the pod access to the loopback device, services listening on localhost
+  # Enable hostNework to run the server on the node network. the server is reacheble by the node ip.
+  # This is usefull to support external-to-k8s Consul clients
+  hostNetwork: False
+  
   # disruptionBudget enables the creation of a PodDisruptionBudget to
   # prevent voluntary degrading of the Consul server cluster.
   disruptionBudget:

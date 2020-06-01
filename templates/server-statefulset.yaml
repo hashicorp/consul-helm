@@ -52,7 +52,7 @@ spec:
       tolerations:
         {{ tpl .Values.server.tolerations . | nindent 8 | trim }}
     {{- end }}
-      {{- if .Values.global.hostNetwork }}
+      {{- if .Values.server.hostNetwork }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       {{- end }}
@@ -123,7 +123,7 @@ spec:
             - name: CONSUL_CACERT
               value: /consul/tls/ca/tls.crt
             {{- end }}
-            {{- if .Values.global.hostNetwork }}
+            {{- if .Values.server.hostNetwork }}
             - name: NODE_IP
               valueFrom:
                 fieldRef:
@@ -144,7 +144,7 @@ spec:
             - |
               CONSUL_FULLNAME="{{template "consul.fullname" . }}"
               exec /bin/consul agent \
-                {{- if .Values.global.hostNetwork }}
+                {{- if .Values.server.hostNetwork }}
                 -bind=${NODE_IP} \
                 -advertise="${NODE_IP}" \
                 {{- else }}
@@ -194,7 +194,7 @@ spec:
                 {{- if .Values.ui.enabled }}
                 -ui \
                 {{- end }}
-                {{- if .Values.global.hostNetwork }}
+                {{- if .Values.server.hostNetwork }}
                 -retry-join=${CONSUL_FULLNAME}-server.${NAMESPACE}.svc \
                 {{- else }}
                 {{- range $index := until (.Values.server.replicas | int) }}
