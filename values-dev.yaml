@@ -582,7 +582,7 @@ syncCatalog:
   nodeSelector: null
 
   # Log verbosity level. One of "trace", "debug", "info", "warn", or "error".
-  logLevel: debug
+  logLevel: "info"
 
   # Override the default interval to perform syncing operations creating Consul services.
   consulWriteInterval: null
