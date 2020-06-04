@@ -17,7 +17,6 @@ load _helpers
       -x templates/ingress-gateways-podsecuritypolicy.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       . | tee /dev/stderr |
       yq -s 'length > 0' | tee /dev/stderr)
@@ -30,7 +29,6 @@ load _helpers
       -x templates/ingress-gateways-podsecuritypolicy.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
       --set 'ingressGateways.gateways[1].name=gateway2' \
@@ -47,8 +45,8 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object | yq -r '.[0].metadata.name' | tee /dev/stderr)
-  [ "${actual}" = "gateway1" ]
+  [ "${actual}" = "release-name-consul-gateway1" ]
 
   local actual=$(echo $object | yq -r '.[1].metadata.name' | tee /dev/stderr)
-  [ "${actual}" = "gateway2" ]
+  [ "${actual}" = "release-name-consul-gateway2" ]
 }

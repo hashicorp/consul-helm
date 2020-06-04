@@ -17,7 +17,6 @@ load _helpers
       -x templates/mesh-gateway-serviceaccount.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]

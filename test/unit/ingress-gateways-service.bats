@@ -11,56 +11,12 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "ingressGateways/Service: disabled with ingressGateways.enabled=true .service.enabled set to false through specific gateway overriding defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-service.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
-      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
-      --set 'ingressGateways.gateways[0].service.enabled=false' \
-      . | tee /dev/stderr |
-      yq -s '.[0] | length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
-}
-
 @test "ingressGateways/Service: enabled by default with ingressGateways, connectInject and client.grpc enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      . | tee /dev/stderr |
-      yq -s '.[0] | length > 0' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
-
-@test "ingressGateways/Service: enabled with ingressGateways.enabled=true .service.enabled set through defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-service.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
-      . | tee /dev/stderr |
-      yq -s '.[0] | length > 0' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
-
-@test "ingressGateways/Service: enabled with ingressGateways.enabled=true .service.enabled set through specific gateway overriding defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-service.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=false' \
-      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
-      --set 'ingressGateways.gateways[0].service.enabled=true' \
       . | tee /dev/stderr |
       yq -s '.[0] | length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -75,8 +31,6 @@ load _helpers
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.service.enabled=true' \
       . | tee /dev/stderr |
       yq -s -r '.[0].metadata.annotations' | tee /dev/stderr)
   [ "${actual}" = "null" ]
@@ -88,7 +42,6 @@ load _helpers
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'ingressGateways.defaults.service.annotations=key1: value1
 key2: value2' \
       . | tee /dev/stderr |
@@ -110,7 +63,6 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
       --set 'ingressGateways.gateways[0].service.annotations=key1: value1
 key2: value2' \
@@ -130,19 +82,18 @@ key2: value2' \
 @test "ingressGateways/Service: annotations can be set through defaults and specific gateway" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
+      -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.annotations=defaultkey: defaultvalue' \
+      --set 'ingressGateways.defaults.service.annotations=defaultkey: defaultvalue' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
-      --set 'ingressGateways.gateways[0].annotations=key1: value1
+      --set 'ingressGateways.gateways[0].service.annotations=key1: value1
 key2: value2' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.metadata.annotations' | tee /dev/stderr)
+      yq -s -r '.[0].metadata.annotations' | tee /dev/stderr)
 
   local actual=$(echo $object | yq '. | length' | tee /dev/stderr)
-  [ "${actual}" = "4" ]
+  [ "${actual}" = "3" ]
 
   local actual=$(echo $object | yq -r '.defaultkey' | tee /dev/stderr)
   [ "${actual}" = "defaultvalue" ]
@@ -163,8 +114,6 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.ports[0].port' | tee /dev/stderr)
   [ "${actual}" = "443" ]
@@ -176,8 +125,6 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
       --set 'ingressGateways.defaults.service.port=8443' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.ports[0].port' | tee /dev/stderr)
@@ -190,8 +137,6 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
       --set 'ingressGateways.defaults.service.port=8443' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
       --set 'ingressGateways.gateways[0].service.port=1234' \
@@ -209,8 +154,6 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.ports[0].nodePort' | tee /dev/stderr)
   [ "${actual}" = "null" ]
@@ -222,8 +165,6 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
       --set 'ingressGateways.defaults.service.nodePort=8443' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.ports[0].nodePort' | tee /dev/stderr)
@@ -236,8 +177,6 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
       --set 'ingressGateways.defaults.service.nodePort=8443' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
       --set 'ingressGateways.gateways[0].service.nodePort=1234' \
@@ -249,17 +188,15 @@ key2: value2' \
 #--------------------------------------------------------------------
 # Service type
 
-@test "ingressGateways/Service: defaults to type LoadBalancer" {
+@test "ingressGateways/Service: defaults to type ClusterIP" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.type' | tee /dev/stderr)
-  [ "${actual}" = "LoadBalancer" ]
+  [ "${actual}" = "ClusterIP" ]
 }
 
 @test "ingressGateways/Service: can set type through defaults" {
@@ -268,12 +205,10 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
-      --set 'ingressGateways.defaults.service.type=ClusterIP' \
+      --set 'ingressGateways.defaults.service.type=LoadBalancer' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.type' | tee /dev/stderr)
-  [ "${actual}" = "ClusterIP" ]
+  [ "${actual}" = "LoadBalancer" ]
 }
 
 @test "ingressGateways/Service: can set type through specific gateway overriding defaults" {
@@ -282,8 +217,6 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
       --set 'ingressGateways.defaults.service.type=NodePort' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
       --set 'ingressGateways.gateways[0].service.type=ClusterIP' \
@@ -301,8 +234,6 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
       --set 'ingressGateways.defaults.service.additionalSpec=key: value' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.key' | tee /dev/stderr)
@@ -315,12 +246,48 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
-      --set 'ingressGateways.defaults.service.enabled=true' \
       --set 'ingressGateways.defaults.service.additionalSpec=key: value' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
       --set 'ingressGateways.gateways[0].service.additionalSpec=key2: value2' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.key2' | tee /dev/stderr)
   [ "${actual}" = "value2" ]
+}
+
+#--------------------------------------------------------------------
+# selectors 
+
+@test "ingressGateways/Service: label selectors uniquely identify gateways" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-service.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.selector."ingress-gateway-name"' | tee /dev/stderr)
+  [ "${actual}" = "release-name-consul-ingress-gateway" ]
+}
+
+#--------------------------------------------------------------------
+# multiple gateways
+
+@test "ingressGateways/Service: multiple gateways" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/ingress-gateways-service.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.gateways[0].name=gateway1' \
+      --set 'ingressGateways.gateways[1].name=gateway2' \
+      . | tee /dev/stderr |
+      yq -s -r '.' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.[0].metadata.name' | tee /dev/stderr)
+  [ "${actual}" = "release-name-consul-gateway1" ]
+
+  local actual=$(echo $object | yq -r '.[1].metadata.name' | tee /dev/stderr)
+  [ "${actual}" = "release-name-consul-gateway2" ]
+
+  local actual=$(echo $object | yq '.[2] | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
 }
