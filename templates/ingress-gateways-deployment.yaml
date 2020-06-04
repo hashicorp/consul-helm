@@ -20,11 +20,12 @@
 #  Check that the gateway name is unique
 {{ fail "Ingress gateway names must be unique"}}
 {{ end -}}
+{{- /* Add the gateway name to the $names dict to ensure uniqueness */ -}}
 {{- $_ := set $names .name .name }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .name }}
+  name: {{ template "consul.fullname" $root }}-{{ .name }}
   namespace: {{ $root.Release.Namespace }}
   labels:
     app: {{ template "consul.name" $root }}
@@ -32,7 +33,7 @@ metadata:
     heritage: {{ $root.Release.Service }}
     release: {{ $root.Release.Name }}
     component: ingress-gateway
-    ingress-gateway-name: {{ .name }}
+    ingress-gateway-name: {{ template "consul.fullname" $root }}-{{ .name }}
 spec:
   replicas: {{ default $defaults.replicas .replicas }}
   selector:
@@ -64,10 +65,10 @@ spec:
       {{- end }}
       {{- if (or $defaults.tolerations .tolerations) }}
       tolerations:
-        {{ toYaml (default $defaults.tolerations .tolerations) | nindent 8 | trim }}
+        {{ tpl (default $defaults.tolerations .tolerations) $root | nindent 8 | trim }}
       {{- end }}
       terminationGracePeriodSeconds: 10
-      serviceAccountName: {{ .name }}
+      serviceAccountName: {{ template "consul.fullname" $root }}-{{ .name }}
       volumes:
         - name: consul-bin
           emptyDir: {}
@@ -143,8 +144,6 @@ spec:
 
                 {{- $source := (default $defaults.wanAddress.source $wanAddress.source) }}
                 {{- $serviceType := (default $defaults.service.type $service.type) }}
-                {{- $serviceEnabled := (ternary $defaults.service.enabled $service.enabled (kindIs "invalid" $service.enabled)) }}
-                {{- if and (eq $source "Service") (not $serviceEnabled) }}{{ fail "if ingressGateways .wanAddress.source=Service then ingressGateways .service.enabled must be set to true in either the defaults or in the gateway definition" }}{{ end }}
                 {{- if or (eq $source "NodeIP") (and (eq $source "Service") (eq $serviceType "NodePort")) }}
                 WAN_ADDR="${HOST_IP}"
                 {{- else if eq $source "NodeName" }}
@@ -292,6 +291,9 @@ spec:
             - envoy
             - -gateway=ingress
             - -address=$(POD_IP):8443
+            {{- if $root.Values.global.enableConsulNamespaces }}
+            - -namespace={{ default $defaults.consulNamespace .consulNamespace }}
+            {{- end }}
           livenessProbe:
             tcpSocket:
               port: 8443

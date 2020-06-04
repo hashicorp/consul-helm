@@ -4,7 +4,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ .name }}
+  name: {{ template "consul.fullname" $root }}-{{ .name }}
   namespace: {{ $root.Release.Namespace }}
   labels:
     app: {{ template "consul.name" $root }}
@@ -15,11 +15,10 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ .name }}
+  name: {{ template "consul.fullname" $root }}-{{ .name }}
 subjects:
   - kind: ServiceAccount
-    name: {{ .name }}
-    namespace: {{ $root.Release.Namespace }}
+    name: {{ template "consul.fullname" $root }}-{{ .name }}
 ---
 {{- end }}
 {{- end }}

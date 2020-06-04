@@ -17,7 +17,6 @@ load _helpers
       -x templates/ingress-gateways-role.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -s 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -29,7 +28,6 @@ load _helpers
       -x templates/ingress-gateways-role.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       . | tee /dev/stderr |
       yq -s -r '.[0].rules[0].resources[0]' | tee /dev/stderr)
@@ -42,7 +40,6 @@ load _helpers
       -x templates/ingress-gateways-role.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq -s -r '.[0].rules[0]' | tee /dev/stderr)
@@ -51,7 +48,7 @@ load _helpers
   [ "${actual}" = "secrets" ]
 
   local actual=$(echo $object | yq -r '.resourceNames[0]' | tee /dev/stderr)
-  [ "${actual}" = "ingress-gateway-ingress-gateway-acl-token" ]
+  [ "${actual}" = "release-name-consul-ingress-gateway-ingress-gateway-acl-token" ]
 }
 
 @test "ingressGateways/Role: rules for ingressGateways .wanAddress.source=Service" {
@@ -60,7 +57,6 @@ load _helpers
       -x templates/ingress-gateways-role.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -s -r '.[0].rules[0].resources[0]' | tee /dev/stderr)
   [ "${actual}" = "services" ]
@@ -72,7 +68,6 @@ load _helpers
       -x templates/ingress-gateways-role.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'ingressGateways.gateways[0].name=ingress-gateway' \
       --set 'ingressGateways.gateways[0].wanAddress.source=NodeIP' \
       . | tee /dev/stderr |
@@ -86,7 +81,6 @@ load _helpers
       -x templates/ingress-gateways-role.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       . | tee /dev/stderr |
@@ -100,7 +94,6 @@ load _helpers
       -x templates/ingress-gateways-role.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
@@ -109,10 +102,10 @@ load _helpers
       yq -s -r '.' | tee /dev/stderr)
 
   local actual=$(echo $object | yq -r '.[0].metadata.name' | tee /dev/stderr)
-  [ "${actual}" = "gateway1" ]
+  [ "${actual}" = "release-name-consul-gateway1" ]
 
   local actual=$(echo $object | yq -r '.[1].metadata.name' | tee /dev/stderr)
-  [ "${actual}" = "gateway2" ]
+  [ "${actual}" = "release-name-consul-gateway2" ]
 
   local actual=$(echo $object | yq '.[0].rules | length' | tee /dev/stderr)
   [ "${actual}" = "3" ]

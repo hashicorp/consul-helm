@@ -17,7 +17,6 @@ load _helpers
       -x templates/ingress-gateways-serviceaccount.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -s 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -56,17 +55,16 @@ load _helpers
       --set 'connectInject.enabled=true' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
       --set 'ingressGateways.gateways[1].name=gateway2' \
-      . | tee /dev/stderr)
+      . | tee /dev/stderr |
+      yq -s -r '.' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.[0].metadata.name' | tee /dev/stderr)
+  [ "${actual}" = "release-name-consul-gateway1" ]
+
+  local actual=$(echo $object | yq -r '.[1].metadata.name' | tee /dev/stderr)
+  [ "${actual}" = "release-name-consul-gateway2" ]
 
   local actual=$(echo "$object" |
-      yq -s -r '.[0] | length > 0' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-
-  local actual=$(echo "$object" |
-      yq -s -r '.[1] | length > 0' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-
-  local actual=$(echo "$object" |
-      yq -s -r '.[2] | length > 0' | tee /dev/stderr)
+      yq -r '.[2] | length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }

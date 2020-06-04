@@ -267,7 +267,6 @@ load _helpers
       -x templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-create-mesh-gateway-token"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
@@ -280,7 +279,6 @@ load _helpers
       --set 'global.acls.manageSystemACLs=true' \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-create-mesh-gateway-token"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -295,7 +293,6 @@ load _helpers
       -x templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-ingress-gateway-name"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
@@ -308,7 +305,6 @@ load _helpers
       --set 'global.acls.manageSystemACLs=true' \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-ingress-gateway-name=\"ingress-gateway\""))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -321,7 +317,6 @@ load _helpers
       --set 'global.acls.manageSystemACLs=true' \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
       --set 'ingressGateways.gateways[1].name=gateway2' \
       . | tee /dev/stderr |
@@ -340,6 +335,19 @@ load _helpers
   [ "${actual}" = 2 ]
 }
 
+@test "serverACLInit/Job: ingress gateways acl option enabled with .ingressGateways.enabled=true, namespaces enabled, default namespace" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.enableConsulNamespaces=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-ingress-gateway-name=\"ingress-gateway.default\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
 @test "serverACLInit/Job: ingress gateways acl option enabled with .ingressGateways.enabled=true, namespaces enabled, no default namespace set" {
   cd `chart_dir`
   local actual=$(helm template \
@@ -347,8 +355,8 @@ load _helpers
       --set 'global.acls.manageSystemACLs=true' \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'global.enableConsulNamespaces=true' \
+      --set 'ingressGateways.defaults.consulNamespace=' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-ingress-gateway-name=\"ingress-gateway\""))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -361,7 +369,6 @@ load _helpers
       --set 'global.acls.manageSystemACLs=true' \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'global.enableConsulNamespaces=true' \
       --set 'ingressGateways.defaults.consulNamespace=default-namespace' \
       --set 'ingressGateways.gateways[0].name=gateway1' \

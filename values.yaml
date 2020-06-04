@@ -55,6 +55,8 @@ global:
   # If using Consul Enterprise namespaces, must be >= 0.12.
   imageK8S: "hashicorp/consul-k8s:0.15.0"
 
+  # imageEnvoy defines the default envoy image to use for ingress and
+  # terminating gateways.
   imageEnvoy: "envoyproxy/envoy:v1.13.0"
 
   # datacenter is the name of the datacenter that the agents should register
@@ -1059,7 +1061,8 @@ ingressGateways:
     # Number of replicas for each ingress gateway defined.
     replicas: 2
 
-    # What gets registered as WAN address for the gateway.
+    # What gets registered as WAN address for the gateway which is
+    # used as the address for the `.ingress.consul` DNS lookup.
     wanAddress:
       # source configures where to retrieve the WAN address (and possibly port)
       # for the ingress gateway from.
@@ -1098,13 +1101,10 @@ ingressGateways:
     # agent.
     hostPort: null
 
-    # The service option configures the Service that fronts the gateway Deployment.
+    # The service options configure the Service that fronts the gateway Deployment.
     service:
-      # Whether to create a Service or not.
-      enabled: true
-
       # Type of service, ex. LoadBalancer, ClusterIP.
-      type: LoadBalancer
+      type: ClusterIP
 
       # Port that the service will be exposed on.
       # The targetPort will be set to 8443.
@@ -1167,7 +1167,9 @@ ingressGateways:
     # [Enterprise Only] `consulNamespace` defines the Consul namespace to register
     # the gateway into.  Requires `global.enableConsulNamespaces` to be true and
     # Consul Enterprise v1.7+ with a valid Consul Enterprise license.
-    consulNamespace: null
+    # Note: The Consul namespace MUST exist before the gateway is deployed or
+    # deployment will fail.
+    consulNamespace: "default"
 
   # Gateways is a list of gateway objects. The only required field for
   # each is `name`, though they can also contain any of the fields in
