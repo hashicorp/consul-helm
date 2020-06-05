@@ -255,7 +255,7 @@ load _helpers
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].ports[0].hostPort' | tee /dev/stderr)
+      yq -s -r '.[0].spec.template.spec.containers[0].ports[1].hostPort' | tee /dev/stderr)
   [ "${actual}" = "null" ]
 }
 
@@ -267,7 +267,7 @@ load _helpers
       --set 'connectInject.enabled=true' \
       --set 'ingressGateways.defaults.hostPort=443' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].ports[0].hostPort' | tee /dev/stderr)
+      yq -s -r '.[0].spec.template.spec.containers[0].ports[1].hostPort' | tee /dev/stderr)
   [ "${actual}" = "443" ]
 }
 
@@ -281,8 +281,107 @@ load _helpers
       --set 'ingressGateways.gateways[0].name=gateway1' \
       --set 'ingressGateways.gateways[0].hostPort=1234' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].ports[0].hostPort' | tee /dev/stderr)
+      yq -s -r '.[0].spec.template.spec.containers[0].ports[1].hostPort' | tee /dev/stderr)
   [ "${actual}" = "1234" ]
+}
+
+#--------------------------------------------------------------------
+# additionalPorts
+
+@test "ingressGateways/Deployment: has default ports" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.containers[0].ports' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.[0].containerPort' | tee /dev/stderr)
+  [ "${actual}" = "21000" ]
+
+  local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-health" ]
+
+  local actual=$(echo $object | yq -r '.[1].containerPort' | tee /dev/stderr)
+  [ "${actual}" = "443" ]
+
+  local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-default" ]
+
+  local actual=$(echo $object | yq -r '.[2].containerPort' | tee /dev/stderr)
+  [ "${actual}" = "80" ]
+
+  local actual=$(echo $object | yq -r '.[2].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-0" ]
+}
+
+@test "ingressGateways/Deployment: can set additionalPorts through defaults" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.additionalPorts[0]=8443' \
+      --set 'ingressGateways.defaults.service.additionalPorts[1]=8444' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.containers[0].ports' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.[0].containerPort' | tee /dev/stderr)
+  [ "${actual}" = "21000" ]
+
+  local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-health" ]
+
+  local actual=$(echo $object | yq -r '.[1].containerPort' | tee /dev/stderr)
+  [ "${actual}" = "443" ]
+
+  local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-default" ]
+
+  local actual=$(echo $object | yq -r '.[2].containerPort' | tee /dev/stderr)
+  [ "${actual}" = "8443" ]
+
+  local actual=$(echo $object | yq -r '.[2].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-0" ]
+
+  local actual=$(echo $object | yq -r '.[3].containerPort' | tee /dev/stderr)
+  [ "${actual}" = "8444" ]
+
+  local actual=$(echo $object | yq -r '.[3].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-1" ]
+}
+
+@test "ingressGateways/Deployment: can set additionalPorts through specific gateway overriding defaults" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.additionalPorts[0]=8443' \
+      --set 'ingressGateways.defaults.service.additionalPorts[1]=8444' \
+      --set 'ingressGateways.gateways[0].name=gateway1' \
+      --set 'ingressGateways.gateways[0].service.additionalPorts[0]=1234' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.containers[0].ports' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.[0].containerPort' | tee /dev/stderr)
+  [ "${actual}" = "21000" ]
+
+  local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-health" ]
+
+  local actual=$(echo $object | yq -r '.[1].containerPort' | tee /dev/stderr)
+  [ "${actual}" = "443" ]
+
+  local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-default" ]
+
+  local actual=$(echo $object | yq -r '.[2].containerPort' | tee /dev/stderr)
+  [ "${actual}" = "1234" ]
+
+  local actual=$(echo $object | yq -r '.[2].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-0" ]
 }
 
 #--------------------------------------------------------------------
@@ -631,7 +730,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -652,7 +751,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -696,7 +795,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -717,7 +816,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -754,7 +853,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -775,7 +874,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -812,7 +911,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -833,7 +932,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -868,7 +967,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -889,7 +988,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -926,7 +1025,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -947,7 +1046,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -989,7 +1088,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1010,7 +1109,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -1054,7 +1153,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1075,7 +1174,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -1140,7 +1239,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1161,7 +1260,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -1199,7 +1298,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1220,7 +1319,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -1261,7 +1360,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1282,7 +1381,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -1327,7 +1426,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1348,7 +1447,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -1385,7 +1484,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1406,7 +1505,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -1445,7 +1544,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1466,7 +1565,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -1523,7 +1622,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1544,7 +1643,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -1590,7 +1689,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1611,7 +1710,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -1650,7 +1749,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1671,7 +1770,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -1712,7 +1811,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1733,7 +1832,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]
@@ -1776,7 +1875,7 @@ service {
   tagged_addresses {
     lan {
       address = "${POD_IP}"
-      port = 8443
+      port = 21000
     }
     wan {
       address = "${WAN_ADDR}"
@@ -1797,7 +1896,7 @@ service {
     {
       name = "Ingress Gateway Listening"
       interval = "10s"
-      tcp = "${POD_IP}:8443"
+      tcp = "${POD_IP}:21000"
       deregister_critical_service_after = "6h"
     }
   ]

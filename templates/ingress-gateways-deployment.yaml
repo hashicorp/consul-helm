@@ -184,7 +184,7 @@ spec:
                   tagged_addresses {
                     lan {
                       address = "${POD_IP}"
-                      port = 8443
+                      port = 21000
                     }
                     wan {
                       address = "${WAN_ADDR}"
@@ -205,7 +205,7 @@ spec:
                     {
                       name = "Ingress Gateway Listening"
                       interval = "10s"
-                      tcp = "${POD_IP}:8443"
+                      tcp = "${POD_IP}:21000"
                       deregister_critical_service_after = "6h"
                     }
                   ]
@@ -290,13 +290,13 @@ spec:
             - connect
             - envoy
             - -gateway=ingress
-            - -address=$(POD_IP):8443
+            - -address=$(POD_IP):21000
             {{- if $root.Values.global.enableConsulNamespaces }}
             - -namespace={{ default $defaults.consulNamespace .consulNamespace }}
             {{- end }}
           livenessProbe:
             tcpSocket:
-              port: 8443
+              port: 21000
             failureThreshold: 3
             initialDelaySeconds: 30
             periodSeconds: 10
@@ -304,18 +304,24 @@ spec:
             timeoutSeconds: 5
           readinessProbe:
             tcpSocket:
-              port: 8443
+              port: 21000
             failureThreshold: 3
             initialDelaySeconds: 10
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 5
           ports:
-            - name: gateway
-              containerPort: 8443
+            - name: gateway-health
+              containerPort: 21000
+            - name: gateway-default
+              containerPort: {{ default $defaults.service.port $service.port }}
               {{- if default $defaults.hostPort .hostPort }}
               hostPort:  {{ default $defaults.hostPort .hostPort }}
               {{- end }}
+            {{- range $index, $port := (default $defaults.service.additionalPorts $service.additionalPorts) }}
+            - name: gateway-{{ $index }}
+              containerPort: {{ $port }}
+            {{- end }}
           lifecycle:
             preStop:
               exec:

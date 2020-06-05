@@ -1106,14 +1106,19 @@ ingressGateways:
       # Type of service, ex. LoadBalancer, ClusterIP.
       type: ClusterIP
 
-      # Port that the service will be exposed on.
-      # The targetPort will be set to 8443.
+      # Port that the service will be exposed on. This port will be used in the
+      # Consul dns lookup for the ingress gateway.
       port: 443
 
       # Optionally hardcode the nodePort of the service if using type: NodePort.
       # If not set and using type: NodePort, Kubernetes will automatically assign
       # a port.
       nodePort: null
+
+      # Additional ports to expose on both the service and the ingress gateway
+      # container for any listeners that will be defined in the gateway's
+      # configuration entry.
+      additionalPorts: [80]
 
       # Annotations to apply to the ingress gateway service. Annotations defined
       # here will be applied to all ingress gateway services in addition to any
