@@ -717,6 +717,7 @@ key2: value2' \
   exp='consul-k8s service-address \
   -k8s-namespace=default \
   -name=ingress-gateway \
+  -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
 WAN_PORT="443"
@@ -782,6 +783,7 @@ EOF
 consul-k8s service-address \
   -k8s-namespace=default \
   -name=ingress-gateway \
+  -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
 WAN_PORT="443"
@@ -1347,6 +1349,7 @@ EOF
   exp='consul-k8s service-address \
   -k8s-namespace=default \
   -name=ingress-gateway \
+  -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
 WAN_PORT="443"
@@ -1413,6 +1416,7 @@ EOF
   exp='consul-k8s service-address \
   -k8s-namespace=default \
   -name=ingress-gateway \
+  -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
 WAN_PORT="443"
@@ -1609,6 +1613,7 @@ EOF
   exp='consul-k8s service-address \
   -k8s-namespace=default \
   -name=ingress-gateway \
+  -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
 WAN_PORT="443"
@@ -1676,6 +1681,7 @@ EOF
   exp='consul-k8s service-address \
   -k8s-namespace=default \
   -name=ingress-gateway \
+  -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
 WAN_PORT="443"
@@ -1736,6 +1742,7 @@ EOF
   exp='consul-k8s service-address \
   -k8s-namespace=default \
   -name=new-name \
+  -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
 WAN_PORT="443"
@@ -1797,6 +1804,7 @@ EOF
   exp='consul-k8s service-address \
   -k8s-namespace=default \
   -name=ingress-gateway \
+  -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
 WAN_PORT="443"
@@ -1861,6 +1869,7 @@ EOF
   exp='consul-k8s service-address \
   -k8s-namespace=default \
   -name=ingress-gateway \
+  -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
 WAN_PORT="443"
