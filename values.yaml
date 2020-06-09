@@ -529,7 +529,7 @@ client:
         memory: "50Mi"
         cpu: "50m"
 
-    # Optional CA certificate that will be added to the trusted system CAs.
+    # Optional PEM-encoded CA certificate that will be added to the trusted system CAs.
     # Useful if using an S3-compatible storage exposing a self-signed certificate.
     # Example
     #   caCert: |
