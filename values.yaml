@@ -755,7 +755,7 @@ connectInject:
   # The Docker image for envoy to use as the proxy sidecar when performing
   # Connect injection. If using Consul 1.7+, the envoy version must be 1.13+.
   # If not set, the image used depends on the consul-k8s version. For
-  # consul-k8s 0.12.0 the default is envoyproxy/envoy-alpine:v1.13.0.
+  # consul-k8s 0.16.0 the default is envoyproxy/envoy-alpine:v1.14.2.
   imageEnvoy: null
 
   # namespaceSelector is the selector for restricting the webhook to only
