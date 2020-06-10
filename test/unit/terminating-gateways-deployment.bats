@@ -726,16 +726,6 @@ service {
   name = "terminating-gateway"
   address = "${POD_IP}"
   port = 8443
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
   checks = [
     {
       name = "Terminating Gateway Listening"
@@ -774,16 +764,6 @@ service {
   name = "terminating-gateway"
   address = "${POD_IP}"
   port = 8443
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
   checks = [
     {
       name = "Terminating Gateway Listening"
@@ -821,16 +801,6 @@ service {
   namespace = "namespace"
   address = "${POD_IP}"
   port = 8443
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
   checks = [
     {
       name = "Terminating Gateway Listening"
@@ -869,16 +839,6 @@ service {
   namespace = "new-namespace"
   address = "${POD_IP}"
   port = 8443
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
   checks = [
     {
       name = "Terminating Gateway Listening"
