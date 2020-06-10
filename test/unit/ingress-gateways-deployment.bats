@@ -396,10 +396,10 @@ load _helpers
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.template.spec.containers[0].resources' | tee /dev/stderr)
 
-  [ $(echo "${actual}" | yq -r '.requests.memory') = "128Mi" ]
-  [ $(echo "${actual}" | yq -r '.requests.cpu') = "250m" ]
-  [ $(echo "${actual}" | yq -r '.limits.memory') = "256Mi" ]
-  [ $(echo "${actual}" | yq -r '.limits.cpu') = "500m" ]
+  [ $(echo "${actual}" | yq -r '.requests.memory') = "100Mi" ]
+  [ $(echo "${actual}" | yq -r '.requests.cpu') = "100m" ]
+  [ $(echo "${actual}" | yq -r '.limits.memory') = "100Mi" ]
+  [ $(echo "${actual}" | yq -r '.limits.cpu') = "100m" ]
 }
 
 @test "ingressGateways/Deployment: resources can be set through defaults" {
