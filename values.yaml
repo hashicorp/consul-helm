@@ -467,6 +467,15 @@ client:
   #           operator: DoesNotExist
   affinity: {}
 
+
+  # Security context settings for Client pods, formatted as a multi-line YAML string.
+  # ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+  # Example:
+  # securityContext: |
+  #   runAsUser: 100
+  securityContext: null
+
+
   # used to assign priority to client pods
   # ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
   priorityClassName: ""
