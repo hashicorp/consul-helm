@@ -61,3 +61,47 @@ Inject extra environment vars in the format key:value, if populated
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Get Consul client CA to use when auto-encrypt is enabled.
+This template is for an init container.
+*/}}
+{{- define "consul.getAutoEncryptClientCA" -}}
+- name: get-auto-encrypt-client-ca
+  image: {{ .Values.global.imageK8S }}
+  command:
+    - "/bin/sh"
+    - "-ec"
+    - |
+      consul-k8s get-consul-client-ca \
+        -output-file=/consul/tls/client/ca/tls.crt \
+        {{- if .Values.externalServers.enabled }}
+        {{- if and .Values.externalServers.enabled (not .Values.externalServers.hosts) }}{{ fail "externalServers.hosts must be set if externalServers.enabled is true" }}{{ end -}}
+        -server-addr={{ quote (first .Values.externalServers.hosts) }} \
+        -server-port={{ .Values.externalServers.httpsPort }} \
+        {{- if .Values.externalServers.tlsServerName }}
+        -tls-server-name={{ .Values.externalServers.tlsServerName }} \
+        {{- end }}
+        {{- if not .Values.externalServers.useSystemRoots }}
+        -ca-file=/consul/tls/ca/tls.crt
+        {{- end }}
+        {{- else }}
+        -server-addr={{ template "consul.fullname" . }}-server \
+        -server-port=8501 \
+        -ca-file=/consul/tls/ca/tls.crt
+        {{- end }}
+  volumeMounts:
+    {{- if not (and .Values.externalServers.enabled .Values.externalServers.useSystemRoots) }}
+    - name: consul-ca-cert
+      mountPath: /consul/tls/ca
+    {{- end }}
+    - name: consul-auto-encrypt-ca-cert
+      mountPath: /consul/tls/client/ca
+  resources:
+    requests:
+      memory: "25Mi"
+      cpu: "50m"
+    limits:
+      memory: "25Mi"
+      cpu: "50m"
+{{- end -}}

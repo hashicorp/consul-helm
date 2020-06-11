@@ -75,17 +75,55 @@ load _helpers
 #--------------------------------------------------------------------
 # retry-join
 
-@test "client/DaemonSet: retry join gets populated" {
+@test "client/DaemonSet: retry join gets populated by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  local command=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'server.replicas=3' \
       . | tee /dev/stderr |
-      yq -r '.spec.template.spec.containers[0].command | any(contains("-retry-join"))' | tee /dev/stderr)
+      yq -r '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
+  local actual=$(echo $command | jq -r ' . | any(contains("-retry-join=\"${CONSUL_FULLNAME}-server-0.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $command | jq -r ' . | any(contains("-retry-join=\"${CONSUL_FULLNAME}-server-1.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $command | jq -r ' . | any(contains("-retry-join=\"${CONSUL_FULLNAME}-server-2.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc\""))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
+@test "client/DaemonSet: retry join gets populated when client.join is set" {
+  cd `chart_dir`
+  local command=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'server.enabled=false' \
+      --set 'externalServers.enabled=true' \
+      --set 'client.join[0]=1.1.1.1' \
+      --set 'client.join[1]=2.2.2.2' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].command')
+
+  local actual=$(echo $command | jq -r ' . | any(contains("-retry-join=\"1.1.1.1\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $command | jq -r ' . | any(contains("-retry-join=\"2.2.2.2\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: can provide cloud auto-join string to client.join" {
+  cd `chart_dir`
+  local command=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'server.enabled=false' \
+      --set 'externalServers.enabled=true' \
+      --set 'client.join[0]=provider=my-cloud config=val' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].command')
+
+  local actual=$(echo $command | jq -r ' . | any(contains("-retry-join=\"provider=my-cloud config=val\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
 
 #--------------------------------------------------------------------
 # grpc
@@ -112,23 +150,34 @@ load _helpers
 #--------------------------------------------------------------------
 # resources
 
-@test "client/DaemonSet: no resources defined by default" {
+@test "client/DaemonSet: resources defined by default" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
       . | tee /dev/stderr |
-      yq -r '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
-  [ "${actual}" = "null" ]
+      yq -rc '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
+  [ "${actual}" = '{"limits":{"cpu":"100m","memory":"100Mi"},"requests":{"cpu":"100m","memory":"100Mi"}}' ]
 }
 
-@test "client/DaemonSet: resources can be set" {
+@test "client/DaemonSet: resources can be overridden" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
-      --set 'client.resources=foo' \
+      --set 'client.resources.foo=bar' \
       . | tee /dev/stderr |
-      yq -r '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
-  [ "${actual}" = "foo" ]
+      yq -r '.spec.template.spec.containers[0].resources.foo' | tee /dev/stderr)
+  [ "${actual}" = "bar" ]
+}
+
+# Test support for the deprecated method of setting a YAML string.
+@test "client/DaemonSet: resources can be overridden with string" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'client.resources=foo: bar' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].resources.foo' | tee /dev/stderr)
+  [ "${actual}" = "bar" ]
 }
 
 #--------------------------------------------------------------------
@@ -424,13 +473,23 @@ load _helpers
 #--------------------------------------------------------------------
 # global.tls.enabled
 
-@test "client/DaemonSet: CA volume present when TLS is enabled" {
+@test "client/DaemonSet: CA cert volume present when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.volumes[] | select(.name == "tls-ca-cert")' | tee /dev/stderr)
+      yq '.spec.template.spec.volumes[] | select(.name == "consul-ca-cert")' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: CA key volume present when TLS is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.volumes[] | select(.name == "consul-ca-key")' | tee /dev/stderr)
   [ "${actual}" != "" ]
 }
 
@@ -440,7 +499,7 @@ load _helpers
       -x templates/client-daemonset.yaml  \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.volumes[] | select(.name == "tls-client-cert")' | tee /dev/stderr)
+      yq '.spec.template.spec.volumes[] | select(.name == "consul-client-cert")' | tee /dev/stderr)
   [ "${actual}" != "" ]
 }
 
@@ -506,13 +565,13 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "client/DaemonSet: readiness checks use CA certificate when TLS is enabled" {
+@test "client/DaemonSet: readiness checks skip TLS verification when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("--cacert /consul/tls/ca/tls.crt")' | tee /dev/stderr)
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("-k")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -537,12 +596,12 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "client/DaemonSet: both ACL and TLS init containers are created when global.tls.enabled=true and global.bootstrapACLs=true" {
+@test "client/DaemonSet: both ACL and TLS init containers are created when global.tls.enabled=true and global.acls.manageSystemACLs=true" {
   cd `chart_dir`
   local has_acl_init_container=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'global.tls.enabled=true' \
-      --set 'global.bootstrapACLs=true' \
+      --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.initContainers[] | select(.name == "client-acl-init") | length > 0' | tee /dev/stderr)
 
@@ -551,7 +610,7 @@ load _helpers
   local has_tls_init_container=$(helm template \
       -x templates/client-daemonset.yaml  \
       --set 'global.tls.enabled=true' \
-      --set 'global.bootstrapACLs=true' \
+      --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.initContainers[] | select(.name == "client-acl-init") | length > 0' | tee /dev/stderr)
 
@@ -561,7 +620,7 @@ load _helpers
 @test "client/DaemonSet: sets Consul environment variables when global.tls.enabled" {
   cd `chart_dir`
   local env=$(helm template \
-      -x templates/server-statefulset.yaml  \
+      -x templates/client-daemonset.yaml  \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].env[]' | tee /dev/stderr)
@@ -593,7 +652,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "client/DaemonSet: doesn't set the verify_* flags by default when global.tls.enabled and global.tls.verify is false" {
+@test "client/DaemonSet: doesn't set the verify_* flags when global.tls.enabled is true and global.tls.verify is false" {
   cd `chart_dir`
   local command=$(helm template \
       -x templates/client-daemonset.yaml  \
@@ -613,6 +672,119 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
+@test "client/DaemonSet: can overwrite CA secret with the provided one" {
+  cd `chart_dir`
+  local spec=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.caCert.secretName=foo-ca-cert' \
+      --set 'global.tls.caCert.secretKey=key' \
+      --set 'global.tls.caKey.secretName=foo-ca-key' \
+      --set 'global.tls.caKey.secretKey=key' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec' | tee /dev/stderr)
+
+  # check that the provided ca cert secret is attached as a volume
+  local actual
+  actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-ca-cert") | .secret.secretName' | tee /dev/stderr)
+  [ "${actual}" = "foo-ca-cert" ]
+
+  # check that the provided ca key secret is attached as volume
+  actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-ca-key") | .secret.secretName' | tee /dev/stderr)
+  [ "${actual}" = "foo-ca-key" ]
+
+  # check that the volumes pulls the provided secret keys as a CA cert
+  actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-ca-cert") | .secret.items[0].key' | tee /dev/stderr)
+  [ "${actual}" = "key" ]
+
+  # check that the volumes pulls the provided secret keys as a CA key
+  actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-ca-key") | .secret.items[0].key' | tee /dev/stderr)
+  [ "${actual}" = "key" ]
+}
+
+#--------------------------------------------------------------------
+# global.tls.enableAutoEncrypt
+
+@test "client/DaemonSet: client certificate volume is not present when TLS with auto-encrypt is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.enableAutoEncrypt=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.volumes[] | select(.name == "consul-client-cert")' | tee /dev/stderr)
+  [ "${actual}" == "" ]
+}
+
+@test "client/DaemonSet: sets auto_encrypt options for the client if auto-encrypt is enabled" {
+  cd `chart_dir`
+  local command=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.enableAutoEncrypt=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | join(" ")' | tee /dev/stderr)
+
+  # enables auto encrypt on the client
+  actual=$(echo $command | jq -r '. | contains("auto_encrypt = {tls = true}")' | tee /dev/stderr)
+  [ "${actual}" == "true" ]
+
+  # sets IP SANs to contain the HOST IP of the client
+  actual=$(echo $command | jq -r '. | contains("auto_encrypt = {ip_san = [\\\"$HOST_IP\\\"]}")' | tee /dev/stderr)
+  [ "${actual}" == "true" ]
+
+  # doesn't set verify_incoming_rpc and verify_server_hostname
+  actual=$(echo $command | jq -r '. | contains("verify_incoming_rpc = true")' | tee /dev/stderr)
+  [ "${actual}" == "false" ]
+
+  actual=$(echo $command | jq -r '. | contains("verify_server_hostname = true")' | tee /dev/stderr)
+  [ "${actual}" == "false" ]
+}
+
+@test "client/DaemonSet: init container is not created when global.tls.enabled=true and global.tls.enableAutoEncrypt=true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.enableAutoEncrypt=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.initContainers | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: CA key volume is not present when TLS is enabled and global.tls.enableAutoEncrypt=true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.enableAutoEncrypt=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.volumes[] | select(.name == "consul-ca-key")' | tee /dev/stderr)
+  [ "${actual}" == "" ]
+}
+
+@test "client/DaemonSet: client certificate volume is not present when TLS is enabled and global.tls.enableAutoEncrypt=true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.enableAutoEncrypt=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.volumes[] | select(.name == "consul-client-cert")' | tee /dev/stderr)
+  [ "${actual}" == "" ]
+}
+
+@test "client/DaemonSet: sets CONSUL_HTTP_SSL_VERIFY environment variable to false when global.tls.enabled and global.tls.enableAutoEncrypt=true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.enableAutoEncrypt=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].env[] | select(.name == "CONSUL_HTTP_SSL_VERIFY") | .value' | tee /dev/stderr)
+  [ "${actual}" == "false" ]
+}
+
 #--------------------------------------------------------------------
 # extraEnvironmentVariables
 
@@ -626,40 +798,32 @@ load _helpers
       yq -r '.spec.template.spec.containers[0].env' | tee /dev/stderr)
 
   local actual=$(echo $object |
-      yq -r '.[3].name' | tee /dev/stderr)
-  [ "${actual}" = "custom_proxy" ]
-
-  local actual=$(echo $object |
-      yq -r '.[3].value' | tee /dev/stderr)
+      yq -r '.[] | select(.name=="custom_proxy").value' | tee /dev/stderr)
   [ "${actual}" = "fakeproxy" ]
 
   local actual=$(echo $object |
-      yq -r '.[4].name' | tee /dev/stderr)
-  [ "${actual}" = "no_proxy" ]
-
-  local actual=$(echo $object |
-      yq -r '.[4].value' | tee /dev/stderr)
+      yq -r '.[] | select(.name=="no_proxy").value' | tee /dev/stderr)
   [ "${actual}" = "custom_no_proxy" ]
 }
 
 #--------------------------------------------------------------------
-# global.bootstrapACLs
+# global.acls.manageSystemACLs
 
-@test "client/DaemonSet: aclconfig volume is created when global.bootstrapACLs=true" {
+@test "client/DaemonSet: aclconfig volume is created when global.acls.manageSystemACLs=true" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
-      --set 'global.bootstrapACLs=true' \
+      --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.volumes[2].name == "aclconfig"' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
-@test "client/DaemonSet: aclconfig volumeMount is created when global.bootstrapACLs=true" {
+@test "client/DaemonSet: aclconfig volumeMount is created when global.acls.manageSystemACLs=true" {
   cd `chart_dir`
   local object=$(helm template \
       -x templates/client-daemonset.yaml  \
-      --set 'global.bootstrapACLs=true' \
+      --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].volumeMounts[2]' | tee /dev/stderr)
 
@@ -672,21 +836,21 @@ load _helpers
   [ "${actual}" = "/consul/aclconfig" ]
 }
 
-@test "client/DaemonSet: command includes aclconfig dir when global.bootstrapACLs=true" {
+@test "client/DaemonSet: command includes aclconfig dir when global.acls.manageSystemACLs=true" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/client-daemonset.yaml  \
-      --set 'global.bootstrapACLs=true' \
+      --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("/consul/aclconfig"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
-@test "client/DaemonSet: init container is created when global.bootstrapACLs=true" {
+@test "client/DaemonSet: init container is created when global.acls.manageSystemACLs=true" {
   cd `chart_dir`
   local object=$(helm template \
       -x templates/client-daemonset.yaml  \
-      --set 'global.bootstrapACLs=true' \
+      --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.initContainers[] | select(.name == "client-acl-init")' | tee /dev/stderr)
 

@@ -13,6 +13,8 @@ metadata:
   annotations:
     "helm.sh/hook": pre-delete
     "helm.sh/hook-delete-policy": hook-succeeded
+    {{- /* Hook weight needs to be 1 so that the service account is provisioned first */}}
+    "helm.sh/hook-weight": "1"
 spec:
   template:
     metadata:
@@ -39,14 +41,23 @@ spec:
             - "/bin/sh"
             - "-ec"
             - |
+              {{- if (not (and .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName)) }}
               curl -s -X DELETE --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets/{{ template "consul.fullname" . }}-ca-cert \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )"
               curl -s -X DELETE --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets/{{ template "consul.fullname" . }}-ca-key \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )"
+              {{- end }}
               curl -s -X DELETE --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets/{{ template "consul.fullname" . }}-server-cert \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )"
+          resources:
+            requests:
+              memory: "25Mi"
+              cpu: "50m"
+            limits:
+              memory: "25Mi"
+              cpu: "50m"
 {{- end }}
 {{- end }}
