@@ -305,6 +305,13 @@ server:
               component: server
           topologyKey: kubernetes.io/hostname
 
+  # Security context settings for Server pods, formatted as a multi-line YAML string.
+  # ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+  # Example:
+  # securityContext: |
+  #   runAsUser: 100
+  securityContext: null
+
   # Toleration Settings for server pods
   # This should be a multi-line string matching the Toleration array
   # in a PodSpec.
