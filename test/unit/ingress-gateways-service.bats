@@ -118,28 +118,70 @@ key2: value2' \
       yq -s -r '.[0].spec.ports' | tee /dev/stderr)
 
   local actual=$(echo $object | yq -r '.[0].port' | tee /dev/stderr)
-  [ "${actual}" = "443" ]
-
-  local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
-  [ "${actual}" = "gateway-default" ]
-
-  local actual=$(echo $object | yq -r '.[1].port' | tee /dev/stderr)
   [ "${actual}" = "80" ]
 
-  local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
+  local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
   [ "${actual}" = "gateway-0" ]
+
+  local actual=$(echo $object | yq -r '.[1].port' | tee /dev/stderr)
+  [ "${actual}" = "443" ]
+
+  local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-1" ]
 }
 
-@test "ingressGateways/Service: can set port through defaults" {
+@test "ingressGateways/Service: can set ports through defaults" {
   cd `chart_dir`
-  local actual=$(helm template \
+  local object=$(helm template \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.service.port=8443' \
+      --set 'ingressGateways.defaults.service.ports[0].port=8443' \
+      --set 'ingressGateways.defaults.service.ports[1].port=8444' \
+      --set 'ingressGateways.defaults.service.ports[2].port=8445' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.ports[0].port' | tee /dev/stderr)
+      yq -s -r '.[0].spec.ports' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.[0].port' | tee /dev/stderr)
   [ "${actual}" = "8443" ]
+
+  local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-0" ]
+
+  local actual=$(echo $object | yq -r '.[1].port' | tee /dev/stderr)
+  [ "${actual}" = "8444" ]
+
+  local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-1" ]
+
+  local actual=$(echo $object | yq -r '.[2].port' | tee /dev/stderr)
+  [ "${actual}" = "8445" ]
+
+  local actual=$(echo $object | yq -r '.[2].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-2" ]
+}
+
+@test "ingressGateways/Service: can set ports through specific gateway overriding defaults" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/ingress-gateways-service.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.ports[0].port=8443' \
+      --set 'ingressGateways.defaults.service.ports[1].port=8444' \
+      --set 'ingressGateways.gateways[0].name=gateway1' \
+      --set 'ingressGateways.gateways[0].service.ports[0].port=1234' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.ports' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.[0].port' | tee /dev/stderr)
+  [ "${actual}" = "1234" ]
+
+  local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-0" ]
+
+  local actual=$(echo $object | yq '.[1] | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
 }
 
 @test "ingressGateways/Service: can set port through specific gateway, overriding defaults" {
@@ -150,7 +192,7 @@ key2: value2' \
       --set 'connectInject.enabled=true' \
       --set 'ingressGateways.defaults.service.port=8443' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
-      --set 'ingressGateways.gateways[0].service.port=1234' \
+      --set 'ingressGateways.gateways[0].service.ports[0].port=1234' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.ports[0].port' | tee /dev/stderr)
   [ "${actual}" = "1234" ]
@@ -170,13 +212,28 @@ key2: value2' \
   [ "${actual}" = "null" ]
 }
 
+@test "ingressGateways/Service: if not a NodePort service, cannot set a nodePort through defaults" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-service.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.ports[0].port=80' \
+      --set 'ingressGateways.defaults.service.ports[0].nodePort=8443' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.ports[0].nodePort' | tee /dev/stderr)
+  [ "${actual}" = "null" ]
+}
+
 @test "ingressGateways/Service: can set a nodePort through defaults" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.service.nodePort=8443' \
+      --set 'ingressGateways.defaults.service.type=NodePort' \
+      --set 'ingressGateways.defaults.service.ports[0].port=80' \
+      --set 'ingressGateways.defaults.service.ports[0].nodePort=8443' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.ports[0].nodePort' | tee /dev/stderr)
   [ "${actual}" = "8443" ]
@@ -188,71 +245,14 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.service.nodePort=8443' \
+      --set 'ingressGateways.defaults.service.type=NodePort' \
+      --set 'ingressGateways.defaults.service.ports[0].nodePort=8443' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
-      --set 'ingressGateways.gateways[0].service.nodePort=1234' \
+      --set 'ingressGateways.gateways[0].service.ports[0].port=80' \
+      --set 'ingressGateways.gateways[0].service.ports[0].nodePort=1234' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.ports[0].nodePort' | tee /dev/stderr)
   [ "${actual}" = "1234" ]
-}
-
-#--------------------------------------------------------------------
-# additionalPorts
-
-@test "ingressGateways/Service: can set additionalPorts through defaults" {
-  cd `chart_dir`
-  local object=$(helm template \
-      -x templates/ingress-gateways-service.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.service.additionalPorts[0]=8443' \
-      --set 'ingressGateways.defaults.service.additionalPorts[1]=8444' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.ports' | tee /dev/stderr)
-
-  local actual=$(echo $object | yq -r '.[0].port' | tee /dev/stderr)
-  [ "${actual}" = "443" ]
-
-  local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
-  [ "${actual}" = "gateway-default" ]
-
-  local actual=$(echo $object | yq -r '.[1].port' | tee /dev/stderr)
-  [ "${actual}" = "8443" ]
-
-  local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
-  [ "${actual}" = "gateway-0" ]
-
-  local actual=$(echo $object | yq -r '.[2].port' | tee /dev/stderr)
-  [ "${actual}" = "8444" ]
-
-  local actual=$(echo $object | yq -r '.[2].name' | tee /dev/stderr)
-  [ "${actual}" = "gateway-1" ]
-}
-
-@test "ingressGateways/Service: can set additionalPorts through specific gateway overriding defaults" {
-  cd `chart_dir`
-  local object=$(helm template \
-      -x templates/ingress-gateways-service.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.service.additionalPorts[0]=8443' \
-      --set 'ingressGateways.defaults.service.additionalPorts[1]=8444' \
-      --set 'ingressGateways.gateways[0].name=gateway1' \
-      --set 'ingressGateways.gateways[0].service.additionalPorts[0]=1234' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.ports' | tee /dev/stderr)
-
-  local actual=$(echo $object | yq -r '.[0].port' | tee /dev/stderr)
-  [ "${actual}" = "443" ]
-
-  local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
-  [ "${actual}" = "gateway-default" ]
-
-  local actual=$(echo $object | yq -r '.[1].port' | tee /dev/stderr)
-  [ "${actual}" = "1234" ]
-
-  local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
-  [ "${actual}" = "gateway-0" ]
 }
 
 #--------------------------------------------------------------------

@@ -246,47 +246,7 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
-# hostPort
-
-@test "ingressGateways/Deployment: no hostPort by default" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].ports[1].hostPort' | tee /dev/stderr)
-  [ "${actual}" = "null" ]
-}
-
-@test "ingressGateways/Deployment: can set a hostPort through defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.hostPort=443' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].ports[1].hostPort' | tee /dev/stderr)
-  [ "${actual}" = "443" ]
-}
-
-@test "ingressGateways/Deployment: can set a hostPort through specific gateway, overrides default" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.hostPort=443' \
-      --set 'ingressGateways.gateways[0].name=gateway1' \
-      --set 'ingressGateways.gateways[0].hostPort=1234' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].ports[1].hostPort' | tee /dev/stderr)
-  [ "${actual}" = "1234" ]
-}
-
-#--------------------------------------------------------------------
-# additionalPorts
+# ports
 
 @test "ingressGateways/Deployment: has default ports" {
   cd `chart_dir`
@@ -304,64 +264,26 @@ load _helpers
   [ "${actual}" = "gateway-health" ]
 
   local actual=$(echo $object | yq -r '.[1].containerPort' | tee /dev/stderr)
-  [ "${actual}" = "443" ]
-
-  local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
-  [ "${actual}" = "gateway-default" ]
-
-  local actual=$(echo $object | yq -r '.[2].containerPort' | tee /dev/stderr)
   [ "${actual}" = "80" ]
 
-  local actual=$(echo $object | yq -r '.[2].name' | tee /dev/stderr)
-  [ "${actual}" = "gateway-0" ]
-}
-
-@test "ingressGateways/Deployment: can set additionalPorts through defaults" {
-  cd `chart_dir`
-  local object=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.service.additionalPorts[0]=8443' \
-      --set 'ingressGateways.defaults.service.additionalPorts[1]=8444' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].ports' | tee /dev/stderr)
-
-  local actual=$(echo $object | yq -r '.[0].containerPort' | tee /dev/stderr)
-  [ "${actual}" = "21000" ]
-
-  local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
-  [ "${actual}" = "gateway-health" ]
-
-  local actual=$(echo $object | yq -r '.[1].containerPort' | tee /dev/stderr)
-  [ "${actual}" = "443" ]
-
   local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
-  [ "${actual}" = "gateway-default" ]
+  [ "${actual}" = "gateway-0" ]
 
   local actual=$(echo $object | yq -r '.[2].containerPort' | tee /dev/stderr)
-  [ "${actual}" = "8443" ]
+  [ "${actual}" = "443" ]
 
   local actual=$(echo $object | yq -r '.[2].name' | tee /dev/stderr)
-  [ "${actual}" = "gateway-0" ]
-
-  local actual=$(echo $object | yq -r '.[3].containerPort' | tee /dev/stderr)
-  [ "${actual}" = "8444" ]
-
-  local actual=$(echo $object | yq -r '.[3].name' | tee /dev/stderr)
   [ "${actual}" = "gateway-1" ]
 }
 
-@test "ingressGateways/Deployment: can set additionalPorts through specific gateway overriding defaults" {
+@test "ingressGateways/Deployment: can set ports through defaults" {
   cd `chart_dir`
   local object=$(helm template \
       -x templates/ingress-gateways-deployment.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.service.additionalPorts[0]=8443' \
-      --set 'ingressGateways.defaults.service.additionalPorts[1]=8444' \
-      --set 'ingressGateways.gateways[0].name=gateway1' \
-      --set 'ingressGateways.gateways[0].service.additionalPorts[0]=1234' \
+      --set 'ingressGateways.defaults.service.ports[0].port=8443' \
+      --set 'ingressGateways.defaults.service.ports[1].port=8444' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.template.spec.containers[0].ports' | tee /dev/stderr)
 
@@ -372,15 +294,39 @@ load _helpers
   [ "${actual}" = "gateway-health" ]
 
   local actual=$(echo $object | yq -r '.[1].containerPort' | tee /dev/stderr)
-  [ "${actual}" = "443" ]
+  [ "${actual}" = "8443" ]
 
   local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
-  [ "${actual}" = "gateway-default" ]
+  [ "${actual}" = "gateway-0" ]
 
   local actual=$(echo $object | yq -r '.[2].containerPort' | tee /dev/stderr)
-  [ "${actual}" = "1234" ]
+  [ "${actual}" = "8444" ]
 
   local actual=$(echo $object | yq -r '.[2].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-1" ]
+}
+
+@test "ingressGateways/Deployment: can set ports through specific gateway overriding defaults" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.gateways[0].name=gateway1' \
+      --set 'ingressGateways.gateways[0].service.ports[0].port=1234' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.containers[0].ports' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.[0].containerPort' | tee /dev/stderr)
+  [ "${actual}" = "21000" ]
+
+  local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
+  [ "${actual}" = "gateway-health" ]
+
+  local actual=$(echo $object | yq -r '.[1].containerPort' | tee /dev/stderr)
+  [ "${actual}" = "1234" ]
+
+  local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
   [ "${actual}" = "gateway-0" ]
 }
 
@@ -703,9 +649,225 @@ key2: value2' \
 }
 
 #--------------------------------------------------------------------
+# WAN_ADDR
+
+@test "ingressGateways/Deployment: WAN_ADDR set correctly for ClusterIP service set in defaults (the default)" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("WAN_ADDR=\"$(cat /tmp/address.txt)\"")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "ingressGateways/Deployment: WAN_ADDR set correctly for ClusterIP service set in specific gateway overriding defaults" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.type=Static' \
+      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
+      --set 'ingressGateways.gateways[0].service.type=ClusterIP' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("WAN_ADDR=\"$(cat /tmp/address.txt)\"")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "ingressGateways/Deployment: WAN_ADDR set correctly for LoadBalancer service set in defaults" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.type=LoadBalancer' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("WAN_ADDR=\"$(cat /tmp/address.txt)\"")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "ingressGateways/Deployment: WAN_ADDR set correctly for LoadBalancer service set in specific gateway overriding defaults" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
+      --set 'ingressGateways.gateways[0].service.type=LoadBalancer' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("WAN_ADDR=\"$(cat /tmp/address.txt)\"")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "ingressGateways/Deployment: WAN_ADDR set correctly for NodePort service set in defaults" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.type=NodePort' \
+      --set 'ingressGateways.defaults.service.ports[0].nodePort=1234' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("WAN_ADDR=\"${HOST_IP}\"")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "ingressGateways/Deployment: WAN_ADDR set correctly for NodePort service set in specific gateway overriding defaults" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
+      --set 'ingressGateways.gateways[0].service.type=NodePort' \
+      --set 'ingressGateways.gateways[0].service.ports[0].nodePort=1234' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("WAN_ADDR=\"${HOST_IP}\"")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "ingressGateways/Deployment: WAN_ADDR definition fails if using unknown service type in defaults" {
+  cd `chart_dir`
+  run helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.type=Static' \
+      .
+
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "currently set ingressGateway value service.type is not supported" ]]
+}
+
+@test "ingressGateways/Deployment: WAN_ADDR definition fails if using unknown service type in specific gateway overriding defaults" {
+  cd `chart_dir`
+  run helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
+      --set 'ingressGateways.gateways[0].service.type=Static' \
+      .
+
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "currently set ingressGateway value service.type is not supported" ]]
+}
+
+#--------------------------------------------------------------------
+# WAN_PORT
+
+@test "ingressGateways/Deployment: WAN_PORT set correctly for non-NodePort service in defaults (the default)" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("WAN_PORT=80")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "ingressGateways/Deployment: WAN_PORT can be set for non-NodePort service in defaults" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.ports[0].port=1234' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("WAN_PORT=1234")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "ingressGateways/Deployment: WAN_PORT set correctly for non-NodePort service in specific gateway overriding defaults" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
+      --set 'ingressGateways.gateways[0].service.ports[0].port=1234' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("WAN_PORT=1234")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "ingressGateways/Deployment: WAN_PORT set correctly for NodePort service with nodePort set in defaults" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.type=NodePort' \
+      --set 'ingressGateways.defaults.service.ports[0].nodePort=1234' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("WAN_PORT=1234")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "ingressGateways/Deployment: WAN_PORT set correctly for NodePort service with nodePort set in specific gateway overriding defaults" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.ports[0].nodePort=8888' \
+      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
+      --set 'ingressGateways.gateways[0].service.type=NodePort' \
+      --set 'ingressGateways.gateways[0].service.ports[0].nodePort=1234' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("WAN_PORT=1234")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "ingressGateways/Deployment: WAN_PORT definition fails if .service.type=NodePort and ports[0].nodePort is empty in defaults" {
+  cd `chart_dir`
+  run helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.type=NodePort' \
+      .
+
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "if ingressGateways .service.type=NodePort and using ingressGateways.defaults.service.ports, the first port entry must include a nodePort" ]]
+}
+
+@test "ingressGateways/Deployment: WAN_PORT definition fails if .service.type=NodePort and ports[0].nodePort is empty in specific gateway and not provided in defaults" {
+  cd `chart_dir`
+  run helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.type=NodePort' \
+      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
+      --set 'ingressGateways.gateways[0].service.ports[0].port=1234' \
+      .
+
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "if ingressGateways .service.type=NodePort and defining ingressGateways.gateways.service.ports, the first port entry must include a nodePort" ]]
+}
+
+@test "ingressGateways/Deployment: WAN_PORT definition fails if .service.type=NodePort and ports[0].nodePort is empty in defaults and specific gateway" {
+  cd `chart_dir`
+  run helm template \
+      -x templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'ingressGateways.defaults.service.type=NodePort' \
+      --set 'ingressGateways.defaults.service.ports=null' \
+      .
+
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "if ingressGateways .service.type=NodePort, the first port entry in either the defaults or specific gateway must include a nodePort" ]]
+}
+
+#--------------------------------------------------------------------
 # service-init init container
 
-@test "ingressGateways/Deployment: service-init init container" {
+@test "ingressGateways/Deployment: service-init init container defaults" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/ingress-gateways-deployment.yaml  \
@@ -720,7 +882,7 @@ key2: value2' \
   -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
-WAN_PORT="443"
+WAN_PORT=80
 
 cat > /consul/service/service.hcl << EOF
 service {
@@ -786,7 +948,7 @@ consul-k8s service-address \
   -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
-WAN_PORT="443"
+WAN_PORT=80
 
 cat > /consul/service/service.hcl << EOF
 service {
@@ -832,1090 +994,58 @@ EOF
   [ "${actual}" = "${exp}" ]
 }
 
-@test "ingressGateways/Deployment: service-init init container wanAddress.port can be changed through defaults" {
+@test "ingressGateways/Deployment: service-init init container includes service-address command for LoadBalancer set through defaults" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/ingress-gateways-deployment.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=NodeIP' \
-      --set 'ingressGateways.defaults.wanAddress.port=9999' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='WAN_ADDR="${HOST_IP}"
-WAN_PORT="9999"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.port can be changed through specific gateway overriding defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=NodeIP' \
-      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
-      --set 'ingressGateways.gateways[0].wanAddress.port=9999' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='WAN_ADDR="${HOST_IP}"
-WAN_PORT="9999"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=NodeIP through defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=NodeIP' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='WAN_ADDR="${HOST_IP}"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=NodeIP through specific gateway overriding defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Service' \
-      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
-      --set 'ingressGateways.gateways[0].wanAddress.source=NodeIP' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='WAN_ADDR="${HOST_IP}"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=NodeName through defaults" {
-  cd `chart_dir`
-  local object=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=NodeName' \
-      . | tee /dev/stderr |
-      yq -s '.[0]')
-
-  local actual=$(echo "$object" |
-      yq -r '.spec.template.spec.containers[0].env | map(select(.name == "NODE_NAME")) | length > 0' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-
-  local actual=$(echo "$object" |
-      yq -r '.spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='WAN_ADDR="${NODE_NAME}"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=NodeName through specific gateway overriding defaults" {
-  cd `chart_dir`
-  local object=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Service' \
-      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
-      --set 'ingressGateways.gateways[0].wanAddress.source=NodeName' \
-      . | tee /dev/stderr |
-      yq -s '.[0]')
-
-  local actual=$(echo "$object" |
-      yq -r '.spec.template.spec.containers[0].env | map(select(.name == "NODE_NAME")) | length > 0' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-
-  local actual=$(echo "$object" |
-      yq -r '.spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='WAN_ADDR="${NODE_NAME}"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=Static fails if wanAddress.static is empty in defaults" {
-  cd `chart_dir`
-  run helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Static' \
-      --set 'ingressGateways.defaults.wanAddress.static=' \
-      .
-
-  [ "$status" -eq 1 ]
-  [[ "$output" =~ "if ingressGateways .wanAddress.source=Static then ingressGateways .wanAddress.static cannot be empty and must be set in either the defaults or in the gateway definition" ]]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=Static fails if wanAddress.static is empty in specific gateway" {
-  cd `chart_dir`
-  run helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Static' \
-      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
-      --set 'ingressGateways.gateways[0].wanAddress.static=' \
-      .
-
-  [ "$status" -eq 1 ]
-  [[ "$output" =~ "if ingressGateways .wanAddress.source=Static then ingressGateways .wanAddress.static cannot be empty and must be set in either the defaults or in the gateway definition" ]]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=Static through defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Static' \
-      --set 'ingressGateways.defaults.wanAddress.static=example.com' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='WAN_ADDR="example.com"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=Static through specific gateway, overriding defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Service' \
-      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
-      --set 'ingressGateways.gateways[0].wanAddress.source=Static' \
-      --set 'ingressGateways.gateways[0].wanAddress.static=example.com' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='WAN_ADDR="example.com"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=Service, type=LoadBalancer through defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Service' \
-      --set 'ingressGateways.defaults.wanAddress.port=ignored' \
       --set 'ingressGateways.defaults.service.type=LoadBalancer' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='consul-k8s service-address \
-  -k8s-namespace=default \
-  -name=ingress-gateway \
-  -resolve-hostnames \
-  -output-file=/tmp/address.txt
-WAN_ADDR="$(cat /tmp/address.txt)"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("consul-k8s service-address")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
 }
 
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=Service, type=LoadBalancer through specific gateway, overrides defaults" {
+@test "ingressGateways/Deployment: service-init init container includes service-address command for LoadBalancer set through specific gateway overriding defaults" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/ingress-gateways-deployment.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Static' \
-      --set 'ingressGateways.defaults.wanAddress.port=ignored' \
-      --set 'ingressGateways.defaults.service.type=NodePort' \
       --set 'ingressGateways.gateways[0].name=ingress-gateway' \
-      --set 'ingressGateways.gateways[0].wanAddress.source=Service' \
-      --set 'ingressGateways.gateways[0].wanAddress.port=ignored' \
       --set 'ingressGateways.gateways[0].service.type=LoadBalancer' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='consul-k8s service-address \
-  -k8s-namespace=default \
-  -name=ingress-gateway \
-  -resolve-hostnames \
-  -output-file=/tmp/address.txt
-WAN_ADDR="$(cat /tmp/address.txt)"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("consul-k8s service-address")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
 }
 
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=Service, type=NodePort through defaults" {
+@test "ingressGateways/Deployment: service-init init container does not include service-address command for NodePort set through defaults" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/ingress-gateways-deployment.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Service' \
-      --set 'ingressGateways.defaults.service.nodePort=9999' \
       --set 'ingressGateways.defaults.service.type=NodePort' \
+      --set 'ingressGateways.defaults.service.ports[0].port=80' \
+      --set 'ingressGateways.defaults.service.ports[0].nodePort=1234' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='WAN_ADDR="${HOST_IP}"
-WAN_PORT="9999"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("consul-k8s service-address")' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
 }
 
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=Service, type=NodePort through specific gateway, overrides default" {
+@test "ingressGateways/Deployment: service-init init container does not include service-address command for NodePort set through specific gateway overriding defaults" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/ingress-gateways-deployment.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Service' \
-      --set 'ingressGateways.defaults.service.nodePort=9999' \
-      --set 'ingressGateways.defaults.service.type=NodePort' \
       --set 'ingressGateways.gateways[0].name=ingress-gateway' \
-      --set 'ingressGateways.defaults.service.nodePort=1234' \
+      --set 'ingressGateways.gateways[0].service.type=NodePort' \
+      --set 'ingressGateways.gateways[0].service.ports[0].port=80' \
+      --set 'ingressGateways.gateways[0].service.ports[0].nodePort=1234' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='WAN_ADDR="${HOST_IP}"
-WAN_PORT="1234"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=Service, type=NodePort fails if service.nodePort is null" {
-  cd `chart_dir`
-  run helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'client.rpc=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Service' \
-      --set 'ingressGateways.defaults.service.type=NodePort' \
-      .
-
-  [ "$status" -eq 1 ]
-  [[ "$output" =~ "if ingressGateways .wanAddress.source=Service and ingressGateways .service.type=NodePort, ingressGateways .service.nodePort must be set in either the defaults or in the gateway definition" ]]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=Service, type=ClusterIP through defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'client.rpc=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Service' \
-      --set 'ingressGateways.defaults.wanAddress.port=ignored' \
-      --set 'ingressGateways.defaults.service.type=ClusterIP' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='consul-k8s service-address \
-  -k8s-namespace=default \
-  -name=ingress-gateway \
-  -resolve-hostnames \
-  -output-file=/tmp/address.txt
-WAN_ADDR="$(cat /tmp/address.txt)"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container wanAddress.source=Service, type=ClusterIP through specific gateway, overrides defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'client.rpc=true' \
-      --set 'ingressGateways.defaults.wanAddress.source=Static' \
-      --set 'ingressGateways.defaults.wanAddress.port=1234' \
-      --set 'ingressGateways.defaults.service.type=NodePort' \
-      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
-      --set 'ingressGateways.gateways[0].wanAddress.source=Service' \
-      --set 'ingressGateways.gateways[0].wanAddress.port=ignored' \
-      --set 'ingressGateways.gateways[0].service.type=ClusterIP' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='consul-k8s service-address \
-  -k8s-namespace=default \
-  -name=ingress-gateway \
-  -resolve-hostnames \
-  -output-file=/tmp/address.txt
-WAN_ADDR="$(cat /tmp/address.txt)"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container gateway name can be changed" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.gateways[0].name=new-name' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='consul-k8s service-address \
-  -k8s-namespace=default \
-  -name=new-name \
-  -resolve-hostnames \
-  -output-file=/tmp/address.txt
-WAN_ADDR="$(cat /tmp/address.txt)"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "new-name"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container gateway namespace can be specified through defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'global.enableConsulNamespaces=true' \
-      --set 'ingressGateways.defaults.consulNamespace=namespace' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='consul-k8s service-address \
-  -k8s-namespace=default \
-  -name=ingress-gateway \
-  -resolve-hostnames \
-  -output-file=/tmp/address.txt
-WAN_ADDR="$(cat /tmp/address.txt)"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  namespace = "namespace"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
-}
-
-@test "ingressGateways/Deployment: service-init init container gateway namespace can be specified through specific gateway overriding defaults" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-deployment.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'global.enableConsulNamespaces=true' \
-      --set 'ingressGateways.defaults.consulNamespace=namespace' \
-      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
-      --set 'ingressGateways.gateways[0].consulNamespace=new-namespace' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2]' | tee /dev/stderr)
-
-  exp='consul-k8s service-address \
-  -k8s-namespace=default \
-  -name=ingress-gateway \
-  -resolve-hostnames \
-  -output-file=/tmp/address.txt
-WAN_ADDR="$(cat /tmp/address.txt)"
-WAN_PORT="443"
-
-cat > /consul/service/service.hcl << EOF
-service {
-  kind = "ingress-gateway"
-  name = "ingress-gateway"
-  namespace = "new-namespace"
-  port = ${WAN_PORT}
-  address = "${WAN_ADDR}"
-  tagged_addresses {
-    lan {
-      address = "${POD_IP}"
-      port = 21000
-    }
-    wan {
-      address = "${WAN_ADDR}"
-      port = ${WAN_PORT}
-    }
-  }
-  proxy {
-    config {
-      envoy_gateway_no_default_bind = true
-      envoy_gateway_bind_addresses {
-        all-interfaces {
-          address = "0.0.0.0"
-        }
-      }
-    }
-  }
-  checks = [
-    {
-      name = "Ingress Gateway Listening"
-      interval = "10s"
-      tcp = "${POD_IP}:21000"
-      deregister_critical_service_after = "6h"
-    }
-  ]
-}
-EOF
-
-/consul-bin/consul services register \
-  /consul/service/service.hcl'
-
-  [ "${actual}" = "${exp}" ]
+      yq -s -r '.[0].spec.template.spec.initContainers | map(select(.name == "service-init"))[0] | .command[2] | contains("consul-k8s service-address")' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
 }
 
 #--------------------------------------------------------------------
