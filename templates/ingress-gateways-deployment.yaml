@@ -9,7 +9,6 @@
 
 {{- range .Values.ingressGateways.gateways }}
 
-{{- $wanAddress := .wanAddress }}
 {{- $service := .service }}
 
 {{- if empty .name }}
@@ -142,36 +141,52 @@ spec:
                   -token-sink-file=/consul/service/acl-token
                 {{ end }}
 
-                {{- $source := (default $defaults.wanAddress.source $wanAddress.source) }}
                 {{- $serviceType := (default $defaults.service.type $service.type) }}
-                {{- if or (eq $source "NodeIP") (and (eq $source "Service") (eq $serviceType "NodePort")) }}
+                {{- if (eq $serviceType "NodePort") }}
                 WAN_ADDR="${HOST_IP}"
-                {{- else if eq $source "NodeName" }}
-                WAN_ADDR="${NODE_NAME}"
-                {{- else if and (eq $source "Service") (or (eq $serviceType "ClusterIP") (eq $serviceType "LoadBalancer")) }}
+                {{- else if (or (eq $serviceType "ClusterIP") (eq $serviceType "LoadBalancer")) }}
                 consul-k8s service-address \
                   -k8s-namespace={{ $root.Release.Namespace }} \
                   -name={{ .name }} \
                   -resolve-hostnames \
                   -output-file=/tmp/address.txt
                 WAN_ADDR="$(cat /tmp/address.txt)"
-                {{- else if eq $source "Static" }}
-                {{- if eq (default $defaults.wanAddress.static $wanAddress.static) "" }}{{ fail "if ingressGateways .wanAddress.source=Static then ingressGateways .wanAddress.static cannot be empty and must be set in either the defaults or in the gateway definition" }}{{ end }}
-                WAN_ADDR="{{ (default $defaults.wanAddress.static $wanAddress.static) }}"
                 {{- else }}
-                {{- fail "currently set ingressGateway values for wanAddress.source and service.type are not supported" }}
+                {{- fail "currently set ingressGateway value service.type is not supported" }}
                 {{- end }}
 
-                {{- if eq $source "Service" }}
-                {{- if eq $serviceType "NodePort" }}
-                {{- if not (default $defaults.service.nodePort $service.nodePort) }}{{ fail "if ingressGateways .wanAddress.source=Service and ingressGateways .service.type=NodePort, ingressGateways .service.nodePort must be set in either the defaults or in the gateway definition" }}{{ end }}
-                WAN_PORT="{{ (default $defaults.service.nodePort $service.nodePort) }}"
-                {{- else }}
-                WAN_PORT="{{ (default $defaults.service.port $service.port) }}"
-                {{- end }}
-                {{- else }}
-                WAN_PORT="{{ (default $defaults.wanAddress.port $wanAddress.port) }}"
-                {{- end }}
+          {{- if (eq $serviceType "NodePort") }}
+            {{- if $service.ports }}
+                {{- $firstPort := first $service.ports}}
+              {{- if $firstPort.nodePort }}
+                WAN_PORT={{ $firstPort.nodePort }}
+              {{- else }}{{ fail "if ingressGateways .service.type=NodePort and defining ingressGateways.gateways.service.ports, the first port entry must include a nodePort" }}
+              {{- end }}
+            {{- else if $defaults.service.ports }}
+              {{- $firstDefaultPort := first $defaults.service.ports}}
+              {{- if $firstDefaultPort.nodePort }}
+                  WAN_PORT={{ $firstDefaultPort.nodePort }}
+              {{- else }}{{ fail "if ingressGateways .service.type=NodePort and using ingressGateways.defaults.service.ports, the first port entry must include a nodePort" }}
+              {{- end }}
+            {{- else }}{{ fail "if ingressGateways .service.type=NodePort, the first port entry in either the defaults or specific gateway must include a nodePort" }}
+            {{- end }}
+
+          {{- else }}
+            {{- if $service.ports }}
+                {{- $firstPort := first $service.ports}}
+              {{- if $firstPort.port }}
+                WAN_PORT={{ $firstPort.port }}
+              {{- else }}{{ fail "if ingressGateways .service.type is not NodePort and defining ingressGateways.gateways.service.ports, the first port entry must include a port" }}
+              {{- end }}
+            {{- else if $defaults.service.ports }}
+                {{- $firstDefaultPort := first $defaults.service.ports}}
+              {{- if $firstDefaultPort.port }}
+                WAN_PORT={{ $firstDefaultPort.port }}
+              {{- else }}{{ fail "if ingressGateways .service.type is not NodePort and using ingressGateways.defaults.service.ports, the first port entry must include a port" }}
+              {{- end }}
+            {{- else }}{{ fail "if ingressGateways .service.type is not NodePort, the first port entry in either the defaults or specific gateway must include a port" }}
+            {{- end }}
+          {{- end }}
 
                 cat > /consul/service/service.hcl << EOF
                 service {
@@ -260,12 +275,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            {{- if eq (default $defaults.wanAddress.source $wanAddress.source) "NodeName" }}
-            - name: NODE_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-            {{- end }}
             {{- if (or $root.Values.global.acls.manageSystemACLs $root.Values.global.bootstrapACLs) }}
             - name: CONSUL_HTTP_TOKEN
               valueFrom:
@@ -314,14 +323,9 @@ spec:
           ports:
             - name: gateway-health
               containerPort: 21000
-            - name: gateway-default
-              containerPort: {{ default $defaults.service.port $service.port }}
-              {{- if default $defaults.hostPort .hostPort }}
-              hostPort:  {{ default $defaults.hostPort .hostPort }}
-              {{- end }}
-            {{- range $index, $port := (default $defaults.service.additionalPorts $service.additionalPorts) }}
+            {{- range $index, $allPorts := (default $defaults.service.ports $service.ports) }}
             - name: gateway-{{ $index }}
-              containerPort: {{ $port }}
+              containerPort: {{ $allPorts.port }}
             {{- end }}
           lifecycle:
             preStop:
