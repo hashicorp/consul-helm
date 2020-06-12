@@ -1086,6 +1086,7 @@ meshGateway:
 # Requirements: consul >= 1.8.0 and consul-k8s >= 0.16.0 if using
 # global.acls.manageSystemACLs.
 ingressGateways:
+  # Enable ingress gateway deployment. Requires `connectInject.enabled=true`.
   enabled: false
 
   # Defaults sets default values for all gateway fields. With the exception
@@ -1098,7 +1099,7 @@ ingressGateways:
     # The service options configure the Service that fronts the gateway Deployment.
     service:
       # Type of service: LoadBalancer, ClusterIP or NodePort. If using NodePort service
-      # type, you must set the desired nodePorts in the `port` setting below.
+      # type, you must set the desired nodePorts in the `ports` setting below.
       type: ClusterIP
 
       # Ports that will be exposed on the service and gateway container. Any
@@ -1124,6 +1125,7 @@ ingressGateways:
       # Optional YAML string that will be appended to the Service spec.
       additionalSpec: null
 
+    # Resource limits for all ingress gateway pods
     resources:
       requests:
         memory: "100Mi"
