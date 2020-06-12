@@ -330,7 +330,15 @@ spec:
           lifecycle:
             preStop:
               exec:
-                command: ["/bin/sh", "-ec", "/consul-bin/consul services deregister -id=\"{{ .name }}\""]
+                command:
+                  - "/bin/sh"
+                  - "-ec"
+                  - |
+                    /consul-bin/consul services deregister \
+                    {{- if $root.Values.global.enableConsulNamespaces }}
+                    -namespace={{ default $defaults.consulNamespace .consulNamespace }} \
+                    {{- end }}
+                    -id=\"{{ .name }}\"
 
         # lifecycle-sidecar ensures the ingress gateway is always registered with
         # the local Consul agent, even if it loses the initial registration.

@@ -1053,31 +1053,41 @@ EOF
 
 @test "ingressGateways/Deployment: namespace command flag is not present by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  local object=$(helm template \
       -x templates/ingress-gateways-deployment.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].command | any(contains("-namespace"))' | tee /dev/stderr)
+      yq -s -r '.[0].spec.template.spec.containers[0]' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.command | any(contains("-namespace"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object | yq -r '.lifecycle.preStop.exec.command | any(contains("-namespace"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
 @test "ingressGateways/Deployment: namespace command flag is specified through defaults" {
   cd `chart_dir`
-  local actual=$(helm template \
+  local object=$(helm template \
       -x templates/ingress-gateways-deployment.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.enableConsulNamespaces=true' \
       --set 'ingressGateways.defaults.consulNamespace=namespace' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].command | any(contains("-namespace=namespace"))' | tee /dev/stderr)
+      yq -s -r '.[0].spec.template.spec.containers[0]' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.command | any(contains("-namespace=namespace"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object | yq -r '.lifecycle.preStop.exec.command | any(contains("-namespace=namespace"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
 @test "ingressGateways/Deployment: namespace command flag is specified through specific gateway overriding defaults" {
   cd `chart_dir`
-  local actual=$(helm template \
+  local object=$(helm template \
       -x templates/ingress-gateways-deployment.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
@@ -1086,7 +1096,12 @@ EOF
       --set 'ingressGateways.gateways[0].name=ingress-gateway' \
       --set 'ingressGateways.gateways[0].consulNamespace=new-namespace' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].command | any(contains("-namespace=new-namespace"))' | tee /dev/stderr)
+      yq -s -r '.[0].spec.template.spec.containers[0]' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.command | any(contains("-namespace=new-namespace"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object | yq -r '.lifecycle.preStop.exec.command | any(contains("-namespace=new-namespace"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
