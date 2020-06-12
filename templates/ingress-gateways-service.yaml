@@ -34,14 +34,12 @@ spec:
     component: ingress-gateway
     ingress-gateway-name: {{ template "consul.fullname" $root }}-{{ .name }}
   ports:
-    - name: gateway-default
-      port: {{ default $defaults.service.port $service.port }}
-      {{- if (default $defaults.service.nodePort $service.nodePort) }}
-      nodePort: {{ default $defaults.service.nodePort $service.nodePort }}
-      {{- end}}
-    {{- range $index, $port := (default $defaults.service.additionalPorts $service.additionalPorts ) }}
+    {{- range $index, $ports := (default $defaults.service.ports $service.ports) }}
     - name: gateway-{{ $index }}
-      port: {{ $port }}
+      port: {{ $ports.port }}
+      {{- if $ports.nodePort }}
+      nodePort: {{ $ports.nodePort }}
+      {{- end}}
     {{- end }}
   type: {{ default $defaults.service.type $service.type }}
   {{- if (default $defaults.service.additionalSpec $service.additionalSpec) }}

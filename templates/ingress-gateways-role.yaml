@@ -4,7 +4,6 @@
 {{- $defaults := .Values.ingressGateways.defaults }}
 
 {{- range .Values.ingressGateways.gateways }}
-{{- $wanAddress := .wanAddress }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -16,9 +15,14 @@ metadata:
     heritage: {{ $root.Release.Service }}
     release: {{ $root.Release.Name }}
     component: ingress-gateway
-{{- $source := (default $defaults.wanAddress.source $wanAddress.source) }}
-{{- if (or $root.Values.global.acls.manageSystemACLs $root.Values.global.bootstrapACLs $root.Values.global.enablePodSecurityPolicies (eq $source "Service")) }}
 rules:
+  - apiGroups: [""]
+    resources:
+      - services
+    resourceNames:
+      - {{ template "consul.fullname" $root }}-{{ .name }}
+    verbs:
+      - get
 {{- if $root.Values.global.enablePodSecurityPolicies }}
   - apiGroups: ["policy"]
     resources: ["podsecuritypolicies"]
@@ -35,18 +39,6 @@ rules:
       - {{ template "consul.fullname" $root }}-{{ .name }}-ingress-gateway-acl-token
     verbs:
       - get
-{{- end }}
-{{- if (eq $source "Service") }}
-  - apiGroups: [""]
-    resources:
-      - services
-    resourceNames:
-      - {{ template "consul.fullname" $root }}-{{ .name }}
-    verbs:
-      - get
-{{- end }}
-{{- else }}
-rules: []
 {{- end }}
 ---
 {{- end }}

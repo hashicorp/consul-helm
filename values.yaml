@@ -1095,64 +1095,23 @@ ingressGateways:
     # Number of replicas for each ingress gateway defined.
     replicas: 2
 
-    # What gets registered as WAN address for the gateway which is
-    # used as the address for the `.ingress.consul` DNS lookup.
-    wanAddress:
-      # source configures where to retrieve the WAN address (and possibly port)
-      # for the ingress gateway from.
-      # Can be set to either: Service, NodeIP, NodeName or Static.
-      #
-      # Service - Determine the address based on the service type.
-      #   If service.type=LoadBalancer use the external IP or hostname of
-      #   the service. Use the port set by service.port.
-      #   If service.type=NodePort use the Node IP. The port will be set to
-      #   service.nodePort so service.nodePort cannot be null.
-      #   If service.type=ClusterIP use the ClusterIP. The port will be set to
-      #   service.port.
-      #   service.type=ExternalName is not supported.
-      # NodeIP - The node IP as provided by the Kubernetes downward API.
-      # NodeName - The name of the node as provided by the Kubernetes downward
-      #   API. This is useful if the node names are DNS entries that
-      #   are routable from other datacenters.
-      # Static - Use the address hardcoded in wanAddress.static.
-      source: "Service"
-
-      # Port that gets registered for WAN traffic.
-      # If source is set to "Service" then this setting will have no effect.
-      # See the documentation for source as to which port will be used in that
-      # case.
-      port: 443
-
-      # If source is set to "Static" then this value will be used as the WAN
-      # address of the ingress gateways. This is useful if you've configured a
-      # DNS entry to point to your ingress gateways.
-      static: ""
-
-    # Optional hostPort for the gateway to be exposed on.
-    # This can be used with wanAddress.port and wanAddress.useNodeIP
-    # to expose the gateways directly from the node.
-    # NOTE: Cannot set to 8500 or 8502 because those are reserved for the Consul
-    # agent.
-    hostPort: null
-
     # The service options configure the Service that fronts the gateway Deployment.
     service:
-      # Type of service, ex. LoadBalancer, ClusterIP.
+      # Type of service: LoadBalancer, ClusterIP or NodePort. If using NodePort service
+      # type, you must set the desired nodePorts in the `port` setting below.
       type: ClusterIP
 
-      # Port that the service will be exposed on. This port will be used in the
-      # Consul dns lookup for the ingress gateway.
-      port: 443
-
-      # Optionally hardcode the nodePort of the service if using type: NodePort.
-      # If not set and using type: NodePort, Kubernetes will automatically assign
-      # a port.
-      nodePort: null
-
-      # Additional ports to expose on both the service and the ingress gateway
-      # container for any listeners that will be defined in the gateway's
-      # configuration entry.
-      additionalPorts: [80]
+      # Ports that will be exposed on the service and gateway container. Any
+      # ports defined as ingress listeners on the gateway's Consul configuration
+      # entry should be included here. The first port will be used as part of
+      # the Consul service registration for the gateway and be listed in its
+      # SRV record. If using a NodePort service type, you must specify the
+      # desired nodePort for each exposed port.
+      ports:
+        - port: 80
+          nodePort: null
+        - port: 443
+          nodePort: null
 
       # Annotations to apply to the ingress gateway service. Annotations defined
       # here will be applied to all ingress gateway services in addition to any
