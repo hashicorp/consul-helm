@@ -11,7 +11,7 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "ingressGateways/Role: enabled with ingressGateways, connectInject and client.grpc enabled" {
+@test "ingressGateways/Role: enabled with ingressGateways, connectInject enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/ingress-gateways-role.yaml  \
@@ -30,7 +30,7 @@ load _helpers
       --set 'connectInject.enabled=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].rules[0].resources[0]' | tee /dev/stderr)
+      yq -s -r '.[0].rules[1].resources[0]' | tee /dev/stderr)
   [ "${actual}" = "podsecuritypolicies" ]
 }
 
@@ -42,7 +42,7 @@ load _helpers
       --set 'connectInject.enabled=true' \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].rules[0]' | tee /dev/stderr)
+      yq -s -r '.[0].rules[1]' | tee /dev/stderr)
 
   local actual=$(echo $object | yq -r '.resources[0]' | tee /dev/stderr)
   [ "${actual}" = "secrets" ]
@@ -51,7 +51,7 @@ load _helpers
   [ "${actual}" = "release-name-consul-ingress-gateway-ingress-gateway-acl-token" ]
 }
 
-@test "ingressGateways/Role: rules for ingressGateways .wanAddress.source=Service" {
+@test "ingressGateways/Role: rules for ingressGateways service" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/ingress-gateways-role.yaml  \
@@ -60,19 +60,6 @@ load _helpers
       . | tee /dev/stderr |
       yq -s -r '.[0].rules[0].resources[0]' | tee /dev/stderr)
   [ "${actual}" = "services" ]
-}
-
-@test "ingressGateways/Role: rules is empty if no ACLs, PSPs and ingressGateways .source != Service" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/ingress-gateways-role.yaml  \
-      --set 'ingressGateways.enabled=true' \
-      --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.gateways[0].name=ingress-gateway' \
-      --set 'ingressGateways.gateways[0].wanAddress.source=NodeIP' \
-      . | tee /dev/stderr |
-      yq -s -r '.[0].rules' | tee /dev/stderr)
-  [ "${actual}" = "[]" ]
 }
 
 @test "ingressGateways/Role: rules for ACLs, PSPs and ingress gateways" {

@@ -37,7 +37,7 @@ spec:
     {{- range $index, $ports := (default $defaults.service.ports $service.ports) }}
     - name: gateway-{{ $index }}
       port: {{ $ports.port }}
-      {{- if $ports.nodePort }}
+      {{- if (and (eq (default $defaults.service.type $service.type) "NodePort") $ports.nodePort) }}
       nodePort: {{ $ports.nodePort }}
       {{- end}}
     {{- end }}
