@@ -492,7 +492,7 @@ client:
   # hostNetwork defines whether or not we use host networking instead of hostPort in the event
   # that a CNI plugin doesnt support hostPort. This has security implications and is not recommended
   # as doing so gives the consul client unnecessary access to all network traffic on the host.
-  # In most cases, pod network and host network are on different subnets so this should be
+  # In most cases, pod network and host network are on different networks so this should be
   # combined with `dnsPolicy: ClusterFirstWithHostNet`
   hostNetwork: false
 
