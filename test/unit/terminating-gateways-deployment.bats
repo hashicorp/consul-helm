@@ -724,6 +724,7 @@ cat > /consul/service/service.hcl << EOF
 service {
   kind = "terminating-gateway"
   name = "terminating-gateway"
+  id = "${POD_NAME}"
   address = "${POD_IP}"
   port = 8443
   checks = [
@@ -762,6 +763,7 @@ cat > /consul/service/service.hcl << EOF
 service {
   kind = "terminating-gateway"
   name = "terminating-gateway"
+  id = "${POD_NAME}"
   address = "${POD_IP}"
   port = 8443
   checks = [
@@ -798,6 +800,7 @@ cat > /consul/service/service.hcl << EOF
 service {
   kind = "terminating-gateway"
   name = "terminating-gateway"
+  id = "${POD_NAME}"
   namespace = "namespace"
   address = "${POD_IP}"
   port = 8443
@@ -836,6 +839,7 @@ cat > /consul/service/service.hcl << EOF
 service {
   kind = "terminating-gateway"
   name = "terminating-gateway"
+  id = "${POD_NAME}"
   namespace = "new-namespace"
   address = "${POD_IP}"
   port = 8443
@@ -861,31 +865,41 @@ EOF
 
 @test "terminatingGateways/Deployment: namespace command flag is not present by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  local object=$(helm template \
       -x templates/terminating-gateways-deployment.yaml \
       --set 'terminatingGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].command | any(contains("-namespace"))' | tee /dev/stderr)
+      yq -s -r '.[0].spec.template.spec.containers[0]' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.command | any(contains("-namespace"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo $object | yq -r '.lifecycle.preStop.exec.command | any(contains("-namespace"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
 @test "terminatingGateways/Deployment: namespace command flag is specified through defaults" {
   cd `chart_dir`
-  local actual=$(helm template \
+  local object=$(helm template \
       -x templates/terminating-gateways-deployment.yaml \
       --set 'terminatingGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.enableConsulNamespaces=true' \
       --set 'terminatingGateways.defaults.consulNamespace=namespace' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].command | any(contains("-namespace=namespace"))' | tee /dev/stderr)
+      yq -s -r '.[0].spec.template.spec.containers[0]' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.command | any(contains("-namespace=namespace"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo $object | yq -r '.lifecycle.preStop.exec.command | any(contains("-namespace=namespace"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
 @test "terminatingGateways/Deployment: namespace command flag is specified through specific gateway overriding defaults" {
   cd `chart_dir`
-  local actual=$(helm template \
+  local object=$(helm template \
       -x templates/terminating-gateways-deployment.yaml \
       --set 'terminatingGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
@@ -894,7 +908,13 @@ EOF
       --set 'terminatingGateways.gateways[0].name=terminating-gateway' \
       --set 'terminatingGateways.gateways[0].consulNamespace=new-namespace' \
       . | tee /dev/stderr |
-      yq -s -r '.[0].spec.template.spec.containers[0].command | any(contains("-namespace=new-namespace"))' | tee /dev/stderr)
+      yq -s -r '.[0].spec.template.spec.containers[0]' | tee /dev/stderr)
+
+  local actual=$(echo $object | yq -r '.command | any(contains("-namespace=new-namespace"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+
+  local actual=$(echo $object | yq -r '.lifecycle.preStop.exec.command | any(contains("-namespace=new-namespace"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 

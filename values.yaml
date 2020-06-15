@@ -1061,6 +1061,7 @@ meshGateway:
               release: "{{ .Release.Name }}"
               component: mesh-gateway
           topologyKey: kubernetes.io/hostname
+
   # Optional YAML string to specify tolerations.
   tolerations: null
 
@@ -1145,6 +1146,7 @@ ingressGateways:
                 release: "{{ .Release.Name }}"
                 component: ingress-gateway
             topologyKey: kubernetes.io/hostname
+
     # Optional YAML string to specify tolerations.
     tolerations: null
 
@@ -1185,6 +1187,7 @@ ingressGateways:
 # Requirements: consul >= 1.8.0 and consul-k8s >= 0.16.0 if using
 # global.acls.manageSystemACLs.
 terminatingGateways:
+  # Enable terminating gateway deployment. Requires `connectInject.enabled=true`.
   enabled: false
 
   # Defaults sets default values for all gateway fields. With the exception
@@ -1205,6 +1208,7 @@ terminatingGateways:
     #          path: path  # secret will now mount to /consul/userconfig/my-secret/path
     extraVolumes: []
 
+    # Resource limits for all terminating gateway pods
     resources:
       requests:
         memory: "100Mi"
