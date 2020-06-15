@@ -23,7 +23,7 @@ Detailed installation instructions for Consul on Kubernetes are found [here](htt
 1. Add the HashiCorp Helm Repository:
     
         $ helm repo add hashicorp https://helm.releases.hashicorp.com
-        hashicorp" has been added to your repositories
+        "hashicorp" has been added to your repositories
     
 2. Ensure you have access to the consul chart: 
 
