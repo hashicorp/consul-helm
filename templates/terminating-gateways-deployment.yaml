@@ -264,6 +264,7 @@ spec:
             - connect
             - envoy
             - -gateway=terminating
+            - -proxy-id=$(POD_NAME)
             {{- if $root.Values.global.enableConsulNamespaces }}
             - -namespace={{ default $defaults.consulNamespace .consulNamespace }}
             {{- end }}
