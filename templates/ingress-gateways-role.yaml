@@ -15,6 +15,7 @@ metadata:
     heritage: {{ $root.Release.Service }}
     release: {{ $root.Release.Name }}
     component: ingress-gateway
+    ingress-gateway-name: {{ template "consul.fullname" $root }}-{{ .name }}
 rules:
   - apiGroups: [""]
     resources:

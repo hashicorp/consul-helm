@@ -878,7 +878,7 @@ key2: value2' \
 
   exp='consul-k8s service-address \
   -k8s-namespace=default \
-  -name=ingress-gateway \
+  -name=release-name-consul-ingress-gateway \
   -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
@@ -888,6 +888,7 @@ cat > /consul/service/service.hcl << EOF
 service {
   kind = "ingress-gateway"
   name = "ingress-gateway"
+  id = "${POD_NAME}"
   port = ${WAN_PORT}
   address = "${WAN_ADDR}"
   tagged_addresses {
@@ -944,7 +945,7 @@ EOF
 
 consul-k8s service-address \
   -k8s-namespace=default \
-  -name=ingress-gateway \
+  -name=release-name-consul-ingress-gateway \
   -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
@@ -954,6 +955,7 @@ cat > /consul/service/service.hcl << EOF
 service {
   kind = "ingress-gateway"
   name = "ingress-gateway"
+  id = "${POD_NAME}"
   port = ${WAN_PORT}
   address = "${WAN_ADDR}"
   tagged_addresses {
