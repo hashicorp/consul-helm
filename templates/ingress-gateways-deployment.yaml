@@ -313,6 +313,7 @@ spec:
             - connect
             - envoy
             - -gateway=ingress
+            - -proxy-id=$(POD_NAME)
             - -address=$(POD_IP):21000
             {{- if $root.Values.global.enableConsulNamespaces }}
             - -namespace={{ default $defaults.consulNamespace .consulNamespace }}
