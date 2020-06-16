@@ -11,6 +11,7 @@ metadata:
     heritage: {{ $root.Release.Service }}
     release: {{ $root.Release.Name }}
     component: terminating-gateway
+    terminating-gateway-name: {{ template "consul.fullname" $root }}-{{ .name }}
 spec:
   privileged: false
   # Required to prevent escalations to root.
