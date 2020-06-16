@@ -12,6 +12,7 @@ metadata:
     heritage: {{ $root.Release.Service }}
     release: {{ $root.Release.Name }}
     component: terminating-gateway
+    terminating-gateway-name: {{ template "consul.fullname" $root }}-{{ .name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
