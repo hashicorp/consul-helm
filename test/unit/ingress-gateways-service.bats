@@ -118,13 +118,13 @@ key2: value2' \
       yq -s -r '.[0].spec.ports' | tee /dev/stderr)
 
   local actual=$(echo $object | yq -r '.[0].port' | tee /dev/stderr)
-  [ "${actual}" = "80" ]
+  [ "${actual}" = "8080" ]
 
   local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
   [ "${actual}" = "gateway-0" ]
 
   local actual=$(echo $object | yq -r '.[1].port' | tee /dev/stderr)
-  [ "${actual}" = "443" ]
+  [ "${actual}" = "8443" ]
 
   local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
   [ "${actual}" = "gateway-1" ]
@@ -136,26 +136,26 @@ key2: value2' \
       -x templates/ingress-gateways-service.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.service.ports[0].port=8443' \
-      --set 'ingressGateways.defaults.service.ports[1].port=8444' \
-      --set 'ingressGateways.defaults.service.ports[2].port=8445' \
+      --set 'ingressGateways.defaults.service.ports[0].port=4443' \
+      --set 'ingressGateways.defaults.service.ports[1].port=4444' \
+      --set 'ingressGateways.defaults.service.ports[2].port=4445' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.ports' | tee /dev/stderr)
 
   local actual=$(echo $object | yq -r '.[0].port' | tee /dev/stderr)
-  [ "${actual}" = "8443" ]
+  [ "${actual}" = "4443" ]
 
   local actual=$(echo $object | yq -r '.[0].name' | tee /dev/stderr)
   [ "${actual}" = "gateway-0" ]
 
   local actual=$(echo $object | yq -r '.[1].port' | tee /dev/stderr)
-  [ "${actual}" = "8444" ]
+  [ "${actual}" = "4444" ]
 
   local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
   [ "${actual}" = "gateway-1" ]
 
   local actual=$(echo $object | yq -r '.[2].port' | tee /dev/stderr)
-  [ "${actual}" = "8445" ]
+  [ "${actual}" = "4445" ]
 
   local actual=$(echo $object | yq -r '.[2].name' | tee /dev/stderr)
   [ "${actual}" = "gateway-2" ]
@@ -219,7 +219,7 @@ key2: value2' \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'ingressGateways.defaults.service.ports[0].port=80' \
-      --set 'ingressGateways.defaults.service.ports[0].nodePort=8443' \
+      --set 'ingressGateways.defaults.service.ports[0].nodePort=4443' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.ports[0].nodePort' | tee /dev/stderr)
   [ "${actual}" = "null" ]
@@ -233,10 +233,10 @@ key2: value2' \
       --set 'connectInject.enabled=true' \
       --set 'ingressGateways.defaults.service.type=NodePort' \
       --set 'ingressGateways.defaults.service.ports[0].port=80' \
-      --set 'ingressGateways.defaults.service.ports[0].nodePort=8443' \
+      --set 'ingressGateways.defaults.service.ports[0].nodePort=4443' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.ports[0].nodePort' | tee /dev/stderr)
-  [ "${actual}" = "8443" ]
+  [ "${actual}" = "4443" ]
 }
 
 @test "ingressGateways/Service: can set a nodePort through specific gateway overriding defaults" {
@@ -246,7 +246,7 @@ key2: value2' \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'ingressGateways.defaults.service.type=NodePort' \
-      --set 'ingressGateways.defaults.service.ports[0].nodePort=8443' \
+      --set 'ingressGateways.defaults.service.ports[0].nodePort=4443' \
       --set 'ingressGateways.gateways[0].name=gateway1' \
       --set 'ingressGateways.gateways[0].service.ports[0].port=80' \
       --set 'ingressGateways.gateways[0].service.ports[0].nodePort=1234' \
