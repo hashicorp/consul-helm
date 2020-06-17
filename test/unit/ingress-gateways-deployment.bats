@@ -264,13 +264,13 @@ load _helpers
   [ "${actual}" = "gateway-health" ]
 
   local actual=$(echo $object | yq -r '.[1].containerPort' | tee /dev/stderr)
-  [ "${actual}" = "80" ]
+  [ "${actual}" = "8080" ]
 
   local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
   [ "${actual}" = "gateway-0" ]
 
   local actual=$(echo $object | yq -r '.[2].containerPort' | tee /dev/stderr)
-  [ "${actual}" = "443" ]
+  [ "${actual}" = "8443" ]
 
   local actual=$(echo $object | yq -r '.[2].name' | tee /dev/stderr)
   [ "${actual}" = "gateway-1" ]
@@ -282,8 +282,8 @@ load _helpers
       -x templates/ingress-gateways-deployment.yaml  \
       --set 'ingressGateways.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'ingressGateways.defaults.service.ports[0].port=8443' \
-      --set 'ingressGateways.defaults.service.ports[1].port=8444' \
+      --set 'ingressGateways.defaults.service.ports[0].port=1234' \
+      --set 'ingressGateways.defaults.service.ports[1].port=4444' \
       . | tee /dev/stderr |
       yq -s -r '.[0].spec.template.spec.containers[0].ports' | tee /dev/stderr)
 
@@ -294,13 +294,13 @@ load _helpers
   [ "${actual}" = "gateway-health" ]
 
   local actual=$(echo $object | yq -r '.[1].containerPort' | tee /dev/stderr)
-  [ "${actual}" = "8443" ]
+  [ "${actual}" = "1234" ]
 
   local actual=$(echo $object | yq -r '.[1].name' | tee /dev/stderr)
   [ "${actual}" = "gateway-0" ]
 
   local actual=$(echo $object | yq -r '.[2].containerPort' | tee /dev/stderr)
-  [ "${actual}" = "8444" ]
+  [ "${actual}" = "4444" ]
 
   local actual=$(echo $object | yq -r '.[2].name' | tee /dev/stderr)
   [ "${actual}" = "gateway-1" ]
@@ -882,7 +882,7 @@ key2: value2' \
   -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
-WAN_PORT=80
+WAN_PORT=8080
 
 cat > /consul/service/service.hcl << EOF
 service {
@@ -949,7 +949,7 @@ consul-k8s service-address \
   -resolve-hostnames \
   -output-file=/tmp/address.txt
 WAN_ADDR="$(cat /tmp/address.txt)"
-WAN_PORT=80
+WAN_PORT=8080
 
 cat > /consul/service/service.hcl << EOF
 service {

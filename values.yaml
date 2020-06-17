@@ -1109,9 +1109,9 @@ ingressGateways:
       # SRV record. If using a NodePort service type, you must specify the
       # desired nodePort for each exposed port.
       ports:
-        - port: 80
+        - port: 8080
           nodePort: null
-        - port: 443
+        - port: 8443
           nodePort: null
 
       # Annotations to apply to the ingress gateway service. Annotations defined
