@@ -11,7 +11,7 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "ingressGateways/Deployment: enabled with ingressGateways, connectInject and client.grpc enabled, has default gateway name" {
+@test "ingressGateways/Deployment: enabled with ingressGateways, connectInject enabled, has default gateway name" {
   cd `chart_dir`
   local object=$(helm template \
       -x templates/ingress-gateways-deployment.yaml  \
