@@ -153,6 +153,14 @@ global:
       secretName: null
       secretKey: null
 
+    # disableCleanupHooks prevents the tls-init-cleanup job from being created.
+    # This is useful if your using helm with other tools that apply the
+    # resources instead of  having helm manage that. In these situations, the
+    # tool typically invokes `helm template` which will produce hooks of all
+    # types, causing the cleanup job to run immediately, which will delete the
+    # certificates, preventing pods from using them.
+    disableCleanupHooks: false
+
   # [Enterprise Only] enableConsulNamespaces indicates that you are running
   # Consul Enterprise v1.7+ with a valid Consul Enterprise license and would like to
   # make use of configuration beyond registering everything into the `default` Consul
