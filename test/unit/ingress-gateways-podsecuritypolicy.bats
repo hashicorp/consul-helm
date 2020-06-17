@@ -11,7 +11,7 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "ingressGateways/PodSecurityPolicy: enabled with ingressGateways, connectInject and client.grpc enabled and global.enablePodSecurityPolicies=true" {
+@test "ingressGateways/PodSecurityPolicy: enabled with ingressGateways, connectInject enabled and global.enablePodSecurityPolicies=true" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/ingress-gateways-podsecuritypolicy.yaml  \

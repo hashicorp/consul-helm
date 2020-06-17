@@ -11,7 +11,7 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "meshGateway/Service: enabled by default with meshGateway, connectInject and client.grpc enabled" {
+@test "meshGateway/Service: enabled by default with meshGateway, connectInject enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/mesh-gateway-service.yaml  \

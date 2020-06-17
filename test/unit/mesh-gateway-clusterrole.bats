@@ -11,7 +11,7 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "meshGateway/ClusterRole: enabled with meshGateway, connectInject and client.grpc enabled" {
+@test "meshGateway/ClusterRole: enabled with meshGateway, connectInject enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/mesh-gateway-clusterrole.yaml  \
