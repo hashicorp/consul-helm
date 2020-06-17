@@ -1167,8 +1167,7 @@ ingressGateways:
     # [Enterprise Only] `consulNamespace` defines the Consul namespace to register
     # the gateway into.  Requires `global.enableConsulNamespaces` to be true and
     # Consul Enterprise v1.7+ with a valid Consul Enterprise license.
-    # Note: The Consul namespace MUST exist before the gateway is deployed or
-    # deployment will fail.
+    # Note: The Consul namespace MUST exist before the gateway is deployed.
     consulNamespace: "default"
 
   # Gateways is a list of gateway objects. The only required field for
@@ -1250,8 +1249,7 @@ terminatingGateways:
     # [Enterprise Only] `consulNamespace` defines the Consul namespace to register
     # the gateway into.  Requires `global.enableConsulNamespaces` to be true and
     # Consul Enterprise v1.7+ with a valid Consul Enterprise license.
-    # Note: The Consul namespace MUST exist before the gateway is deployed or
-    # deployment will fail.
+    # Note: The Consul namespace MUST exist before the gateway is deployed.
     consulNamespace: "default"
 
   # Gateways is a list of gateway objects. The only required field for
