@@ -30,7 +30,7 @@ global:
   #   image: "consul:1.5.0"
   #   # Consul Enterprise 1.5.0
   #   image: "hashicorp/consul-enterprise:1.5.0-ent"
-  image: "consul:1.7.3"
+  image: "consul:1.8.0"
 
   # array of objects containing image pull secret names that will be applied to
   # each service account.
@@ -53,7 +53,11 @@ global:
   # If using acls.manageSystemACLs then must be >= 0.10.1.
   # If using connect inject then must be >= 0.10.1.
   # If using Consul Enterprise namespaces, must be >= 0.12.
-  imageK8S: "hashicorp/consul-k8s:0.15.0"
+  imageK8S: "hashicorp/consul-k8s:0.16.0"
+
+  # imageEnvoy defines the default envoy image to use for ingress and
+  # terminating gateways.
+  imageEnvoy: "envoyproxy/envoy-alpine:v1.14.2"
 
   # datacenter is the name of the datacenter that the agents should register
   # as. This can't be changed once the Consul cluster is up and running
@@ -161,9 +165,6 @@ global:
   # of both the catalog sync and connect injector.
   enableConsulNamespaces: false
 
-  # [DEPRECATED] Use acls.manageSystemACLs instead.
-  bootstrapACLs: false
-
   # Configure ACLs.
   acls:
 
@@ -200,13 +201,12 @@ global:
 
   # Settings related to federating with another Consul datacenter.
   federation:
-    # Experimental: Currently this is only available in Consul 1.8.0-beta1.
-    #               To use, set global.image: "consul:1.8.0-beta1".
     # If enabled, this datacenter will be federation-capable. Only federation
     # through mesh gateways is supported.
     # Mesh gateways and servers will be configured to allow federation.
     # Requires global.tls.enabled, meshGateway.enabled and connectInject.enabled
     # to be true.
+    # Requires Consul 1.8+.
     enabled: false
 
     # If true, the chart will create a Kubernetes secret that can be imported
@@ -927,6 +927,26 @@ connectInject:
     proxyDefaults: |
       {}
 
+  sidecarProxy:
+    # Set default resources for sidecar proxy. If null, that resource won't
+    # be set.
+    # These settings can be overridden on a per-pod basis via these annotations:
+    # - consul.hashicorp.com/sidecar-proxy-cpu-limit
+    # - consul.hashicorp.com/sidecar-proxy-cpu-request
+    # - consul.hashicorp.com/sidecar-proxy-memory-limit
+    # - consul.hashicorp.com/sidecar-proxy-memory-request
+    resources:
+      requests:
+        # Recommended default: 100Mi
+        memory: null
+        # Recommended default: 100m
+        cpu: null
+      limits:
+        # Recommended default: 100Mi
+        memory: null
+        # Recommended default: 100m
+        cpu: null
+
 # Mesh Gateways enable Consul Connect to work across Consul datacenters.
 meshGateway:
   # If mesh gateways are enabled, a Deployment will be created that runs
@@ -1008,7 +1028,7 @@ meshGateway:
     additionalSpec: null
 
   # Envoy image to use. For Consul v1.7+, Envoy version 1.13+ is required.
-  imageEnvoy: envoyproxy/envoy:v1.13.0
+  imageEnvoy: envoyproxy/envoy-alpine:v1.14.2
 
   # If set to true, gateway Pods will run on the host network.
   hostNetwork: false
@@ -1045,9 +1065,9 @@ meshGateway:
       memory: "100Mi"
       cpu: "100m"
 
-  # By default, we set an anti affinity so that two gateway pods won't be
+  # By default, we set an anti-affinity so that two gateway pods won't be
   # on the same node. NOTE: Gateways require that Consul client agents are
-  # also running on the nodes alongside each gateway Pod.
+  # also running on the nodes alongside each gateway pod.
   affinity: |
     podAntiAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -1072,6 +1092,194 @@ meshGateway:
   #   annotations: |
   #     "annotation-key": "annotation-value"
   annotations: null
+
+# Configuration options for ingress gateways. Default values for all
+# ingress gateways are defined in `ingressGateways.defaults`. Any of
+# these values may be overridden in `ingressGateways.gateways` for a
+# specific gateway with the exception of annotations. Annotations will
+# include both the default annotations and any additional ones defined
+# for a specific gateway.
+# Requirements: consul >= 1.8.0 and consul-k8s >= 0.16.0 if using
+# global.acls.manageSystemACLs and consul-k8s  >= 0.10.0 if not.
+ingressGateways:
+  # Enable ingress gateway deployment. Requires `connectInject.enabled=true`
+  # and `client.enabled=true`.
+  enabled: false
+
+  # Defaults sets default values for all gateway fields. With the exception
+  # of annotations, defining any of these values in the `gateways` list
+  # will override the default values provided here. Annotations will
+  # include both the default annotations and any additional ones defined
+  # for a specific gateway.
+  defaults:
+    # Number of replicas for each ingress gateway defined.
+    replicas: 2
+
+    # The service options configure the Service that fronts the gateway Deployment.
+    service:
+      # Type of service: LoadBalancer, ClusterIP or NodePort. If using NodePort service
+      # type, you must set the desired nodePorts in the `ports` setting below.
+      type: ClusterIP
+
+      # Ports that will be exposed on the service and gateway container. Any
+      # ports defined as ingress listeners on the gateway's Consul configuration
+      # entry should be included here. The first port will be used as part of
+      # the Consul service registration for the gateway and be listed in its
+      # SRV record. If using a NodePort service type, you must specify the
+      # desired nodePort for each exposed port.
+      ports:
+        - port: 8080
+          nodePort: null
+        - port: 8443
+          nodePort: null
+
+      # Annotations to apply to the ingress gateway service. Annotations defined
+      # here will be applied to all ingress gateway services in addition to any
+      # service annotations defined for a specific gateway in `ingressGateways.gateways`.
+      # Example:
+      #   annotations: |
+      #     "annotation-key": "annotation-value"
+      annotations: null
+
+      # Optional YAML string that will be appended to the Service spec.
+      additionalSpec: null
+
+    # Resource limits for all ingress gateway pods
+    resources:
+      requests:
+        memory: "100Mi"
+        cpu: "100m"
+      limits:
+        memory: "100Mi"
+        cpu: "100m"
+
+    # By default, we set an anti-affinity so that two of the same gateway pods
+    # won't be on the same node. NOTE: Gateways require that Consul client agents are
+    # also running on the nodes alongside each gateway pod.
+    affinity: |
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: {{ template "consul.name" . }}
+                release: "{{ .Release.Name }}"
+                component: ingress-gateway
+            topologyKey: kubernetes.io/hostname
+
+    # Optional YAML string to specify tolerations.
+    tolerations: null
+
+    # Optional YAML string to specify a nodeSelector config.
+    nodeSelector: null
+
+    # Optional priorityClassName.
+    priorityClassName: ""
+
+    # Annotations to apply to the ingress gateway deployment. Annotations defined
+    # here will be applied to all ingress gateway deployments in addition to any
+    # annotations defined for a specific gateway in `ingressGateways.gateways`.
+    # Example:
+    #   annotations: |
+    #     "annotation-key": "annotation-value"
+    annotations: null
+
+    # [Enterprise Only] `consulNamespace` defines the Consul namespace to register
+    # the gateway into.  Requires `global.enableConsulNamespaces` to be true and
+    # Consul Enterprise v1.7+ with a valid Consul Enterprise license.
+    # Note: The Consul namespace MUST exist before the gateway is deployed.
+    consulNamespace: "default"
+
+  # Gateways is a list of gateway objects. The only required field for
+  # each is `name`, though they can also contain any of the fields in
+  # `defaults`. Values defined here override the defaults except in the
+  # case of annotations where both will be applied.
+  gateways:
+    - name: ingress-gateway
+
+# Configuration options for terminating gateways. Default values for all
+# terminating gateways are defined in `terminatingGateways.defaults`. Any of
+# these values may be overridden in `terminatingGateways.gateways` for a
+# specific gateway with the exception of annotations. Annotations will
+# include both the default annotations and any additional ones defined
+# for a specific gateway.
+# Requirements: consul >= 1.8.0 and consul-k8s >= 0.16.0 if using
+# global.acls.manageSystemACLs and consul-k8s  >= 0.10.0 if not.
+terminatingGateways:
+  # Enable terminating gateway deployment. Requires `connectInject.enabled=true`
+  # and `client.enabled=true`.
+  enabled: false
+
+  # Defaults sets default values for all gateway fields. With the exception
+  # of annotations, defining any of these values in the `gateways` list
+  # will override the default values provided here. Annotations will
+  # include both the default annotations and any additional ones defined
+  # for a specific gateway.
+  defaults:
+    # Number of replicas for each terminating gateway defined.
+    replicas: 2
+
+    # extraVolumes is a list of extra volumes to mount. These will be exposed
+    # to Consul in the path `/consul/userconfig/<name>/`. The value below is
+    # an array of objects, examples are shown below.
+    #  extraVolumes:
+    #    - type: secret
+    #      name: my-secret
+    #      items:  # optional items array
+    #        - key: key
+    #          path: path  # secret will now mount to /consul/userconfig/my-secret/path
+    extraVolumes: []
+
+    # Resource limits for all terminating gateway pods
+    resources:
+      requests:
+        memory: "100Mi"
+        cpu: "100m"
+      limits:
+        memory: "100Mi"
+        cpu: "100m"
+
+    # By default, we set an anti-affinity so that two of the same gateway pods
+    # won't be on the same node. NOTE: Gateways require that Consul client agents are
+    # also running on the nodes alongside each gateway pod.
+    affinity: |
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: {{ template "consul.name" . }}
+                release: "{{ .Release.Name }}"
+                component: terminating-gateway
+            topologyKey: kubernetes.io/hostname
+
+    # Optional YAML string to specify tolerations.
+    tolerations: null
+
+    # Optional YAML string to specify a nodeSelector config.
+    nodeSelector: null
+
+    # Optional priorityClassName.
+    priorityClassName: ""
+
+    # Annotations to apply to the terminating gateway deployment. Annotations defined
+    # here will be applied to all terminating gateway deployments in addition to any
+    # annotations defined for a specific gateway in `terminatingGateways.gateways`.
+    # Example:
+    #   annotations: |
+    #     "annotation-key": "annotation-value"
+    annotations: null
+
+    # [Enterprise Only] `consulNamespace` defines the Consul namespace to register
+    # the gateway into.  Requires `global.enableConsulNamespaces` to be true and
+    # Consul Enterprise v1.7+ with a valid Consul Enterprise license.
+    # Note: The Consul namespace MUST exist before the gateway is deployed.
+    consulNamespace: "default"
+
+  # Gateways is a list of gateway objects. The only required field for
+  # each is `name`, though they can also contain any of the fields in
+  # `defaults`. Values defined here override the defaults except in the
+  # case of annotations where both will be applied.
+  gateways:
+    - name: terminating-gateway
 
 # Control whether a test Pod manifest is generated when running helm template.
 # When using helm install, the test Pod is not submitted to the cluster so this
