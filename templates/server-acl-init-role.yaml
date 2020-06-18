@@ -2,7 +2,7 @@
 {{- if (or $serverEnabled .Values.externalServers.enabled) }}
 {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   name: {{ template "consul.fullname" . }}-server-acl-init
   labels:
