@@ -20,6 +20,5 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: {{ template "consul.fullname" . }}-tls-init
-  namespace: {{ .Release.Namespace }}
 {{- end }}
 {{- end }}
