@@ -18,6 +18,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: {{ template "consul.fullname" . }}-server-acl-init
-    namespace: {{ .Release.Namespace }}
 {{- end }}
 {{- end }}
