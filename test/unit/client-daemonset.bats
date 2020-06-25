@@ -146,23 +146,34 @@ load _helpers
 #--------------------------------------------------------------------
 # resources
 
-@test "client/DaemonSet: no resources defined by default" {
+@test "client/DaemonSet: resources defined by default" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-daemonset.yaml  \
       . | tee /dev/stderr |
-      yq -r '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
-  [ "${actual}" = "null" ]
+      yq -rc '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
+  [ "${actual}" = '{"limits":{"cpu":"100m","memory":"100Mi"},"requests":{"cpu":"100m","memory":"100Mi"}}' ]
 }
 
-@test "client/DaemonSet: resources can be set" {
+@test "client/DaemonSet: resources can be overridden" {
   cd `chart_dir`
   local actual=$(helm template \
-      -s templates/client-daemonset.yaml  \
-      --set 'client.resources=foo' \
+      -x templates/client-daemonset.yaml  \
+      --set 'client.resources.foo=bar' \
       . | tee /dev/stderr |
-      yq -r '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
-  [ "${actual}" = "foo" ]
+      yq -r '.spec.template.spec.containers[0].resources.foo' | tee /dev/stderr)
+  [ "${actual}" = "bar" ]
+}
+
+# Test support for the deprecated method of setting a YAML string.
+@test "client/DaemonSet: resources can be overridden with string" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml  \
+      --set 'client.resources=foo: bar' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].resources.foo' | tee /dev/stderr)
+  [ "${actual}" = "bar" ]
 }
 
 #--------------------------------------------------------------------
@@ -945,6 +956,27 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
+#--------------------------------------------------------------------
+# hostNetwork
+
+@test "client/DaemonSet: hostNetwork not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.hostNetwork == null' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: hostNetwork can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-daemonset.yaml \
+      --set 'client.hostNetwork=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.hostNetwork == true' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
 #--------------------------------------------------------------------
 # updateStrategy
 

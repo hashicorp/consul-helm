@@ -37,7 +37,7 @@ spec:
       {{- if .Values.client.priorityClassName }}
       priorityClassName: {{ .Values.client.priorityClassName | quote }}
       {{- end }}
-      {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs .Values.global.tls.enabled (and .Values.client.snapshotAgent.configSecret.secretName .Values.client.snapshotAgent.configSecret.secretKey)) }}
+      {{- if (or .Values.global.acls.manageSystemACLs .Values.global.tls.enabled (and .Values.client.snapshotAgent.configSecret.secretName .Values.client.snapshotAgent.configSecret.secretKey)) }}
       volumes:
         {{- if (and .Values.client.snapshotAgent.configSecret.secretName .Values.client.snapshotAgent.configSecret.secretKey) }}
         - name: snapshot-config
@@ -47,7 +47,7 @@ spec:
             - key: {{ .Values.client.snapshotAgent.configSecret.secretKey }}
               path: snapshot-config.json
         {{- end }}
-        {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+        {{- if .Values.global.acls.manageSystemACLs }}
         - name: aclconfig
           emptyDir: {}
         {{- end }}
@@ -88,7 +88,7 @@ spec:
             - name: CONSUL_HTTP_ADDR
               value: http://$(HOST_IP):8500
             {{- end }}
-            {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+            {{- if .Values.global.acls.manageSystemACLs }}
             - name: CONSUL_HTTP_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -99,21 +99,26 @@ spec:
             - "/bin/sh"
             - "-ec"
             - |
+              {{- if .Values.client.snapshotAgent.caCert }}
+              cat <<EOF > /etc/ssl/certs/custom-ca.pem
+              {{- .Values.client.snapshotAgent.caCert | nindent 14 }}
+              EOF
+              {{- end }}
               exec /bin/consul snapshot agent \
                 {{- if (and .Values.client.snapshotAgent.configSecret.secretName .Values.client.snapshotAgent.configSecret.secretKey) }}
                 -config-dir=/consul/config \
                 {{- end }}
-                {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+                {{- if .Values.global.acls.manageSystemACLs }}
                 -config-dir=/consul/aclconfig \
                 {{- end }}
-          {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs .Values.global.tls.enabled (and .Values.client.snapshotAgent.configSecret.secretName .Values.client.snapshotAgent.configSecret.secretKey) ) }}
+          {{- if (or .Values.global.acls.manageSystemACLs .Values.global.tls.enabled (and .Values.client.snapshotAgent.configSecret.secretName .Values.client.snapshotAgent.configSecret.secretKey) ) }}
           volumeMounts:
             {{- if (and .Values.client.snapshotAgent.configSecret.secretName .Values.client.snapshotAgent.configSecret.secretKey) }}
             - name: snapshot-config
               readOnly: true
               mountPath: /consul/config
             {{- end }}
-            {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+            {{- if .Values.global.acls.manageSystemACLs }}
             - name: aclconfig
               mountPath: /consul/aclconfig
             {{- end }}
@@ -125,11 +130,15 @@ spec:
             {{- end }}
               mountPath: /consul/tls/ca
               readOnly: true
+            {{- end }}
           {{- end }}
+          {{- with .Values.client.snapshotAgent.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- if (or (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt)) }}
+      {{- if (or .Values.global.acls.manageSystemACLs (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt)) }}
       initContainers:
-      {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+      {{- if .Values.global.acls.manageSystemACLs }}
       - name: client-snapshot-agent-acl-init
         image: {{ .Values.global.imageK8S }}
         command:
@@ -142,6 +151,13 @@ spec:
         volumeMounts:
           - name: aclconfig
             mountPath: /consul/aclconfig
+        resources:
+          requests:
+            memory: "25Mi"
+            cpu: "50m"
+          limits:
+            memory: "25Mi"
+            cpu: "50m"
       {{- end }}
       {{- if (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) }}
       {{- include "consul.getAutoEncryptClientCA" . | nindent 6 }}

@@ -308,6 +308,30 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# affinity
+
+@test "syncCatalog/Deployment: affinity not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.affinity == null' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "syncCatalog/Deployment: affinity can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      --set 'syncCatalog.affinity=foobar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec | .affinity == "foobar"' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
 # nodeSelector
 
 @test "syncCatalog/Deployment: nodeSelector is not set by default" {
@@ -338,6 +362,30 @@ load _helpers
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.nodeSelector' | tee /dev/stderr)
   [ "${actual}" = "testing" ]
+}
+
+#--------------------------------------------------------------------
+# tolerations
+
+@test "syncCatalog/Deployment: tolerations not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.tolerations == null' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "syncCatalog/Deployment: tolerations can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      --set 'syncCatalog.tolerations=foobar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec | .tolerations == "foobar"' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
 }
 
 #--------------------------------------------------------------------
@@ -691,4 +739,31 @@ load _helpers
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-consul-cross-namespace-acl-policy"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
+# resources
+
+@test "syncCatalog/Deployment: default resources" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      . | tee /dev/stderr |
+      yq -rc '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
+  [ "${actual}" = '{"limits":{"cpu":"50m","memory":"50Mi"},"requests":{"cpu":"50m","memory":"50Mi"}}' ]
+}
+
+@test "syncCatalog/Deployment: can set resources" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
+      --set 'syncCatalog.resources.requests.memory=100Mi' \
+      --set 'syncCatalog.resources.requests.cpu=100m' \
+      --set 'syncCatalog.resources.limits.memory=200Mi' \
+      --set 'syncCatalog.resources.limits.cpu=200m' \
+      . | tee /dev/stderr |
+      yq -rc '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
+  [ "${actual}" = '{"limits":{"cpu":"200m","memory":"200Mi"},"requests":{"cpu":"100m","memory":"100Mi"}}' ]
 }

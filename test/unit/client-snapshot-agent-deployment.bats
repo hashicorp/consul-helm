@@ -335,3 +335,52 @@ load _helpers
       yq '.spec.template.spec.volumes[] | select(.name == "consul-ca-cert")' | tee /dev/stderr)
   [ "${actual}" = "" ]
 }
+
+#--------------------------------------------------------------------
+# resources
+
+@test "client/SnapshotAgentDeployment: default resources" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      . | tee /dev/stderr |
+      yq -rc '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
+  [ "${actual}" = '{"limits":{"cpu":"50m","memory":"50Mi"},"requests":{"cpu":"50m","memory":"50Mi"}}' ]
+}
+
+@test "client/SnapshotAgentDeployment: can set resources" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      --set 'client.snapshotAgent.resources.requests.memory=100Mi' \
+      --set 'client.snapshotAgent.resources.requests.cpu=100m' \
+      --set 'client.snapshotAgent.resources.limits.memory=200Mi' \
+      --set 'client.snapshotAgent.resources.limits.cpu=200m' \
+      . | tee /dev/stderr |
+      yq -rc '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
+  [ "${actual}" = '{"limits":{"cpu":"200m","memory":"200Mi"},"requests":{"cpu":"100m","memory":"100Mi"}}' ]
+}
+
+#--------------------------------------------------------------------
+# client.snapshotAgent.caCert
+
+@test "client/SnapshotAgentDeployment: if caCert is set it is used in command" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/client-snapshot-agent-deployment.yaml  \
+      --set 'client.snapshotAgent.enabled=true' \
+      --set 'client.snapshotAgent.caCert=-----BEGIN CERTIFICATE-----
+MIICFjCCAZsCCQCdwLtdjbzlYzAKBggqhkjOPQQDAjB0MQswCQYDVQQGEwJDQTEL' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].command[2]' | tee /dev/stderr)
+
+  exp='cat <<EOF > /etc/ssl/certs/custom-ca.pem
+-----BEGIN CERTIFICATE-----
+MIICFjCCAZsCCQCdwLtdjbzlYzAKBggqhkjOPQQDAjB0MQswCQYDVQQGEwJDQTEL
+EOF
+exec /bin/consul snapshot agent \'
+
+  [ "${actual}" = "${exp}" ]
+}

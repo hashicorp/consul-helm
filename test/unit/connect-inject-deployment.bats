@@ -235,6 +235,30 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# affinity
+
+@test "connectInject/Deployment: affinity not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.affinity == null' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "connectInject/Deployment: affinity can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.affinity=foobar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec | .affinity == "foobar"' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
 # nodeSelector
 
 @test "connectInject/Deployment: nodeSelector is not set by default" {
@@ -265,6 +289,30 @@ load _helpers
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.nodeSelector' | tee /dev/stderr)
   [ "${actual}" = "testing" ]
+}
+
+#--------------------------------------------------------------------
+# tolerations
+
+@test "connectInject/Deployment: tolerations not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.tolerations == null' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "connectInject/Deployment: tolerations can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.tolerations=foobar' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec | .tolerations == "foobar"' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
 }
 
 #--------------------------------------------------------------------
@@ -847,5 +895,118 @@ load _helpers
       --set 'global.enableConsulNamespaces=true' \
       . | tee /dev/stderr |
       yq '[.spec.template.spec.containers[0].env[].name] | any(contains("HOST_IP"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
+# resources
+
+@test "connectInject/Deployment: default resources" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq -rc '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
+  [ "${actual}" = '{"limits":{"cpu":"50m","memory":"50Mi"},"requests":{"cpu":"50m","memory":"50Mi"}}' ]
+}
+
+@test "connectInject/Deployment: can set resources" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.resources.requests.memory=100Mi' \
+      --set 'connectInject.resources.requests.cpu=100m' \
+      --set 'connectInject.resources.limits.memory=200Mi' \
+      --set 'connectInject.resources.limits.cpu=200m' \
+      . | tee /dev/stderr |
+      yq -rc '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
+  [ "${actual}" = '{"limits":{"cpu":"200m","memory":"200Mi"},"requests":{"cpu":"100m","memory":"100Mi"}}' ]
+}
+
+#--------------------------------------------------------------------
+# sidecarProxy.resources
+
+@test "connectInject/Deployment: by default there are no resource settings" {
+  cd `chart_dir`
+  local cmd=$(helm template \
+      -x templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-default-sidecar-proxy-memory-request"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-default-sidecar-proxy-cpu-request"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-default-sidecar-proxy-memory-limit"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-default-sidecar-proxy-cpu-limit"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "connectInject/Deployment: can set resource settings" {
+  cd `chart_dir`
+  local cmd=$(helm template \
+      -x templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.sidecarProxy.resources.requests.memory=10Mi' \
+      --set 'connectInject.sidecarProxy.resources.requests.cpu=100m' \
+      --set 'connectInject.sidecarProxy.resources.limits.memory=20Mi' \
+      --set 'connectInject.sidecarProxy.resources.limits.cpu=200m' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-default-sidecar-proxy-memory-request=10Mi"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-default-sidecar-proxy-cpu-request=100m"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-default-sidecar-proxy-memory-limit=20Mi"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-default-sidecar-proxy-cpu-limit=200m"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "connectInject/Deployment: can set resource settings explicitly to 0" {
+  cd `chart_dir`
+  local cmd=$(helm template \
+      -x templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.sidecarProxy.resources.requests.memory=0' \
+      --set 'connectInject.sidecarProxy.resources.requests.cpu=0' \
+      --set 'connectInject.sidecarProxy.resources.limits.memory=0' \
+      --set 'connectInject.sidecarProxy.resources.limits.cpu=0' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-default-sidecar-proxy-memory-request=0"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-default-sidecar-proxy-cpu-request=0"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-default-sidecar-proxy-memory-limit=0"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-default-sidecar-proxy-cpu-limit=0"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }

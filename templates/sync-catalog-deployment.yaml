@@ -68,7 +68,7 @@ spec:
                   name: {{ .Values.syncCatalog.aclSyncToken.secretName }}
                   key: {{ .Values.syncCatalog.aclSyncToken.secretKey }}
             {{- end }}
-            {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+            {{- if .Values.global.acls.manageSystemACLs }}
             - name: CONSUL_HTTP_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -152,7 +152,7 @@ spec:
                 -k8s-namespace-mirroring-prefix={{ .Values.syncCatalog.consulNamespaces.mirroringK8SPrefix }} \
                 {{- end }}
                 {{- end }}
-                {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+                {{- if .Values.global.acls.manageSystemACLs }}
                 -consul-cross-namespace-acl-policy=cross-namespace-policy \
                 {{- end }}
                 {{- end }}
@@ -176,9 +176,13 @@ spec:
             periodSeconds: 5
             successThreshold: 1
             timeoutSeconds: 5
-      {{- if or (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) }}
+          {{- with .Values.syncCatalog.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- if or .Values.global.acls.manageSystemACLs (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) }}
       initContainers:
-      {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+      {{- if .Values.global.acls.manageSystemACLs }}
       - name: sync-acl-init
         image: {{ .Values.global.imageK8S }}
         command:
@@ -188,6 +192,13 @@ spec:
             consul-k8s acl-init \
               -secret-name="{{ template "consul.fullname" . }}-catalog-sync-acl-token" \
               -k8s-namespace={{ .Release.Namespace }}
+        resources:
+          requests:
+            memory: "25Mi"
+            cpu: "50m"
+          limits:
+            memory: "25Mi"
+            cpu: "50m"
       {{- end }}
       {{- if (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) }}
       {{- include "consul.getAutoEncryptClientCA" . | nindent 6 }}
@@ -196,5 +207,13 @@ spec:
       {{- if .Values.syncCatalog.nodeSelector }}
       nodeSelector:
         {{ tpl .Values.syncCatalog.nodeSelector . | indent 8 | trim }}
-      {{- end }}  
+      {{- end }}
+      {{- if .Values.syncCatalog.affinity }}
+      affinity:
+        {{ tpl .Values.syncCatalog.affinity . | indent 8 | trim }}
+      {{- end }}
+      {{- if .Values.syncCatalog.tolerations }}
+      tolerations:
+        {{ tpl .Values.syncCatalog.tolerations . | indent 8 | trim }}
+      {{- end }}
 {{- end }}
