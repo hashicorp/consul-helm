@@ -4,11 +4,9 @@ load _helpers
 
 @test "createFederationSecet/Job: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/create-federation-secret-job.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "createFederationSecet/Job: fails when global.federation.enabled=false" {

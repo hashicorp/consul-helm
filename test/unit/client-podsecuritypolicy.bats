@@ -128,10 +128,11 @@ load _helpers
 
 #--------------------------------------------------------------------
 # client.hostNetwork = true
+
 @test "client/PodSecurityPolicy: enabled with global.enablePodSecurityPolicies=true and hostNetwork=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-podsecuritypolicy.yaml  \
+      -s templates/client-podsecuritypolicy.yaml  \
       --set 'global.enablePodSecurityPolicies=true' \
       --set 'client.hostNetwork=true' \
       . | tee /dev/stderr |
@@ -143,7 +144,7 @@ load _helpers
 @test "client/PodSecurityPolicy: enabled with global.enablePodSecurityPolicies=true and default hostNetwork=false" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-podsecuritypolicy.yaml  \
+      -s templates/client-podsecuritypolicy.yaml  \
       --set 'global.enablePodSecurityPolicies=true' \
       . | tee /dev/stderr |
       yq '.spec.hostNetwork == false' | tee /dev/stderr)

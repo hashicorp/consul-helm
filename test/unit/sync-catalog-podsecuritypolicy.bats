@@ -4,7 +4,7 @@ load _helpers
 
 @test "syncCatalog/PodSecurityPolicy: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/sync-catalog-podsecuritypolicy.yaml  \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
@@ -13,7 +13,7 @@ load _helpers
 
 @test "syncCatalog/PodSecurityPolicy: disabled by default with syncCatalog enabled" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/sync-catalog-podsecuritypolicy.yaml  \
       --set 'syncCatalog.enabled=true' \
       . | tee /dev/stderr |
@@ -23,7 +23,7 @@ load _helpers
 
 @test "syncCatalog/PodSecurityPolicy: disabled with syncCatalog disabled and global.enablePodSecurityPolicies=true" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/sync-catalog-podsecuritypolicy.yaml  \
       --set 'syncCatalog.enabled=false' \
       --set 'global.enablePodSecurityPolicies=true' \

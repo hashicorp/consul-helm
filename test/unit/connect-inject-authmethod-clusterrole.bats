@@ -4,11 +4,9 @@ load _helpers
 
 @test "connectInjectAuthMethod/ClusterRole: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/connect-inject-authmethod-clusterrole.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "connectInjectAuthMethod/ClusterRole: enabled with global.enabled false" {
@@ -26,12 +24,10 @@ load _helpers
 
 @test "connectInjectAuthMethod/ClusterRole: disabled with connectInject.enabled" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/connect-inject-authmethod-clusterrole.yaml  \
       --set 'connectInject.enabled=true' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "connectInjectAuthMethod/ClusterRole: enabled with global.acls.manageSystemACLs.enabled=true" {
