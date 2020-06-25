@@ -5,7 +5,7 @@ load _helpers
 @test "createFederationSecet/Job: disabled by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/create-federation-secret-job.yaml  \
+      -s templates/create-federation-secret-job.yaml  \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
@@ -14,7 +14,7 @@ load _helpers
 @test "createFederationSecet/Job: fails when global.federation.enabled=false" {
   cd `chart_dir`
   run helm template \
-      -x templates/create-federation-secret-job.yaml  \
+      -s templates/create-federation-secret-job.yaml  \
       --set 'global.federation.createFederationSecret=true' .
   [ "$status" -eq 1 ]
   [[ "$output" =~ "global.federation.enabled must be true when global.federation.createFederationSecret is true" ]]
@@ -25,7 +25,7 @@ load _helpers
 @test "createFederationSecet/Job: fails when global.tls.enabled=false" {
   cd `chart_dir`
   run helm template \
-      -x templates/create-federation-secret-job.yaml  \
+      -s templates/create-federation-secret-job.yaml  \
       --set 'global.federation.enabled=true' \
       --set 'global.federation.createFederationSecret=true' .
   [ "$status" -eq 1 ]
@@ -37,7 +37,7 @@ load _helpers
 @test "createFederationSecet/Job: fails when global.acls.createReplicationToken is true but global.acls.manageSystemACLs is false" {
   cd `chart_dir`
   run helm template \
-      -x templates/create-federation-secret-job.yaml  \
+      -s templates/create-federation-secret-job.yaml  \
       --set 'global.federation.enabled=true' \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
@@ -51,7 +51,7 @@ load _helpers
 @test "createFederationSecet/Job: fails when global.acls.createReplicationToken is false but global.acls.manageSystemACLs is true" {
   cd `chart_dir`
   run helm template \
-      -x templates/create-federation-secret-job.yaml  \
+      -s templates/create-federation-secret-job.yaml  \
       --set 'global.federation.enabled=true' \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
@@ -66,7 +66,7 @@ load _helpers
 @test "createFederationSecet/Job: mounts auto-created ca secrets by default" {
   cd `chart_dir`
   local volumes=$(helm template \
-      -x templates/create-federation-secret-job.yaml  \
+      -s templates/create-federation-secret-job.yaml  \
       --set 'global.federation.enabled=true' \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
@@ -100,7 +100,7 @@ load _helpers
 @test "createFederationSecet/Job: mounts caCert secrets when set manually" {
   cd `chart_dir`
   local volumes=$(helm template \
-      -x templates/create-federation-secret-job.yaml  \
+      -s templates/create-federation-secret-job.yaml  \
       --set 'global.federation.enabled=true' \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
@@ -135,7 +135,7 @@ load _helpers
 @test "createFederationSecet/Job: auto-encrypt disabled" {
   cd `chart_dir`
   local obj=$(helm template \
-      -x templates/create-federation-secret-job.yaml  \
+      -s templates/create-federation-secret-job.yaml  \
       --set 'global.federation.enabled=true' \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
@@ -157,7 +157,7 @@ load _helpers
 @test "createFederationSecet/Job: auto-encrypt enabled" {
   cd `chart_dir`
   local obj=$(helm template \
-      -x templates/create-federation-secret-job.yaml  \
+      -s templates/create-federation-secret-job.yaml  \
       --set 'global.federation.enabled=true' \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
@@ -187,7 +187,7 @@ load _helpers
 @test "createFederationSecet/Job: gossip encryption key set" {
   cd `chart_dir`
   local obj=$(helm template \
-      -x templates/create-federation-secret-job.yaml  \
+      -s templates/create-federation-secret-job.yaml  \
       --set 'global.federation.enabled=true' \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
@@ -214,7 +214,7 @@ load _helpers
 @test "createFederationSecet/Job: global.acls.createReplicationToken=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/create-federation-secret-job.yaml  \
+      -s templates/create-federation-secret-job.yaml  \
       --set 'global.federation.enabled=true' \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
@@ -232,7 +232,7 @@ load _helpers
 @test "createFederationSecet/Job: sets -mesh-gateway-service-name to meshGateway.consulServiceName" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/create-federation-secret-job.yaml  \
+      -s templates/create-federation-secret-job.yaml  \
       --set 'global.federation.enabled=true' \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \

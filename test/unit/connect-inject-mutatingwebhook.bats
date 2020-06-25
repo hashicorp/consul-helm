@@ -5,7 +5,7 @@ load _helpers
 @test "connectInject/MutatingWebhookConfiguration: disabled by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/connect-inject-mutatingwebhook.yaml  \
+      -s templates/connect-inject-mutatingwebhook.yaml  \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
@@ -14,7 +14,7 @@ load _helpers
 @test "connectInject/MutatingWebhookConfiguration: enable with global.enabled false" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/connect-inject-mutatingwebhook.yaml  \
+      -s templates/connect-inject-mutatingwebhook.yaml  \
       --set 'global.enabled=false' \
       --set 'client.enabled=true' \
       --set 'connectInject.enabled=true' \
@@ -26,7 +26,7 @@ load _helpers
 @test "connectInject/MutatingWebhookConfiguration: disable with connectInject.enabled" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/connect-inject-mutatingwebhook.yaml  \
+      -s templates/connect-inject-mutatingwebhook.yaml  \
       --set 'connectInject.enabled=false' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
@@ -36,7 +36,7 @@ load _helpers
 @test "connectInject/MutatingWebhookConfiguration: disable with global.enabled" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/connect-inject-mutatingwebhook.yaml  \
+      -s templates/connect-inject-mutatingwebhook.yaml  \
       --set 'global.enabled=false' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
@@ -46,7 +46,7 @@ load _helpers
 @test "connectInject/MutatingWebhookConfiguration: namespace is set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/connect-inject-mutatingwebhook.yaml  \
+      -s templates/connect-inject-mutatingwebhook.yaml  \
       --set 'connectInject.enabled=true' \
       --namespace foo \
       . | tee /dev/stderr |

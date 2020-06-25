@@ -5,7 +5,7 @@ load _helpers
 @test "serverACLInit/Job: disabled by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
@@ -14,7 +14,7 @@ load _helpers
 @test "serverACLInit/Job: enabled with global.acls.manageSystemACLs=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
@@ -24,7 +24,7 @@ load _helpers
 @test "serverACLInit/Job: disabled with server=false and global.acls.manageSystemACLs=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.enabled=false' \
       . | tee /dev/stderr |
@@ -35,7 +35,7 @@ load _helpers
 @test "serverACLInit/Job: enabled with client=false global.acls.manageSystemACLs=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'client.enabled=false' \
       . | tee /dev/stderr |
@@ -46,7 +46,7 @@ load _helpers
 @test "serverACLInit/Job: disabled when server.updatePartition > 0" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.updatePartition=1' \
       . | tee /dev/stderr |
@@ -57,7 +57,7 @@ load _helpers
 @test "serverACLInit/Job: enabled with externalServers.enabled=true global.acls.manageSystemACLs=true, but server.enabled set to false" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'server.enabled=false' \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'externalServers.enabled=true' \
@@ -70,7 +70,7 @@ load _helpers
 @test "serverACLInit/Job: fails if both externalServers.enabled=true and server.enabled=true" {
   cd `chart_dir`
   run helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'server.enabled=true' \
       --set 'externalServers.enabled=true' .
   [ "$status" -eq 1 ]
@@ -80,7 +80,7 @@ load _helpers
 @test "serverACLInit/Job: fails if both externalServers.enabled=true and server.enabled not set to false" {
   cd `chart_dir`
   run helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'externalServers.enabled=true' .
   [ "$status" -eq 1 ]
   [[ "$output" =~ "only one of server.enabled or externalServers.enabled can be set" ]]
@@ -89,7 +89,7 @@ load _helpers
 @test "serverACLInit/Job: fails if createReplicationToken=true but manageSystemACLs=false" {
   cd `chart_dir`
   run helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.createReplicationToken=true' .
   [ "$status" -eq 1 ]
   [[ "$output" =~ "if global.acls.createReplicationToken is true, global.acls.manageSystemACLs must be true" ]]
@@ -98,7 +98,7 @@ load _helpers
 @test "serverACLInit/Job: does not set -create-client-token=false when client is enabled (the default)" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command[2] | contains("-create-client-token=false")' |
@@ -109,7 +109,7 @@ load _helpers
 @test "serverACLInit/Job: sets -create-client-token=false when client is disabled" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'client.enabled=false' \
       . | tee /dev/stderr |
@@ -121,7 +121,7 @@ load _helpers
 @test "serverACLInit/Job: server address is set to the DNS names of the server stateful set" {
   cd `chart_dir`
   local command=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
@@ -143,7 +143,7 @@ load _helpers
 @test "serverACLInit/Job: dns acl option enabled with .dns.enabled=-" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("allow-dns"))' | tee /dev/stderr)
@@ -153,7 +153,7 @@ load _helpers
 @test "serverACLInit/Job: dns acl option enabled with .dns.enabled=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'dns.enabled=true' \
       . | tee /dev/stderr |
@@ -164,7 +164,7 @@ load _helpers
 @test "serverACLInit/Job: dns acl option disabled with .dns.enabled=false" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'dns.enabled=false' \
       . | tee /dev/stderr |
@@ -178,7 +178,7 @@ load _helpers
 @test "serverACLInit/Job: no acl-binding-rule-selector flag by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml \
+      -s templates/server-acl-init-job.yaml \
       --set 'connectInject.aclBindingRuleSlector=foo' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
@@ -188,7 +188,7 @@ load _helpers
 @test "serverACLInit/Job: can specify acl-binding-rule-selector" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml \
+      -s templates/server-acl-init-job.yaml \
       --set 'connectInject.enabled=true' \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'connectInject.aclBindingRuleSelector="foo"' \
@@ -203,7 +203,7 @@ load _helpers
 @test "serverACLInit/Job: ent license acl option enabled with server.enterpriseLicense.secretName and server.enterpriseLicense.secretKey set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.enterpriseLicense.secretName=foo' \
       --set 'server.enterpriseLicense.secretKey=bar' \
@@ -215,7 +215,7 @@ load _helpers
 @test "serverACLInit/Job: ent license acl option disabled missing server.enterpriseLicense.secretName" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.enterpriseLicense.secretKey=bar' \
       . | tee /dev/stderr |
@@ -226,7 +226,7 @@ load _helpers
 @test "serverACLInit/Job: ent license acl option disabled missing server.enterpriseLicense.secretKey" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.enterpriseLicense.secretName=foo' \
       . | tee /dev/stderr |
@@ -240,7 +240,7 @@ load _helpers
 @test "serverACLInit/Job: snapshot agent acl option disabled by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-create-snapshot-agent-token"))' | tee /dev/stderr)
@@ -250,7 +250,7 @@ load _helpers
 @test "serverACLInit/Job: snapshot agent acl option enabled with .client.snapshotAgent.enabled=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'client.snapshotAgent.enabled=true' \
       . | tee /dev/stderr |
@@ -261,7 +261,7 @@ load _helpers
 @test "serverACLInit/Job: mesh gateway acl option enabled with .meshGateway.enabled=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
@@ -277,7 +277,7 @@ load _helpers
 @test "serverACLInit/Job: sets TLS flags when global.tls.enabled" {
   cd `chart_dir`
   local command=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
@@ -297,7 +297,7 @@ load _helpers
 @test "serverACLInit/Job: can overwrite CA secret with the provided one" {
   cd `chart_dir`
   local ca_cert_volume=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.tls.enabled=true' \
       --set 'global.tls.caCert.secretName=foo-ca-cert' \
@@ -323,7 +323,7 @@ load _helpers
 @test "serverACLInit/Job: namespace options disabled by default" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
@@ -367,7 +367,7 @@ load _helpers
 @test "serverACLInit/Job: sync namespace options not set with namespaces enabled, sync disabled" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enableConsulNamespaces=true' \
       --set 'syncCatalog.consulNamespaces.mirroringK8S=true' \
@@ -411,7 +411,7 @@ load _helpers
 @test "serverACLInit/Job: sync namespace options set with .global.enableConsulNamespaces=true and sync enabled" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enableConsulNamespaces=true' \
       --set 'syncCatalog.enabled=true' \
@@ -454,7 +454,7 @@ load _helpers
 @test "serverACLInit/Job: sync mirroring options set with .syncCatalog.consulNamespaces.mirroringK8S=true" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enableConsulNamespaces=true' \
       --set 'syncCatalog.enabled=true' \
@@ -498,7 +498,7 @@ load _helpers
 @test "serverACLInit/Job: sync prefix can be set with .syncCatalog.consulNamespaces.mirroringK8SPrefix" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enableConsulNamespaces=true' \
       --set 'syncCatalog.enabled=true' \
@@ -546,7 +546,7 @@ load _helpers
 @test "serverACLInit/Job: inject namespace options not set with namespaces enabled, inject disabled" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enableConsulNamespaces=true' \
       --set 'connectInject.consulNamespaces.mirroringK8S=true' \
@@ -590,7 +590,7 @@ load _helpers
 @test "serverACLInit/Job: inject namespace options set with .global.enableConsulNamespaces=true and inject enabled" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enableConsulNamespaces=true' \
       --set 'connectInject.enabled=true' \
@@ -633,7 +633,7 @@ load _helpers
 @test "serverACLInit/Job: inject mirroring options set with .connectInject.consulNamespaces.mirroringK8S=true" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enableConsulNamespaces=true' \
       --set 'connectInject.enabled=true' \
@@ -677,7 +677,7 @@ load _helpers
 @test "serverACLInit/Job: inject prefix can be set with .connectInject.consulNamespaces.mirroringK8SPrefix" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enableConsulNamespaces=true' \
       --set 'connectInject.enabled=true' \
@@ -725,7 +725,7 @@ load _helpers
 @test "serverACLInit/Job: -create-acl-replication-token is not set by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-create-acl-replication-token"))' | tee /dev/stderr)
@@ -735,7 +735,7 @@ load _helpers
 @test "serverACLInit/Job: -create-acl-replication-token is true when acls.createReplicationToken is true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.acls.createReplicationToken=true' \
       . | tee /dev/stderr |
@@ -749,7 +749,7 @@ load _helpers
 @test "serverACLInit/Job: -acl-replication-token-file is not set by default" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr)
 
@@ -772,7 +772,7 @@ load _helpers
 @test "serverACLInit/Job: -acl-replication-token-file is not set when acls.replicationToken.secretName is set but secretKey is not" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.acls.replicationToken.secretName=name' \
       . | tee /dev/stderr)
@@ -796,7 +796,7 @@ load _helpers
 @test "serverACLInit/Job: -acl-replication-token-file is not set when acls.replicationToken.secretKey is set but secretName is not" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.acls.replicationToken.secretKey=key' \
       . | tee /dev/stderr)
@@ -820,7 +820,7 @@ load _helpers
 @test "serverACLInit/Job: -acl-replication-token-file is set when acls.replicationToken.secretKey and secretName are set" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.acls.replicationToken.secretName=name' \
       --set 'global.acls.replicationToken.secretKey=key' \
@@ -848,7 +848,7 @@ load _helpers
 @test "serverACLInit/Job: fails if external servers are enabled but externalServers.hosts are not set" {
   cd `chart_dir`
   run helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.enabled=false' \
       --set 'externalServers.enabled=true' .
@@ -859,7 +859,7 @@ load _helpers
 @test "serverACLInit/Job: sets server address if externalServers.hosts are set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.enabled=false' \
       --set 'externalServers.enabled=true' \
@@ -872,7 +872,7 @@ load _helpers
 @test "serverACLInit/Job: can pass cloud auto-join string to server address via externalServers.hosts" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.enabled=false' \
       --set 'externalServers.enabled=true' \
@@ -885,7 +885,7 @@ load _helpers
 @test "serverACLInit/Job: port 8501 is used by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.enabled=false' \
       --set 'externalServers.enabled=true' \
@@ -898,7 +898,7 @@ load _helpers
 @test "serverACLInit/Job: can override externalServers.httpsPort" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.enabled=false' \
       --set 'externalServers.enabled=true' \
@@ -912,7 +912,7 @@ load _helpers
 @test "serverACLInit/Job: uses only the port from externalServers.httpsPort if TLS is enabled and externalServers.enabled is false" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.tls.enabled=true' \
       --set 'server.enabled=false' \
@@ -927,7 +927,7 @@ load _helpers
 @test "serverACLInit/Job: doesn't set the CA cert if TLS is enabled and externalServers.useSystemRoots is true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.tls.enabled=true' \
       --set 'server.enabled=false' \
@@ -942,7 +942,7 @@ load _helpers
 @test "serverACLInit/Job: sets the CA cert if TLS is enabled and externalServers.enabled is true but externalServers.useSystemRoots is false" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.tls.enabled=true' \
       --set 'server.enabled=false' \
@@ -957,7 +957,7 @@ load _helpers
 @test "serverACLInit/Job: sets the CA cert if TLS is enabled and externalServers.useSystemRoots is true but externalServers.enabled is false" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.tls.enabled=true' \
       --set 'externalServers.enabled=false' \
@@ -974,7 +974,7 @@ load _helpers
 @test "serverACLInit/Job: -bootstrap-token-file is not set by default" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr)
 
@@ -997,7 +997,7 @@ load _helpers
 @test "serverACLInit/Job: -bootstrap-token-file is not set when acls.bootstrapToken.secretName is set but secretKey is not" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.acls.bootstrapToken.secretName=name' \
       . | tee /dev/stderr)
@@ -1021,7 +1021,7 @@ load _helpers
 @test "serverACLInit/Job: -bootstrap-token-file is not set when acls.bootstrapToken.secretKey is set but secretName is not" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.acls.bootstrapToken.secretKey=key' \
       . | tee /dev/stderr)
@@ -1045,7 +1045,7 @@ load _helpers
 @test "serverACLInit/Job: -bootstrap-token-file is set when acls.bootstrapToken.secretKey and secretName are set" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.acls.bootstrapToken.secretName=name' \
       --set 'global.acls.bootstrapToken.secretKey=key' \
@@ -1070,7 +1070,7 @@ load _helpers
 @test "serverACLInit/Job: -bootstrap-token-file is preferred when both acls.bootstrapToken and acls.replicationToken are set" {
   cd `chart_dir`
   local object=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.acls.bootstrapToken.secretName=name' \
       --set 'global.acls.bootstrapToken.secretKey=key' \
@@ -1097,7 +1097,7 @@ load _helpers
 @test "serverACLInit/Job: doesn't set auth method host by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
@@ -1108,7 +1108,7 @@ load _helpers
 @test "serverACLInit/Job: doesn't set auth method host by default when externalServers.k8sAuthMethodHost is provided but externalServers.enabled is false" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'externalServers.k8sAuthMethodHost=foo.com' \
       --set 'connectInject.enabled=true' \
@@ -1120,7 +1120,7 @@ load _helpers
 @test "serverACLInit/Job: can provide custom auth method host" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-acl-init-job.yaml  \
+      -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'connectInject.enabled=true' \
       --set 'server.enabled=false' \

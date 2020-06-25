@@ -5,7 +5,7 @@ load _helpers
 @test "enterpriseLicense/ClusterRole: disabled by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/enterprise-license-clusterrole.yaml  \
+      -s templates/enterprise-license-clusterrole.yaml  \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
@@ -14,7 +14,7 @@ load _helpers
 @test "enterpriseLicense/ClusterRole: disabled with server=false, ent secret defined" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/enterprise-license-clusterrole.yaml  \
+      -s templates/enterprise-license-clusterrole.yaml  \
       --set 'server.enabled=false' \
       --set 'server.enterpriseLicense.secretName=foo' \
       --set 'server.enterpriseLicense.secretKey=bar' \
@@ -26,7 +26,7 @@ load _helpers
 @test "enterpriseLicense/ClusterRole: disabled when ent secretName missing" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/enterprise-license-clusterrole.yaml  \
+      -s templates/enterprise-license-clusterrole.yaml  \
       --set 'server.enterpriseLicense.secretKey=bar' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
@@ -36,7 +36,7 @@ load _helpers
 @test "enterpriseLicense/ClusterRole: disabled when ent secretKey missing" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/enterprise-license-clusterrole.yaml  \
+      -s templates/enterprise-license-clusterrole.yaml  \
       --set 'server.enterpriseLicense.secretName=foo' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
@@ -46,7 +46,7 @@ load _helpers
 @test "enterpriseLicense/ClusterRole: enabled when ent license defined" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/enterprise-license-clusterrole.yaml  \
+      -s templates/enterprise-license-clusterrole.yaml  \
       --set 'server.enterpriseLicense.secretName=foo' \
       --set 'server.enterpriseLicense.secretKey=bar' \
       . | tee /dev/stderr |
@@ -57,7 +57,7 @@ load _helpers
 @test "enterpriseLicense/ClusterRole: rules are empty if global.acls.manageSystemACLs and global.enablePodSecurityPolicies are false" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/enterprise-license-clusterrole.yaml  \
+      -s templates/enterprise-license-clusterrole.yaml  \
       --set 'server.enterpriseLicense.secretName=foo' \
       --set 'server.enterpriseLicense.secretKey=bar' \
       . | tee /dev/stderr |
@@ -71,7 +71,7 @@ load _helpers
 @test "enterpriseLicense/ClusterRole: allows acl token when global.acls.manageSystemACLs is true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/enterprise-license-clusterrole.yaml  \
+      -s templates/enterprise-license-clusterrole.yaml  \
       --set 'server.enterpriseLicense.secretName=foo' \
       --set 'server.enterpriseLicense.secretKey=bar' \
       --set 'global.acls.manageSystemACLs=true' \
@@ -87,7 +87,7 @@ load _helpers
 @test "enterpriseLicense/ClusterRole: allows podsecuritypolicies access with global.enablePodSecurityPolicies=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/enterprise-license-clusterrole.yaml  \
+      -s templates/enterprise-license-clusterrole.yaml  \
       --set 'server.enterpriseLicense.secretName=foo' \
       --set 'server.enterpriseLicense.secretKey=bar' \
       --set 'global.enablePodSecurityPolicies=true' \

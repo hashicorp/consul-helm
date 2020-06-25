@@ -5,7 +5,7 @@ load _helpers
 @test "meshGateway/Service: disabled by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
@@ -14,7 +14,7 @@ load _helpers
 @test "meshGateway/Service: enabled by default with meshGateway, connectInject and client.grpc enabled" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -26,7 +26,7 @@ load _helpers
 @test "meshGateway/Service: enabled with meshGateway.enabled=true meshGateway.service.enabled" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -42,7 +42,7 @@ load _helpers
 @test "meshGateway/Service: no annotations by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -55,7 +55,7 @@ load _helpers
 @test "meshGateway/Service: can set annotations" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -72,7 +72,7 @@ load _helpers
 @test "meshGateway/Service: has default port" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -85,7 +85,7 @@ load _helpers
 @test "meshGateway/Service: can set port" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -102,7 +102,7 @@ load _helpers
 @test "meshGateway/Service: has default targetPort" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -115,7 +115,7 @@ load _helpers
 @test "meshGateway/Service: uses targetPort from containerPort" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -132,7 +132,7 @@ load _helpers
 @test "meshGateway/Service: no nodePort by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -145,7 +145,7 @@ load _helpers
 @test "meshGateway/Service: can set a nodePort" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -162,7 +162,7 @@ load _helpers
 @test "meshGateway/Service: defaults to type LoadBalancer" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -175,7 +175,7 @@ load _helpers
 @test "meshGateway/Service: can set type" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -192,7 +192,7 @@ load _helpers
 @test "meshGateway/Service: can add additionalSpec" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-service.yaml  \
+      -s templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
