@@ -4,11 +4,9 @@ load _helpers
 
 @test "meshGateway/Deployment: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/mesh-gateway-deployment.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "meshGateway/Deployment: enabled with meshGateway, connectInject enabled" {
@@ -287,7 +285,7 @@ key2: value2' \
 @test "meshGateway/Deployment: resources can be overridden with string" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -500,7 +498,7 @@ key2: value2' \
 @test "meshGateway/Deployment: sets TLS env variables in lifecycle sidecar when global.tls.enabled" {
   cd `chart_dir`
   local env=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.tls.enabled=true' \
@@ -517,7 +515,6 @@ key2: value2' \
 @test "meshGateway/Deployment: can overwrite CA secret with the provided one" {
   cd `chart_dir`
   local ca_cert_volume=$(helm template \
-      -s templates/client-snapshot-agent-deployment.yaml  \
       -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \

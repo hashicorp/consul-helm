@@ -4,11 +4,9 @@ load _helpers
 
 @test "syncCatalog/Deployment: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/sync-catalog-deployment.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "syncCatalog/Deployment: enable with global.enabled false" {
@@ -18,28 +16,24 @@ load _helpers
       --set 'global.enabled=false' \
       --set 'syncCatalog.enabled=true' \
       . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
+      yq -s 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
 @test "syncCatalog/Deployment: disable with syncCatalog.enabled" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/sync-catalog-deployment.yaml  \
       --set 'syncCatalog.enabled=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "syncCatalog/Deployment: disable with global.enabled" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/sync-catalog-deployment.yaml  \
       --set 'global.enabled=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 #--------------------------------------------------------------------
@@ -338,6 +332,7 @@ load _helpers
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/sync-catalog-deployment.yaml  \
+      --set 'syncCatalog.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.nodeSelector' | tee /dev/stderr)
   [ "${actual}" = "null" ]

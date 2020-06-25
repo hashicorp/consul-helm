@@ -4,11 +4,9 @@ load _helpers
 
 @test "connectInject/Deployment: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/connect-inject-deployment.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "connectInject/Deployment: enable with global.enabled false, client.enabled true" {
@@ -25,22 +23,18 @@ load _helpers
 
 @test "connectInject/Deployment: disable with connectInject.enabled" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/connect-inject-deployment.yaml  \
       --set 'connectInject.enabled=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "connectInject/Deployment: disable with global.enabled" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/connect-inject-deployment.yaml  \
       --set 'global.enabled=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "connectInject/Deployment: fails if global.enabled=false" {
@@ -240,7 +234,7 @@ load _helpers
 @test "connectInject/Deployment: affinity not set by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/connect-inject-deployment.yaml  \
+      -s templates/connect-inject-deployment.yaml  \
       --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.affinity == null' | tee /dev/stderr)
@@ -250,7 +244,7 @@ load _helpers
 @test "connectInject/Deployment: affinity can be set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/connect-inject-deployment.yaml  \
+      -s templates/connect-inject-deployment.yaml  \
       --set 'connectInject.enabled=true' \
       --set 'connectInject.affinity=foobar' \
       . | tee /dev/stderr |
@@ -265,6 +259,7 @@ load _helpers
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.nodeSelector' | tee /dev/stderr)
   [ "${actual}" = "null" ]
@@ -297,7 +292,7 @@ load _helpers
 @test "connectInject/Deployment: tolerations not set by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/connect-inject-deployment.yaml  \
+      -s templates/connect-inject-deployment.yaml  \
       --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.tolerations == null' | tee /dev/stderr)
@@ -307,7 +302,7 @@ load _helpers
 @test "connectInject/Deployment: tolerations can be set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/connect-inject-deployment.yaml  \
+      -s templates/connect-inject-deployment.yaml  \
       --set 'connectInject.enabled=true' \
       --set 'connectInject.tolerations=foobar' \
       . | tee /dev/stderr |
@@ -904,7 +899,7 @@ load _helpers
 @test "connectInject/Deployment: default resources" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/connect-inject-deployment.yaml  \
+      -s templates/connect-inject-deployment.yaml  \
       --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
       yq -rc '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
@@ -914,7 +909,7 @@ load _helpers
 @test "connectInject/Deployment: can set resources" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/connect-inject-deployment.yaml  \
+      -s templates/connect-inject-deployment.yaml  \
       --set 'connectInject.enabled=true' \
       --set 'connectInject.resources.requests.memory=100Mi' \
       --set 'connectInject.resources.requests.cpu=100m' \
@@ -931,7 +926,7 @@ load _helpers
 @test "connectInject/Deployment: by default there are no resource settings" {
   cd `chart_dir`
   local cmd=$(helm template \
-      -x templates/connect-inject-deployment.yaml \
+      -s templates/connect-inject-deployment.yaml \
       --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
@@ -956,7 +951,7 @@ load _helpers
 @test "connectInject/Deployment: can set resource settings" {
   cd `chart_dir`
   local cmd=$(helm template \
-      -x templates/connect-inject-deployment.yaml \
+      -s templates/connect-inject-deployment.yaml \
       --set 'connectInject.enabled=true' \
       --set 'connectInject.sidecarProxy.resources.requests.memory=10Mi' \
       --set 'connectInject.sidecarProxy.resources.requests.cpu=100m' \
@@ -985,7 +980,7 @@ load _helpers
 @test "connectInject/Deployment: can set resource settings explicitly to 0" {
   cd `chart_dir`
   local cmd=$(helm template \
-      -x templates/connect-inject-deployment.yaml \
+      -s templates/connect-inject-deployment.yaml \
       --set 'connectInject.enabled=true' \
       --set 'connectInject.sidecarProxy.resources.requests.memory=0' \
       --set 'connectInject.sidecarProxy.resources.requests.cpu=0' \

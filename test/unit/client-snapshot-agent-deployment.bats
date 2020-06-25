@@ -4,11 +4,9 @@ load _helpers
 
 @test "client/SnapshotAgentDeployment: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/client-snapshot-agent-deployment.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "client/SnapshotAgentDeployment: enabled with client.snapshotAgent.enabled=true" {
@@ -34,13 +32,11 @@ load _helpers
 
 @test "client/SnapshotAgentDeployment: disabled with client=false and client.snapshotAgent.enabled=true" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/client-snapshot-agent-deployment.yaml  \
       --set 'client.snapshotAgent.enabled=true' \
       --set 'client.enabled=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 #--------------------------------------------------------------------
@@ -342,7 +338,7 @@ load _helpers
 @test "client/SnapshotAgentDeployment: default resources" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-snapshot-agent-deployment.yaml  \
+      -s templates/client-snapshot-agent-deployment.yaml  \
       --set 'client.snapshotAgent.enabled=true' \
       . | tee /dev/stderr |
       yq -rc '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
@@ -352,7 +348,7 @@ load _helpers
 @test "client/SnapshotAgentDeployment: can set resources" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-snapshot-agent-deployment.yaml  \
+      -s templates/client-snapshot-agent-deployment.yaml  \
       --set 'client.snapshotAgent.enabled=true' \
       --set 'client.snapshotAgent.resources.requests.memory=100Mi' \
       --set 'client.snapshotAgent.resources.requests.cpu=100m' \
@@ -369,7 +365,7 @@ load _helpers
 @test "client/SnapshotAgentDeployment: if caCert is set it is used in command" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-snapshot-agent-deployment.yaml  \
+      -s templates/client-snapshot-agent-deployment.yaml  \
       --set 'client.snapshotAgent.enabled=true' \
       --set 'client.snapshotAgent.caCert=-----BEGIN CERTIFICATE-----
 MIICFjCCAZsCCQCdwLtdjbzlYzAKBggqhkjOPQQDAjB0MQswCQYDVQQGEwJDQTEL' \

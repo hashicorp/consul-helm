@@ -4,11 +4,9 @@ load _helpers
 
 @test "serverACLInit/ServiceAccount: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/server-acl-init-serviceaccount.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "serverACLInit/ServiceAccount: enabled with global.acls.manageSystemACLs=true" {
@@ -23,13 +21,11 @@ load _helpers
 
 @test "serverACLInit/ServiceAccount: disabled with server=false and global.acls.manageSystemACLs=true" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/server-acl-init-serviceaccount.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.enabled=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "serverACLInit/ServiceAccount: enabled with client=false and global.acls.manageSystemACLs=true" {

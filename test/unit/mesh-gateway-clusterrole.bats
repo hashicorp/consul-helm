@@ -4,11 +4,9 @@ load _helpers
 
 @test "meshGateway/ClusterRole: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/mesh-gateway-clusterrole.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "meshGateway/ClusterRole: enabled with meshGateway, connectInject enabled" {

@@ -4,11 +4,9 @@ load _helpers
 
 @test "createFederationSecret/ServiceAccount: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/create-federation-secret-serviceaccount.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "createFederationSecret/ServiceAccount: enabled with global.federation.createFederationSecret=true" {

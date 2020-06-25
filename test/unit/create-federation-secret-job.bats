@@ -4,11 +4,9 @@ load _helpers
 
 @test "createFederationSecet/Job: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/create-federation-secret-job.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "createFederationSecet/Job: fails when global.federation.enabled=false" {
@@ -71,7 +69,7 @@ load _helpers
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.tls.enabled=true' \
-      --set 'global.federation.createFederationSecret=true' . \
+      --set 'global.federation.createFederationSecret=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.volumes' | tee /dev/stderr )
 
@@ -109,7 +107,7 @@ load _helpers
       --set 'global.tls.caCert.secretKey=customKey' \
       --set 'global.tls.caKey.secretName=custom-ca-key' \
       --set 'global.tls.caKey.secretKey=customKey2' \
-      --set 'global.federation.createFederationSecret=true' . \
+      --set 'global.federation.createFederationSecret=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.volumes' | tee /dev/stderr )
 
@@ -140,7 +138,7 @@ load _helpers
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.tls.enabled=true' \
-      --set 'global.federation.createFederationSecret=true' . \
+      --set 'global.federation.createFederationSecret=true' \
       . | tee /dev/stderr)
 
   local actual
@@ -163,7 +161,7 @@ load _helpers
       --set 'connectInject.enabled=true' \
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
-      --set 'global.federation.createFederationSecret=true' . \
+      --set 'global.federation.createFederationSecret=true' \
       . | tee /dev/stderr)
 
   local actual
@@ -194,7 +192,7 @@ load _helpers
       --set 'global.tls.enabled=true' \
       --set 'global.gossipEncryption.secretName=gossip-secret' \
       --set 'global.gossipEncryption.secretKey=key' \
-      --set 'global.federation.createFederationSecret=true' . \
+      --set 'global.federation.createFederationSecret=true' \
       . | tee /dev/stderr)
 
   local actual
@@ -221,7 +219,7 @@ load _helpers
       --set 'global.tls.enabled=true' \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.acls.createReplicationToken=true' \
-      --set 'global.federation.createFederationSecret=true' . \
+      --set 'global.federation.createFederationSecret=true' \
       . | tee /dev/stderr | yq '.spec.template.spec.containers[0].command | any(contains("-export-replication-token=true"))')
   [ "${actual}" = "true" ]
 }
@@ -238,7 +236,7 @@ load _helpers
       --set 'connectInject.enabled=true' \
       --set 'global.tls.enabled=true' \
       --set 'meshGateway.consulServiceName=my-service-name' \
-      --set 'global.federation.createFederationSecret=true' . \
+      --set 'global.federation.createFederationSecret=true' \
       . | tee /dev/stderr | yq '.spec.template.spec.containers[0].command | any(contains("-mesh-gateway-service-name=my-service-name"))')
   [ "${actual}" = "true" ]
 }

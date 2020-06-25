@@ -4,22 +4,18 @@ load _helpers
 
 @test "tlsInit/Job: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/tls-init-job.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "tlsInit/Job: disabled with global.enabled=false" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/tls-init-job.yaml  \
       --set 'global.tls.enabled=true' \
       --set 'global.enabled=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "tlsInit/Job: enabled with global.tls.enabled=true" {
@@ -34,13 +30,11 @@ load _helpers
 
 @test "tlsInit/Job: disabled when server.enabled=false" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/tls-init-job.yaml  \
       --set 'global.tls.enabled=true' \
       --set 'server.enabled=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "tlsInit/Job: enabled when global.tls.enabled=true and server.enabled=true" {

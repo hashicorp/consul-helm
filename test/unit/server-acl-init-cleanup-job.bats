@@ -4,11 +4,9 @@ load _helpers
 
 @test "serverACLInitCleanup/Job: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/server-acl-init-cleanup-job.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "serverACLInitCleanup/Job: enabled with global.acls.manageSystemACLs=true" {
@@ -23,13 +21,11 @@ load _helpers
 
 @test "serverACLInitCleanup/Job: disabled with server=false and global.acls.manageSystemACLs=true" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/server-acl-init-cleanup-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.enabled=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "serverACLInitCleanup/Job: enabled with client=true and global.acls.manageSystemACLs=true" {
@@ -45,13 +41,11 @@ load _helpers
 
 @test "serverACLInitCleanup/Job: disabled when server.updatePartition > 0" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/server-acl-init-cleanup-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.updatePartition=1' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "serverACLInitCleanup/Job: consul-k8s delete-completed-job is called with correct arguments" {

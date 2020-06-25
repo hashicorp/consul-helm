@@ -4,22 +4,18 @@ load _helpers
 
 @test "serverACLInitCleanup/PodSecurityPolicy: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/server-acl-init-cleanup-podsecuritypolicy.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "serverACLInitCleanup/PodSecurityPolicy: disabled with global.acls.manageSystemACLs=true and global.enablePodSecurityPolicies=false" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/server-acl-init-cleanup-podsecuritypolicy.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enablePodSecurityPolicies=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "serverACLInitCleanup/PodSecurityPolicy: enabled with global.acls.manageSystemACLs=true and global.enablePodSecurityPolicies=true" {

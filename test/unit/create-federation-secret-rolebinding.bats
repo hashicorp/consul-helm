@@ -4,11 +4,9 @@ load _helpers
 
 @test "createFederationSecret/RoleBinding: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/create-federation-secret-rolebinding.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "createFederationSecret/RoleBinding: enabled with global.createFederationSecret=true" {

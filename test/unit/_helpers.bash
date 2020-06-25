@@ -3,7 +3,7 @@ chart_dir() {
     echo ${BATS_TEST_DIRNAME}/../..
 }
 
-# helm is used to intercept the helm command in tests and change flags depending
+# helm is used to intercept the `helm` command in tests and change flags depending
 # on which version is being run.
 # Helm 2 uses the -x flag instead of -s.
 # NOTE: command is used so that this function isn't called recursively.
@@ -11,7 +11,9 @@ helm() {
   if [[ $(v2) ]]; then
     command helm template -x "${@:3}"
   else
-    command helm "$@"
+    # The release name in Helm 3 defaults to RELEASE-NAME whereas it's lowercaes
+    # in Helm 3 so we need to set it explictly.
+    command helm template release-name -s "${@:3}"
   fi
 }
 

@@ -4,11 +4,9 @@ load _helpers
 
 @test "serverACLInit/Job: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/server-acl-init-job.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "serverACLInit/Job: enabled with global.acls.manageSystemACLs=true" {
@@ -23,13 +21,11 @@ load _helpers
 
 @test "serverACLInit/Job: disabled with server=false and global.acls.manageSystemACLs=true" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.enabled=false' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "serverACLInit/Job: enabled with client=false global.acls.manageSystemACLs=true" {
@@ -45,13 +41,11 @@ load _helpers
 
 @test "serverACLInit/Job: disabled when server.updatePartition > 0" {
   cd `chart_dir`
-  local actual=$(helm template \
+  assert_empty helm template \
       -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'server.updatePartition=1' \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      .
 }
 
 @test "serverACLInit/Job: enabled with externalServers.enabled=true global.acls.manageSystemACLs=true, but server.enabled set to false" {
@@ -185,14 +179,14 @@ load _helpers
 #--------------------------------------------------------------------
 # aclBindingRuleSelector/global.acls.manageSystemACLs
 
-@test "serverACLInit/Job: no acl-binding-rule-selector flag by default" {
+@test "serverACLInit/Job: acl-binding-rule-selector flag set by default" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/server-acl-init-job.yaml \
-      --set 'connectInject.aclBindingRuleSlector=foo' \
+      --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+      yq '.spec.template.spec.containers[0].command | any(contains("-acl-binding-rule-selector=serviceaccount.name!=default"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
 }
 
 @test "serverACLInit/Job: can specify acl-binding-rule-selector" {

@@ -11,7 +11,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "client/DaemonSet: enable with global.enabled false" {
+@test "client/DaemonSet: enabled with global.enabled=false and client.enabled=true" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-daemonset.yaml  \
@@ -22,7 +22,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "client/DaemonSet: disable with client.enabled" {
+@test "client/DaemonSet: disabled with client.enabled=false" {
   cd `chart_dir`
   assert_empty helm template \
       -s templates/client-daemonset.yaml  \
@@ -30,7 +30,7 @@ load _helpers
       .
 }
 
-@test "client/DaemonSet: disable with global.enabled" {
+@test "client/DaemonSet: disabled with global.enabled=false and client.enabled='-'" {
   cd `chart_dir`
   assert_empty helm template \
       -s templates/client-daemonset.yaml  \
@@ -158,7 +158,7 @@ load _helpers
 @test "client/DaemonSet: resources can be overridden" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-daemonset.yaml  \
+      -s templates/client-daemonset.yaml  \
       --set 'client.resources.foo=bar' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].resources.foo' | tee /dev/stderr)
@@ -169,7 +169,7 @@ load _helpers
 @test "client/DaemonSet: resources can be overridden with string" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-daemonset.yaml  \
+      -s templates/client-daemonset.yaml  \
       --set 'client.resources=foo: bar' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].resources.foo' | tee /dev/stderr)
@@ -401,16 +401,6 @@ load _helpers
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[] | select(.name=="consul") | .env[] | select(.name == "GOSSIP_KEY") | length > 0' | tee /dev/stderr)
   [ "${actual}" = "" ]
-}
-
-@test "client/DaemonSet: gossip encryption disabled in client DaemonSet when clients are disabled" {
-  cd `chart_dir`
-  assert_empty helm template \
-      -s templates/client-daemonset.yaml  \
-      --set 'client.enabled=false' \
-      --set 'global.gossipEncryption.secretName=foo' \
-      --set 'global.gossipEncryption.secretKey=bar' \
-      .
 }
 
 @test "client/DaemonSet: gossip encryption disabled in client DaemonSet when secretName is missing" {
@@ -962,7 +952,7 @@ load _helpers
 @test "client/DaemonSet: hostNetwork not set by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-daemonset.yaml \
+      -s templates/client-daemonset.yaml \
       . | tee /dev/stderr |
       yq '.spec.template.spec.hostNetwork == null' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -971,7 +961,7 @@ load _helpers
 @test "client/DaemonSet: hostNetwork can be set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/client-daemonset.yaml \
+      -s templates/client-daemonset.yaml \
       --set 'client.hostNetwork=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.hostNetwork == true' | tee /dev/stderr)
