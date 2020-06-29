@@ -1,5 +1,7 @@
 # StatefulSet to run the actual Consul server cluster.
 {{- if (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) }}
+{{- if and .Values.global.federation.enabled (not .Values.global.tls.enabled) }}{{ fail "If global.federation.enabled is true, global.tls.enabled must be true because federation is only supported with TLS enabled" }}{{ end }}
+{{- if and .Values.global.federation.enabled (not .Values.meshGateway.enabled) }}{{ fail "If global.federation.enabled is true, meshGateway.enabled must be true because mesh gateways are required for federation" }}{{ end }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -59,10 +61,17 @@ spec:
           configMap:
             name: {{ template "consul.fullname" . }}-server-config
         {{- if .Values.global.tls.enabled }}
-        - name: tls-ca-cert
+        - name: consul-ca-cert
           secret:
+            {{- if .Values.global.tls.caCert.secretName }}
+            secretName: {{ .Values.global.tls.caCert.secretName }}
+            {{- else }}
             secretName: {{ template "consul.fullname" . }}-ca-cert
-        - name: tls-server-cert
+            {{- end }}
+            items:
+            - key: {{ default "tls.crt" .Values.global.tls.caCert.secretKey }}
+              path: tls.crt
+        - name: consul-server-cert
           secret:
             secretName: {{ template "consul.fullname" . }}-server-cert
         {{- end }}
@@ -73,6 +82,13 @@ spec:
             name: {{ .name }}
             {{- else if (eq .type "secret") }}
             secretName: {{ .name }}
+            {{- end }}
+            {{- with .items }}
+            items:
+            {{- range . }}
+            - key: {{.key}}
+              path: {{.path}}
+            {{- end }}
             {{- end }}
         {{- end }}
       {{- if .Values.server.priorityClassName }}
@@ -103,6 +119,13 @@ spec:
             - name: CONSUL_CACERT
               value: /consul/tls/ca/tls.crt
             {{- end }}
+            {{- if (and .Values.global.acls.replicationToken.secretName .Values.global.acls.replicationToken.secretKey) }}
+            - name: ACL_REPLICATION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.acls.replicationToken.secretName | quote }}
+                  key: {{ .Values.global.acls.replicationToken.secretKey | quote }}
+            {{- end }}
             {{- include "consul.extraEnvironmentVars" .Values.server | nindent 12 }}
           command:
             - "/bin/sh"
@@ -118,6 +141,9 @@ spec:
                 -hcl='ca_file = "/consul/tls/ca/tls.crt"' \
                 -hcl='cert_file = "/consul/tls/server/tls.crt"' \
                 -hcl='key_file = "/consul/tls/server/tls.key"' \
+                {{- if .Values.global.tls.enableAutoEncrypt }}
+                -hcl='auto_encrypt = {allow_tls = true}' \
+                {{- end }}
                 {{- if .Values.global.tls.verify }}
                 -hcl='verify_incoming_rpc = true' \
                 -hcl='verify_outgoing = true' \
@@ -144,6 +170,12 @@ spec:
                 {{- if .Values.server.connect }}
                 -hcl="connect { enabled = true }" \
                 {{- end }}
+                {{- if .Values.global.federation.enabled }}
+                -hcl="connect { enable_mesh_gateway_wan_federation = true }" \
+                {{- end }}
+                {{- if (and .Values.global.acls.replicationToken.secretName .Values.global.acls.replicationToken.secretKey) }}
+                -hcl="acl { tokens { agent = \"${ACL_REPLICATION_TOKEN}\", replication = \"${ACL_REPLICATION_TOKEN}\" } }" \
+                {{- end }}
                 {{- if .Values.ui.enabled }}
                 -ui \
                 {{- end }}
@@ -157,10 +189,10 @@ spec:
             - name: config
               mountPath: /consul/config
             {{- if .Values.global.tls.enabled }}
-            - name: tls-ca-cert
+            - name: consul-ca-cert
               mountPath: /consul/tls/ca/
               readOnly: true
-            - name: tls-server-cert
+            - name: consul-server-cert
               mountPath: /consul/tls/server
               readOnly: true
             {{- end }}
@@ -220,7 +252,11 @@ spec:
             timeoutSeconds: 5
           {{- if .Values.server.resources }}
           resources:
+            {{- if eq (typeOf .Values.server.resources) "string" }}
             {{ tpl .Values.server.resources . | nindent 12 | trim }}
+            {{- else }}
+            {{- toYaml .Values.server.resources | nindent 12 }}
+            {{- end }}
           {{- end }}
       {{- if .Values.server.nodeSelector }}
       nodeSelector:

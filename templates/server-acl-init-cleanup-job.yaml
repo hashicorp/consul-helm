@@ -1,5 +1,6 @@
-{{- if (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) }}
-{{- if .Values.global.bootstrapACLs }}
+{{- $serverEnabled := (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) -}}
+{{- if (or $serverEnabled .Values.externalServers.enabled) }}
+{{- if .Values.global.acls.manageSystemACLs }}
 {{- /* See reason for this in server-acl-init-job.yaml */ -}}
 {{- if eq (int .Values.server.updatePartition) 0 }}
 # This job deletes the server-acl-init job once it completes successfully.
@@ -51,6 +52,13 @@ spec:
             - delete-completed-job
             - -k8s-namespace={{ .Release.Namespace }}
             - {{ template "consul.fullname" . }}-server-acl-init
+          resources:
+            requests:
+              memory: "25Mi"
+              cpu: "50m"
+            limits:
+              memory: "25Mi"
+              cpu: "50m"
   {{- end }}
   {{- end }}
   {{- end }}

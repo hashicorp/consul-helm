@@ -11,16 +11,15 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "meshGateway/Service: disabled by default with meshGateway, connectInject and client.grpc enabled" {
+@test "meshGateway/Service: enabled by default with meshGateway, connectInject enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+  [ "${actual}" = "true" ]
 }
 
 @test "meshGateway/Service: enabled with meshGateway.enabled=true meshGateway.service.enabled" {
@@ -29,7 +28,6 @@ load _helpers
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
@@ -45,7 +43,6 @@ load _helpers
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
       . | tee /dev/stderr |
       yq -r '.metadata.annotations' | tee /dev/stderr)
@@ -58,7 +55,6 @@ load _helpers
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
       --set 'meshGateway.service.annotations=key: value' \
       . | tee /dev/stderr |
@@ -75,7 +71,6 @@ load _helpers
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
       . | tee /dev/stderr |
       yq -r '.spec.ports[0].port' | tee /dev/stderr)
@@ -88,7 +83,6 @@ load _helpers
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
       --set 'meshGateway.service.port=8443' \
       . | tee /dev/stderr |
@@ -105,11 +99,10 @@ load _helpers
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
       . | tee /dev/stderr |
       yq -r '.spec.ports[0].targetPort' | tee /dev/stderr)
-  [ "${actual}" = "443" ]
+  [ "${actual}" = "8443" ]
 }
 
 @test "meshGateway/Service: uses targetPort from containerPort" {
@@ -118,12 +111,11 @@ load _helpers
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
-      --set 'meshGateway.containerPort=8443' \
+      --set 'meshGateway.containerPort=9443' \
       . | tee /dev/stderr |
       yq -r '.spec.ports[0].targetPort' | tee /dev/stderr)
-  [ "${actual}" = "8443" ]
+  [ "${actual}" = "9443" ]
 }
 
 #--------------------------------------------------------------------
@@ -135,7 +127,6 @@ load _helpers
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
       . | tee /dev/stderr |
       yq -r '.spec.ports[0].nodePort' | tee /dev/stderr)
@@ -148,7 +139,6 @@ load _helpers
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
       --set 'meshGateway.service.nodePort=8443' \
       . | tee /dev/stderr |
@@ -159,17 +149,16 @@ load _helpers
 #--------------------------------------------------------------------
 # Service type
 
-@test "meshGateway/Service: defaults to type ClusterIP" {
+@test "meshGateway/Service: defaults to type LoadBalancer" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
       . | tee /dev/stderr |
       yq -r '.spec.type' | tee /dev/stderr)
-  [ "${actual}" = "ClusterIP" ]
+  [ "${actual}" = "LoadBalancer" ]
 }
 
 @test "meshGateway/Service: can set type" {
@@ -178,12 +167,11 @@ load _helpers
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
-      --set 'meshGateway.service.type=LoadBalancer' \
+      --set 'meshGateway.service.type=ClusterIP' \
       . | tee /dev/stderr |
       yq -r '.spec.type' | tee /dev/stderr)
-  [ "${actual}" = "LoadBalancer" ]
+  [ "${actual}" = "ClusterIP" ]
 }
 
 #--------------------------------------------------------------------
@@ -195,7 +183,6 @@ load _helpers
       -x templates/mesh-gateway-service.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
       --set 'meshGateway.service.additionalSpec=key: value' \
       . | tee /dev/stderr |

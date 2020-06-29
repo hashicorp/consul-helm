@@ -1,5 +1,575 @@
 ## Unreleased
 
+## 0.22.0 (June 18, 2020)
+
+FEATURES:
+
+* Supports deploying Consul [Ingress](https://www.consul.io/docs/connect/ingress_gateway)
+  and [Terminating](https://www.consul.io/docs/connect/terminating_gateway) Gateways.
+  Multiple different gateways of each type can be deployed with default values that can
+  be overridden for specific gateways if desired. Full documentation of the configuration
+  options can be found in the values file or in the Helm chart documentation
+  ([Ingress](https://www.consul.io/docs/k8s/helm#v-ingressgateways),
+  [Terminating](https://www.consul.io/docs/k8s/helm#v-terminatinggateways)).
+  Requires Consul 1.8.0+.
+
+  Ingress gateways: [[GH-456](https://github.com/hashicorp/consul-helm/pull/456)], 
+  Terminating gateways: [[GH-503](https://github.com/hashicorp/consul-helm/pull/503)]
+
+* Resources are now set on all containers. This enables the chart to be deployed
+  in clusters that have resource quotas set. This also ensures that Consul
+  server and client pods won't be evicted by Kubernetes when nodes reach their
+  resource limits.
+  
+  Resource settings have been made configurable for sync catalog, connect inject
+  and client snapshot deployments and sidecar proxies. [[GH-470](https://github.com/hashicorp/consul-helm/pull/470)]
+  
+  The default settings were chosen based on a cluster with a small workload.
+  For production, we recommend monitoring resource usage and modifying the
+  defaults according to your usage. [[GH-466](https://github.com/hashicorp/consul-helm/pull/466)]
+
+BREAKING CHANGES:
+
+* If upgrading to Consul 1.8.0 and using Consul Connect, you will need to upgrade consul-k8s to 0.16.0 (by setting `global.imageK8S: hashicorp/consul-k8s:0.16.0`) and re-roll your Connect pods so they get re-injected, before upgrading consul. This is required because we were previously setting a health check incorrectly that now fails on Consul 1.8.0. If you upgrade to 1.8.0 without upgrading to consul-k8s 0.16.0 and re-rolling your connect pods first, the connect pods will fail their health checks and no traffic will be routed to them.
+
+* It is recommended to use the helm repository to install the helm chart instead of cloning this repo directly. Starting with this release
+ the master branch may contain breaking changes.
+
+  ```sh
+    $ helm repo add hashicorp https://helm.releases.hashicorp.com
+    $ helm install consul hashicorp/consul --set global.name=consul
+  ```
+
+* Mesh Gateway: `meshGateway.enableHealthChecks` is no longer supported. This config
+  option was to work around an issue where mesh gateways would not listen on their
+  bind ports until a Connect service was registered. This issue was fixed in Consul 1.6.2. ([GH-464](https://github.com/hashicorp/consul-helm/pull/464))
+
+* Mesh Gateway: The default resource settings have been changed. To keep
+  the previous settings, you must set `meshGateway.resources` in your own Helm config. ([GH-466](https://github.com/hashicorp/consul-helm/pull/466))
+
+  Before:
+  ```yaml
+  meshGateway:
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "250m"
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+  ```
+
+  After:
+  ```yaml
+  meshGateway:
+    resources:
+      requests:
+        memory: "100Mi"
+        cpu: "100m"
+      limits:
+        memory: "100Mi"
+        cpu: "100m"
+  ```
+
+* Clients and Servers: There are now default resource settings for Consul clients
+   and servers. Previously, there were no default settings which meant the default
+   was unlimited. This change was made because Kubernetes will prefer to evict
+   pods that don't have resource settings and that resulted in the Consul client
+   and servers being evicted. The default resource settings were chosen based
+   on a low-usage cluster. If you are running a production cluster, use the
+   `kubectl top` command to see how much CPU and memory your clients and servers
+   are using and set the resources accordingly [[GH-466](https://github.com/hashicorp/consul-helm/pull/466)].
+* `global.bootstrapACLs` has been removed, use `global.acls.manageSystemACLs` instead [[GH-501](https://github.com/hashicorp/consul-helm/pull/501)].
+
+IMPROVEMENTS:
+
+* Add component label to the server, DNS, and UI services [[GH-480](https://github.com/hashicorp/consul-helm/pull/480)].
+* Provide the ability to set a custom CA Cert for consul snapshot agent [[GH-481](https://github.com/hashicorp/consul-helm/pull/481)].
+* Add support for client host networking [[GH-496](https://github.com/hashicorp/consul-helm/pull/496)].
+
+  To enable:
+  ```yaml
+  client:
+    hostNetwork: true
+    dnsPolicy: ClusterFirstWithHostNet
+  ```
+* Add ability to set Affinity and Tolerations to Connect Inject and Catalog Sync [[GH-335](https://github.com/hashicorp/consul-helm/pull/335)].
+* Updated the default consul-k8s version to 0.16.0.
+* Updated the default consul version to 1.8.0.
+* Update default Envoy image version and OS to `envoyproxy/envoy-alpine:1.14.2` [[GH-502](https://github.com/hashicorp/consul-helm/pull/502)].
+
+DEPRECATIONS
+
+* Setting resources via YAML string is now deprecated. Instead, set directly as YAML.
+  This affects `client.resources`, `server.resources` and `meshGateway.resources`.
+  To set directly as YAML, simply remove the pipe (`|`) character that defines
+  the YAML as a string [[GH-465](https://github.com/hashicorp/consul-helm/pull/465)]: 
+  
+  Before:
+  ```yaml
+  client:
+    resources: |
+      requests:
+        memory: "128Mi"
+        cpu: "250m"
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+  ```
+  
+  After:
+  ```yaml
+  client:
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "250m"
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+  ```
+
+## 0.21.0 (May 14, 2020)
+
+FEATURES
+
+* Add experimental support for multi-datacenter federation via
+
+    ```yaml
+    global:
+      federation:
+        enabled: true
+    ```
+  
+  This requires Consul 1.8.0+ (which as of this release is only available as
+  a beta. To use the beta, set `global.image: consul:1.8.0-beta1`)
+
+* Add new Helm value `global.federation.createFederationSecret` that will
+  create a Kubernetes secret in primary datacenters that can be exported to secondary
+  datacenters to help bootstrap secondary clusters for federation ([GH-447](https://github.com/hashicorp/consul-helm/pull/447)).
+
+IMPROVEMENTS
+
+* Default Consul Docker image is now `consul:1.7.3`.
+* Default consul-k8s Docker image is now `hashicorp/consul-k8s:0.15.0`.
+* ACLs: Restrict permissions for the `server-acl-init` job [[GH-454](https://github.com/hashicorp/consul-helm/pull/454)].
+
+BUG FIXES
+
+* Fix missing `NODE_NAME` environment variable when setting `meshGateway.wanAddress.source=NodeName`
+  [[GH-453](https://github.com/hashicorp/consul-helm/pull/453)].
+
+## 0.20.1 (Apr 27, 2020)
+
+BUG FIXES
+
+* Fix a bug where `client.join` and `externalServers.hosts` values containing spaces are
+  not quoted properly, for example, when providing [cloud auto-join](https://www.consul.io/docs/agent/cloud-auto-join.html) strings
+  [[GH-435](https://github.com/hashicorp/consul-helm/pull/435)].
+
+## 0.20.0 (Apr 24, 2020)
+
+BREAKING CHANGES:
+
+* External Servers [[GH-430](https://github.com/hashicorp/consul-helm/pull/430)]:
+  * `externalServers.https.address` moved to `externalServers.hosts`
+    and changed its type from `string` to `array`.
+  * `externalServers.https.port` moved to `externalServers.httpsPort`
+    and its default value changed from `443` to `8501`.
+  * `externalServers.https.tlsServerName` moved to `externalServers.tlsServerName`.
+  * `externalServers.https.useSystemRoots` moved to `externalServers.useSystemRoots`.
+
+  For example, if previously setting `externalServers` like so:
+
+    ```yaml
+    externalServers:
+      enabled: true
+      https:
+        address: "example.com"
+        port: 443
+        tlsServerName: null
+        useSystemRoots: false
+    ```
+
+  Now you need to change it to the following:
+
+    ```yaml
+    externalServers:
+      enabled: true
+      hosts: ["example.com"]
+      httpsPort: 443
+      tlsServerName: null
+      useSystemRoots: false
+    ```
+
+* Auto-encrypt: You can no longer re-use `client.join` property if using auto-encrypt
+  with `externalServers.enabled` set to `true`. You must provide Consul server HTTPS address
+  via `externalServers.hosts` and `externalServers.httpsPort`.
+
+  For example, if previously setting:
+
+    ```yaml
+    tls:
+      enabled: true
+      enabledAutoEncrypt: true
+    externalServers:
+      enabled: true
+    client:
+      join: ["consul.example.com"]
+    ``` 
+
+  Now you need to change it to:
+
+  ```yaml
+    tls:
+      enabled: true
+      enabledAutoEncrypt: true
+    externalServers:
+      enabled: true
+      hosts: ["consul.example.com"]
+    client:
+      join: ["consul.example.com"]
+    ``` 
+
+FEATURES:
+
+* Support managing ACLs when running Consul servers externally to Kubernetes:
+
+    * ACLs: Support providing your own bootstrap token [[GH-420](https://github.com/hashicorp/consul-helm/pull/420)].
+      If provided, the `server-acl-init` job will skip server ACL bootstrapping.
+
+      Example:
+
+        ```yaml
+        global:
+          acls:
+            manageSystemACLs: true
+            bootstrapToken:
+              secretName: bootstrap-token
+              secretKey: token
+        ```
+
+    * External Servers: Add `externalServers.k8sAuthMethodHost` to allow configuring a custom location
+      of the Kubernetes API server for the auth method created in Consul [[GH-420](https://github.com/hashicorp/consul-helm/pull/420)].
+      The Kubernetes API server provided here must be reachable from the external Consul servers.
+
+      Example:
+
+        ```yaml
+        externalServers:
+          enabled: true
+          k8sAuthMethodHost: https://kubernetes-api.example.com:443
+        ```
+
+IMPROVEMENTS:
+
+* Default to the latest version of consul-k8s: hashicorp/consul-k8s:0.14.0
+
+BUG FIXES:
+
+* `tls-init-cleanup` can run even if pre-install fails [[GH-419](https://github.com/hashicorp/consul-helm/pull/419)].
+
+## 0.19.0 (Apr 7, 2020)
+
+BREAKING CHANGES:
+
+* Mesh Gateways:
+  * `meshGateway.wanAddress` - The following values are no longer supported:
+  
+       ```yaml
+       meshGateway:
+         wanAddress:
+           useNodeIP: true
+           useNodeName: false
+           host: ""
+       ```
+    
+    Instead, if previously setting `useNodeIP: true`, now you must set:
+       ```yaml
+       meshGateway:
+         wanAddress:
+           source: "NodeIP"
+       ```
+    
+    If previously setting `useNodeName: true`, now you must set:
+       ```yaml
+       meshGateway:
+         wanAddress:
+           source: "NodeName"
+       ```
+    
+    If previously setting `host: "example.com"`, now you must set:
+       ```yaml
+       meshGateway:
+         wanAddress:
+           source: "Static"
+           static: "example.com"
+       ```
+    where `meshGateway.wanAddress.static` is set to the previous `host` value.
+  
+  * `meshGateway.service.enabled` now defaults to `true`. If
+    previously you were enabling mesh gateways but not enabling the service,
+    you must now explicitly set this to `false`:
+    
+    Previously:
+    ```yaml
+    meshGateway:
+      enabled: true
+    ```
+    
+    Now:
+    ```yaml
+    meshGateway:
+      enabled: true
+      service:
+        enabled: false
+    ```
+    
+  * `meshGateway.service.type` now defaults to `LoadBalancer` instead of `ClusterIP`.
+    To set to `ClusterIP` use:
+    ```yaml
+    meshGateway:
+      service:
+        type: ClusterIP
+    ```
+
+  * `meshGateway.containerPort` now defaults to `8443` instead of `443`. This is
+    to support running in Google Kubernetes Engine by default. This change should
+    have no effect because the service's targetPort will change accordingly so
+    you will still be able to route to the mesh gateway as before.
+    If you wish to keep the port as `443` you must set:
+    ```yaml
+    meshGateway:
+      containerPort: 443
+    ```
+
+FEATURES:
+
+* Add `externalServers` configuration to support configuring the Helm chart with Consul servers
+  running outside of a Kubernetes cluster [[GH-375](https://github.com/hashicorp/consul-helm/pull/375)]. At the moment, this configuration is only used together
+  with auto-encrypt, but might be extended later for other use-cases.
+
+  To use auto-encrypt with external servers, you can set:
+  ```yaml
+  externalServers:
+    enabled: true
+  ```
+  This will tell all consul-k8s components to talk to the external servers to retrieve
+  the clients' CA. Take a look at other properties you can set for `externalServers`
+  [here](https://github.com/hashicorp/consul-helm/blob/e892588288c5c14197306cc714aabb2473f6f59e/values.yaml#L273-L305).
+
+* ACLs: Support ACL replication. ACL replication allows two or more Consul clusters
+  to be federated when ACLs are enabled. One cluster is designated the primary
+  and the rest are secondaries. The primary cluster replicates its ACLs to
+  the secondaries. [[GH-368](https://github.com/hashicorp/consul-helm/pull/368)]
+  
+  NOTE: This feature requires that the clusters are federated.
+  
+  Primary cluster:
+  
+  ```yaml
+  global:
+    acls:
+      manageSystemACLs: true
+      createReplicationToken: true
+  ```
+
+  The replication acl token Kubernetes secret is exported from the primary cluster
+  into the secondaries and then referenced in their Helm config:
+  
+  ```yaml
+  global:
+    acls:
+      manageSystemACLs: true
+      replicationToken:
+        secretName: name
+        secretKey: key
+  ```
+
+* Mesh Gateways: Automatically set mesh gateway addresses when using a Kubernetes
+  Load Balancer service. 
+  To use, set:
+  
+  ```yaml
+  meshGateway:
+    enabled: true
+    service:
+      enabled: true
+      type: "LoadBalancer"
+    wanAddress:
+      source: "Service"
+  ```
+  [[GH-388](https://github.com/hashicorp/consul-helm/pull/388)]
+
+* Support setting image pull secrets via service accounts [[GH-411](https://github.com/hashicorp/consul-helm/pull/411)].
+
+IMPROVEMENTS:
+
+* Default to the latest version of consul-k8s: `hashicorp/consul-k8s:0.13.0`
+* Default to the latest version of Consul: `consul:1.7.2`
+* Allow setting specific secret keys in `server.extraVolumes` [[GH-395](https://github.com/hashicorp/consul-helm/pull/395)]
+* Support auto-encrypt [[GH-375](https://github.com/hashicorp/consul-helm/pull/375)].
+  Auto-encrypt is the feature of Consul that allows clients to bootstrap their own certs
+  at startup. To enable it through the Helm Chart, set:
+  ```yaml
+  global:
+    tls:
+      enabled: true
+      enableAutoEncrypt: true
+  ```
+* Run the enterprise license job on Helm upgrades, as well as installs [[GH-407](https://github.com/hashicorp/consul-helm/pull/407)].
+
+BUGFIXES:
+
+* Mesh Gateways: Mesh gateways are no longer de-registered when their node's Consul
+  client restarts. [[GH-380](https://github.com/hashicorp/consul-helm/pull/380)]
+
+DEPRECATIONS:
+
+* `global.bootstrapACLs` is deprecated. Instead, set `global.acls.manageSystemACLs`.
+   `global.bootstrapACLs` will be supported for the next three releases.
+
+   Previously:
+   ```yaml
+   global:
+     bootstrapACLs: true
+   ```
+
+   Now:
+   ```yaml
+   global:
+     acls:
+       manageSystemACLs: true
+   ```
+
+## 0.18.0 (Mar 18, 2020)
+
+IMPROVEMENTS:
+
+* Allow setting your own certificate authority for Consul to Consul communication
+(i.e. not Connect service to service communication) [[GH-346](https://github.com/hashicorp/consul-helm/pull/346)].
+  To use, set:
+  ```yaml
+  global:
+    tls:
+      caCert:
+        secretName: null
+        secretKey: null
+      caKey:
+        secretName: null
+        secretKey: null
+  ```
+  See `values.yaml` for more details.
+* Allow setting custom annotations for Consul server service [[GH-376](https://github.com/hashicorp/consul-helm/pull/376)]
+  To use, set:
+  ```yaml
+  server:
+    service:
+      annotations: |
+        "annotation-key": "annotation-value"
+  ```
+
+BUG FIXES:
+
+* Fix incompatibility with Helm 3.1.2. [[GH-390](https://github.com/hashicorp/consul-helm/issues/390)]
+* Ensure the Consul Enterprise license gets applied, even if servers take a long time to come up. [[GH-348](https://github.com/hashicorp/consul-helm/pull/348))
+
+## 0.17.0 (Feb 21, 2020)
+
+BREAKING CHANGES:
+
+* `consul-k8s` `v0.12.0`+ is now required. The chart is passing new flags that are only available in this version.
+  To use this version if not using the chart defaults, set
+  ```yaml
+  global:
+    imageK8S: hashicorp/consul-k8s:0.12.0
+  ```
+
+IMPROVEMENTS:
+
+* Catalog Sync
+  * New Helm values have been added to configure which Kubernetes namespaces we will sync from. The defaults are shown below:
+    ```yaml
+    syncCatalog:
+      toConsul: true
+      k8sAllowNamespaces: ["*"]
+      k8sDenyNamespaces: ["kube-system", "kube-public"]
+    ```
+  * If running Consul Enterprise 1.7.0+, Consul namespaces are supported. New Helm values have been added to allow configuring which
+    Consul namespaces Kubernetes services are synced to. See [https://www.consul.io/docs/platform/k8s/service-sync.html#consul-enterprise-namespaces](https://www.consul.io/docs/platform/k8s/service-sync.html#consul-enterprise-namespaces) for more details.
+
+    ```yaml
+    global:
+      enableConsulNamespaces: true
+    syncCatalog:
+      consulNamespaces:
+        # consulDestinationNamespace is the name of the Consul namespace to register all
+        # k8s services into. If the Consul namespace does not already exist,
+        # it will be created. This will be ignored if `mirroringK8S` is true.
+        consulDestinationNamespace: "default"
+
+        # mirroringK8S causes k8s services to be registered into a Consul namespace
+        # of the same name as their k8s namespace, optionally prefixed if
+        # `mirroringK8SPrefix` is set below. If the Consul namespace does not
+        # already exist, it will be created. Turning this on overrides the
+        # `consulDestinationNamespace` setting.
+        # `addK8SNamespaceSuffix` may no longer be needed if enabling this option.
+        mirroringK8S: false
+
+        # If `mirroringK8S` is set to true, `mirroringK8SPrefix` allows each Consul namespace
+        # to be given a prefix. For example, if `mirroringK8SPrefix` is set to "k8s-", a
+        # service in the k8s `staging` namespace will be registered into the
+        # `k8s-staging` Consul namespace.
+        mirroringK8SPrefix: ""
+    ```
+
+* Connect Inject
+  * New Helm values have been added to configure which Kubernetes namespaces we will inject pods in. The defaults are shown below:
+    ```yaml
+    connectInject:
+      k8sAllowNamespaces: ["*"]
+      k8sDenyNamespaces: []
+    ```
+  * If running Consul Enterprise 1.7.0+, Consul namespaces are supported. New Helm values have been added to allow configuring which Consul namespaces Kubernetes pods
+    are registered into. See [https://www.consul.io/docs/platform/k8s/connect.html#consul-enterprise-namespaces](https://www.consul.io/docs/platform/k8s/connect.html#consul-enterprise-namespaces) for more details.
+    ```yaml
+    global:
+      enableConsulNamespaces: true
+
+    connectInject:
+      consulNamespaces:
+        # consulDestinationNamespace is the name of the Consul namespace to register all
+        # k8s pods into. If the Consul namespace does not already exist,
+        # it will be created. This will be ignored if `mirroringK8S` is true.
+        consulDestinationNamespace: "default"
+
+        # mirroringK8S causes k8s pods to be registered into a Consul namespace
+        # of the same name as their k8s namespace, optionally prefixed if
+        # `mirroringK8SPrefix` is set below. If the Consul namespace does not
+        # already exist, it will be created. Turning this on overrides the
+        # `consulDestinationNamespace` setting.
+        mirroringK8S: false
+
+        # If `mirroringK8S` is set to true, `mirroringK8SPrefix` allows each Consul namespace
+        # to be given a prefix. For example, if `mirroringK8SPrefix` is set to "k8s-", a
+        # pod in the k8s `staging` namespace will be registered into the
+        # `k8s-staging` Consul namespace.
+        mirroringK8SPrefix: ""
+    ```
+
+BUG FIXES:
+
+* Fix template rendering bug when setting `connectInject.overrideAuthMethodName` [[GH-342](https://github.com/hashicorp/consul-helm/pull/342)]
+* Set `"consul.hashicorp.com/connect-inject": "false"` annotation on enterprise license job so it is not connect injected [[GH-343](https://github.com/hashicorp/consul-helm/pull/343)]
+
+DEPRECATIONS:
+
+* `.syncCatalog.k8sSourceNamespace` should no longer be used. Instead, use the new `.syncCatalog.k8sAllowNamespaces` and `.syncCatalog.k8sDenyNamespaces` features. For backward compatibility, if both this and the allow/deny lists are set, the allow/deny lists will be ignored.
+
+NOTES:
+
+* Bootstrap ACLs: Previously, ACL policies were not updated after creation. Now, if namespaces are enabled, they are updated every time the ACL bootstrapper is run so that any namespace config changes can be adjusted. This change is only an issue if you are updating ACL policies after creation.
+
 ## 0.16.2 (Jan 15, 2020)
 
 BUG FIXES:
@@ -202,6 +772,10 @@ IMPROVEMENTS:
   * Remove the `gossipEncryption.enabled` option and instead have the implementation based on the existence of the secretName and secretKey.
 
 ## 0.7.0 (March 21, 2019)
+
+BREAKING CHANGES:
+
+  * If previously setting the release name to `consul`, you must now set `fullnameOverride: consul` in your config to prevent all resources being renamed.
 
 IMPROVEMENTS:
 
