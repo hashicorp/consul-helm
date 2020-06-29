@@ -44,7 +44,7 @@ helm template \
   --set 'syncCatalog.toConsul=false' \
   .
 ```
-It's expected that `helm` is Helm 3.
+It's expected that the version of `helm` in your path is Helm 3.
 
 In our CI/CD the tests are run against both Helm 2 and Helm 3.
 
