@@ -297,6 +297,18 @@ spec:
                   curl http://127.0.0.1:8500/v1/status/leader \
                   {{- end }}
                   2>/dev/null | grep -E '".+"'
+            {{- if .Values.client.failureThreshold }}   
+            failureThreshold: {{ .Values.client.failureThreshold }}
+            {{- end}}
+            {{- if .Values.client.periodSeconds }}   
+            periodSeconds: {{ .Values.client.periodSeconds }}
+            {{- end}}
+            {{- if .Values.client.successThreshold }}   
+            successThreshold: {{ .Values.client.successThreshold }}
+            {{- end}}
+            {{- if .Values.client.timeoutSeconds }}   
+            timeoutSeconds: {{ .Values.client.timeoutSeconds }}
+            {{- end}}                            
           {{- if .Values.client.resources }}
           resources:
             {{- if eq (typeOf .Values.client.resources) "string" }}
