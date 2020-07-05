@@ -544,6 +544,14 @@ client:
     #     MIIC7jCCApSgAwIBAgIRAIq2zQEVexqxvtxP6J0bXAwwCgYIKoZIzj0EAwIwgbkx
     #     ...
     caCert: null
+    
+    # Optional fields to control the thresholds of readiness checks.
+    # Example
+    # failureThreshold: 3
+    # periodSeconds: 10
+    # successThreshold: 1
+    # timeoutSeconds: 1
+    readinessProbe: null
 
 # Configuration for DNS configuration within the Kubernetes cluster.
 # This creates a service that routes to all agents (client or server)

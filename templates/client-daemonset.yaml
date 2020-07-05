@@ -297,6 +297,9 @@ spec:
                   curl http://127.0.0.1:8500/v1/status/leader \
                   {{- end }}
                   2>/dev/null | grep -E '".+"'
+            {{- if .Values.client.readinessProbe }}      
+            {{- .Values.client.readinessProbe | toYaml | nindent 12 }}
+            {{- end}}
           {{- if .Values.client.resources }}
           resources:
             {{- if eq (typeOf .Values.client.resources) "string" }}
