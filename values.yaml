@@ -219,6 +219,28 @@ global:
     # Requires consul-k8s 0.15.0+.
     createFederationSecret: false
 
+  # Resource settings for lifecycle-sidecar containers
+  lifecycleSidecarContainerResources:
+    resources:
+      requests:
+        memory: "25Mi"
+        cpu: "20m"
+      limits:
+        memory: "25Mi"
+        cpu: "20m"
+
+  # Resource settings for copy-consul-bin init containers.
+  # these settings are bounded by the size of the consul binary
+  # as we issue a cp of it during the init container.
+  initCopyContainerResources:
+    resources:
+      requests:
+        memory: "25Mi"
+        cpu: "50m"
+      limits:
+        memory: "125Mi"
+        cpu: "50m"
+
 # Server, when enabled, configures a server cluster to run. This should
 # be disabled if you plan on connecting to a Consul cluster external to
 # the Kube cluster.

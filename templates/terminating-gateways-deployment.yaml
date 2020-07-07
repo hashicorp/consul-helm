@@ -124,6 +124,10 @@ spec:
           volumeMounts:
           - name: consul-bin
             mountPath: /consul-bin
+          {{- if ( default $root.Values.global.initCopyContainerResources .resources) }}
+          resources:
+            {{ toYaml (default $root.Values.global.initCopyContainerResources .resources) | nindent 12 }}
+          {{- end }}
         {{- if (and $root.Values.global.tls.enabled $root.Values.global.tls.enableAutoEncrypt) }}
         {{- include "consul.getAutoEncryptClientCA" $root | nindent 8 }}
         {{- end }}
