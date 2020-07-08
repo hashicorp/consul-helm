@@ -110,9 +110,7 @@ spec:
           volumeMounts:
           - name: consul-bin
             mountPath: /consul-bin
-          {{- if ( default $root.Values.global.initCopyContainerResources .resources) }}
-          resources: {{ toYaml (default $root.Values.global.initCopyContainerResources.resources .resources) | nindent 12 }}
-          {{- end }}
+          resources: {{ toYaml $root.Values.global.initContainer.resources | nindent 12 }}
         {{- if (and $root.Values.global.tls.enabled $root.Values.global.tls.enableAutoEncrypt) }}
         {{- include "consul.getAutoEncryptClientCA" $root | nindent 8 }}
         {{- end }}
@@ -375,6 +373,7 @@ spec:
               mountPath: /consul/tls/ca
               readOnly: true
             {{- end }}
+          resources: {{ toYaml $root.Values.global.lifecycleSidecarContainer.resources | nindent 12 }}
           env:
             - name: HOST_IP
               valueFrom:
