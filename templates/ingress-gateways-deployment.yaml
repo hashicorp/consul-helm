@@ -115,7 +115,7 @@ spec:
               memory: "25Mi"
               cpu: "50m"
             limits:
-              memory: "125Mi"
+              memory: "150Mi"
               cpu: "50m"
         {{- if (and $root.Values.global.tls.enabled $root.Values.global.tls.enableAutoEncrypt) }}
         {{- include "consul.getAutoEncryptClientCA" $root | nindent 8 }}
