@@ -1,3 +1,0 @@
-package helpers
-
-const HelmChartPath = "../.."

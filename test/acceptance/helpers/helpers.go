@@ -2,44 +2,36 @@ package helpers
 
 import (
 	"fmt"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/retry"
-	"github.com/stretchr/testify/require"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/hashicorp/consul/sdk/testutil/retry"
+	"github.com/stretchr/testify/require"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
-// HelmDelete calls helm.Delete from the terratest library.
-// It also deletes any PVCs associated with the release called 'releaseName'
-// ('helm delete' doesn't delete them by basic).
-func HelmDelete(t *testing.T, options *helm.Options, namespace, releaseName string) {
-	require := require.New(t)
-	helm.Delete(t, options, releaseName, true)
-
-	k8sClient, err := k8s.GetKubernetesClientE(t)
-	require.NoError(err)
-
-	err = k8sClient.CoreV1().PersistentVolumeClaims(namespace).DeleteCollection(nil, metav1.ListOptions{LabelSelector: fmt.Sprintf("release=%s", releaseName)})
-	require.NoError(err)
-
-	err = k8sClient.CoreV1().Pods(namespace).DeleteCollection(nil, metav1.ListOptions{LabelSelector: fmt.Sprintf("release=%s", releaseName)})
-	require.NoError(err)
+func RandomName() string {
+	return fmt.Sprintf("test-%s", strings.ToLower(random.UniqueId()))
 }
 
+// todo: update docs
 // WaitForAllPodsToBeReady waits until all pods in a release called 'releaseName'
 // are in the ready status. It checks every 5 seconds for a total of 10 tries.
 // If there is at least one container in a pod that isn't ready after that,
 // it fails the test.
-func WaitForAllPodsToBeReady(t *testing.T, options *k8s.KubectlOptions, podLabelSelector string) {
-	retry.DoWithRetry(t, "waiting for pods to be ready", 10, 5*time.Second, func() (string, error) {
-		pods := k8s.ListPods(t, options, metav1.ListOptions{LabelSelector: podLabelSelector})
+func WaitForAllPodsToBeReady(t *testing.T, client *kubernetes.Clientset, namespace, podLabelSelector string) {
+	counter := &retry.Counter{Count: 20, Wait: 5*time.Second}
+	retry.RunWith(counter, t, func(r *retry.R) {
+		pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: podLabelSelector})
+		require.NoError(r, err)
 		var numNotReadyContainers int
 		var totalNumContainers int
-		for _, pod := range pods {
+		for _, pod := range pods.Items {
 			if len(pod.Status.ContainerStatuses) == 0 {
-				return "", fmt.Errorf("pod %s is pending", pod.Name)
+				r.Errorf("pod %s is pending", pod.Name)
 			}
 			for _, contStatus := range pod.Status.InitContainerStatuses {
 				totalNumContainers++
@@ -55,8 +47,7 @@ func WaitForAllPodsToBeReady(t *testing.T, options *k8s.KubectlOptions, podLabel
 			}
 		}
 		if numNotReadyContainers != 0 {
-			return "", fmt.Errorf("%d out of %d containers are ready", totalNumContainers-numNotReadyContainers, totalNumContainers)
+			r.Errorf("%d out of %d containers are ready", totalNumContainers-numNotReadyContainers, totalNumContainers)
 		}
-		return "", nil
 	})
 }

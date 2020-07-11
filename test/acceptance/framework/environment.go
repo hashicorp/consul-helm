@@ -1,62 +1,79 @@
 package framework
 
 import (
-	"errors"
+	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
+	"k8s.io/client-go/kubernetes"
 )
 
+type TestEnvironment interface {
+	DefaultContext() TestContext
+	Context(name string) TestContext
+}
+
+type TestContext interface {
+	KubectlOptions() *k8s.KubectlOptions
+	KubernetesClient(t *testing.T) *kubernetes.Clientset
+}
+
 // todo: add docs
-type KubernetesEnvironment struct {
+type kubernetesContext struct {
 	// todo: add docs
-	PathToKubeConfig           string
-	Context                    string
-	Namespace                  string
-	Default                    bool
-	PodSecurityPoliciesEnabled bool
-	IsSecondaryCluster         bool
+	name             string
+	pathToKubeConfig string
+	contextName      string
+	namespace        string
 }
 
-type KubernetesEnvironments []KubernetesEnvironment
-
-func NewDefaultEnvironment() KubernetesEnvironment {
-	return KubernetesEnvironment{
-		Namespace: "default",
-		Default:   true,
-	}
-}
-
-func (k KubernetesEnvironment) GetKubectlOptions() *k8s.KubectlOptions {
+func (k kubernetesContext) KubectlOptions() *k8s.KubectlOptions {
 	return &k8s.KubectlOptions{
-		ContextName: k.Context,
-		ConfigPath:  k.PathToKubeConfig,
-		Namespace:   k.Namespace,
-		Env:         nil,
+		ContextName: k.contextName,
+		ConfigPath:  k.pathToKubeConfig,
+		Namespace:   k.namespace,
 	}
-}
-func (k KubernetesEnvironments) GetDefaultEnvironment() (KubernetesEnvironment, error) {
-	for _, e := range k {
-		if e.Default {
-			return e, nil
-		}
-	}
-	return KubernetesEnvironment{}, errors.New("default environment is not found")
 }
 
-func (k KubernetesEnvironments) GetPSPEnabledEnvironment() (KubernetesEnvironment, error) {
-	for _, e := range k {
-		if e.PodSecurityPoliciesEnabled {
-			return e, nil
-		}
-	}
-	return KubernetesEnvironment{}, errors.New("PSP enabled environment is not found")
+func (k kubernetesContext) KubernetesClient(t *testing.T) *kubernetes.Clientset {
+	configPath, err := k.KubectlOptions().GetConfigPath(t)
+	require.NoError(t, err)
+
+	config, err := k8s.LoadApiClientConfigE(configPath, k.contextName)
+	require.NoError(t, err)
+
+	client, err := kubernetes.NewForConfig(config)
+	require.NoError(t, err)
+
+	return client
 }
 
-func (k KubernetesEnvironments) GetSecondaryEnvironment() (KubernetesEnvironment, error) {
-	for _, e := range k {
-		if e.IsSecondaryCluster {
-			return e, nil
-		}
+func NewDefaultContext() *kubernetesContext {
+	return &kubernetesContext{
+		name:      "default",
+		namespace: "default",
 	}
-	return KubernetesEnvironment{}, errors.New("secondary cluster environment is not found")
+}
+
+func NewContext(name, namespace, pathToKubeConfig, contextName string) *kubernetesContext {
+	return &kubernetesContext{
+		name:             name,
+		namespace:        namespace,
+		pathToKubeConfig: pathToKubeConfig,
+		contextName:      contextName,
+	}
+}
+
+type kubernetesEnvironment struct {
+	contexts map[string]*kubernetesContext
+}
+
+func (k *kubernetesEnvironment) Context(name string) TestContext {
+	// todo: might need to error here
+	return k.contexts[name]
+}
+
+func (k *kubernetesEnvironment) DefaultContext() TestContext {
+	// todo: might need to make it a constant
+	return k.contexts["default"]
 }
