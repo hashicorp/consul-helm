@@ -11,7 +11,10 @@ import (
 
 func TestDefaultInstallation(t *testing.T) {
 	releaseName := helpers.RandomName()
-	consulCluster := framework.NewHelmCluster(t, nil, suite.Environment().DefaultContext(), releaseName)
+	consulCluster := framework.NewHelmCluster(t, map[string]string{
+		"server.replicas": "1",
+		"server.bootstrapExpect": "1",
+	}, suite.Environment().DefaultContext(), releaseName)
 
 	consulCluster.Create(t)
 

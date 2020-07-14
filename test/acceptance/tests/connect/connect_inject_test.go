@@ -19,6 +19,8 @@ func TestConnectInjectDefault(t *testing.T) {
 
 	helmValues := map[string]string{
 		"connectInject.enabled": "true",
+		"server.replicas": "1",
+		"server.bootstrapExpect": "1",
 	}
 
 	releaseName := helpers.RandomName()
@@ -39,6 +41,8 @@ func TestConnectInjectSecure(t *testing.T) {
 		"connectInject.enabled":        "true",
 		"global.tls.enabled":           "true",
 		"global.acls.manageSystemACLs": "true",
+		"server.replicas": "1",
+		"server.bootstrapExpect": "1",
 	}
 
 	releaseName := helpers.RandomName()

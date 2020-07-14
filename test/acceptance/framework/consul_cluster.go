@@ -21,7 +21,7 @@ import (
 type Cluster interface {
 	Create(t *testing.T)
 	Destroy(t *testing.T)
-	Upgrade(t *testing.T)
+	Upgrade(t *testing.T, vals map[string]string)
 	SetupConsulClient(t *testing.T, secure bool) (*api.Client)
 }
 
@@ -48,7 +48,9 @@ func (h *HelmCluster) Create(t *testing.T) {
 	// todo: don't hard-code helm-chart path like this
 	helm.Install(t, h.helmOptions, "../../../..", h.releaseName)
 	t.Cleanup(func() {
-		h.Destroy(t)
+		if !t.Failed() {
+			h.Destroy(t)
+		}
 	})
 	// todo: replace this with helm install --wait
 	helpers.WaitForAllPodsToBeReady(t, h.kubernetesClient, h.helmOptions.KubectlOptions.Namespace, fmt.Sprintf("release=%s", h.releaseName))
@@ -71,8 +73,12 @@ func (h *HelmCluster) Destroy(t *testing.T) {
 	}
 }
 
-func (h *HelmCluster) Upgrade(t *testing.T) {
-	t.Errorf("not implemented yet")
+func (h *HelmCluster) Upgrade(t *testing.T, helmValues map[string]string) {
+	// todo: don't hard-code helm-chart path like this
+	h.helmOptions.SetValues = helmValues
+	helm.Upgrade(t, h.helmOptions, "../../../..", h.releaseName)
+	// todo: replace this with helm install --wait
+	helpers.WaitForAllPodsToBeReady(t, h.kubernetesClient, h.helmOptions.KubectlOptions.Namespace, fmt.Sprintf("release=%s", h.releaseName))
 }
 
 func (h *HelmCluster) SetupConsulClient(t *testing.T, secure bool) (*api.Client) {
