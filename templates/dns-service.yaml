@@ -1,5 +1,5 @@
-# Service for Consul DNS.
 {{- if (or (and (ne (.Values.dns.enabled | toString) "-") .Values.dns.enabled) (and (eq (.Values.dns.enabled | toString) "-") .Values.global.enabled)) }}
+# Service for Consul DNS.
 apiVersion: v1
 kind: Service
 metadata:
@@ -10,6 +10,7 @@ metadata:
     chart: {{ template "consul.chart" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
+    component: dns
   {{- if .Values.dns.annotations }}
   annotations:
     {{ tpl .Values.dns.annotations . | nindent 4 | trim }}

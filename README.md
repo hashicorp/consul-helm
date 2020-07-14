@@ -1,5 +1,7 @@
 # Consul Helm Chart
 
+⭐ **We're looking for feedback on how folks are using Consul on Kubernetes. Please fill out our brief [survey](https://hashicorp.sjc1.qualtrics.com/jfe/form/SV_4MANbw1BUku7YhL)!** ⭐
+
 This repository contains the official HashiCorp Helm chart for installing
 and configuring Consul on Kubernetes. This chart supports multiple use
 cases of Consul on Kubernetes, depending on the values provided.
@@ -18,21 +20,21 @@ use Consul with Kubernetes, please see the
 
 Detailed installation instructions for Consul on Kubernetes are found [here](https://www.consul.io/docs/k8s/installation/overview). 
 
-Add the HashiCorp Helm Repository:
+1. Add the HashiCorp Helm Repository:
+    
+        $ helm repo add hashicorp https://helm.releases.hashicorp.com
+        "hashicorp" has been added to your repositories
+    
+2. Ensure you have access to the consul chart: 
 
-    $ helm repo add hashicorp https://helm.releases.hashicorp.com
-    hashicorp" has been added to your repositories
+        $ helm search repo hashicorp/consul
+        NAME                CHART VERSION   APP VERSION DESCRIPTION
+        hashicorp/consul    0.20.1          1.7.2       Official HashiCorp Consul Chart
 
-Ensure you have access to the consul chart: 
+3. Now you're ready to install Consul! To install Consul with the default configuration using Helm 3 run:
 
-    $ helm search repo hashicorp/consul
-    NAME                CHART VERSION   APP VERSION DESCRIPTION
-    hashicorp/consul    0.20.1          1.7.2       Official HashiCorp Consul Chart
-
-Now you're ready to install Consul! To install Consul with the default configuration using Helm 3 run:
-
-    $ helm install consul hashicorp/consul --set global.name=consul
-    NAME: consul
+        $ helm install consul hashicorp/consul --set global.name=consul
+        NAME: consul
 
 Please see the many options supported in the `values.yaml`
 file. These are also fully documented directly on the

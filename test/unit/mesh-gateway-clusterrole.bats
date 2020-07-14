@@ -4,20 +4,17 @@ load _helpers
 
 @test "meshGateway/ClusterRole: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/mesh-gateway-clusterrole.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+  assert_empty helm template \
+      -s templates/mesh-gateway-clusterrole.yaml  \
+      .
 }
 
-@test "meshGateway/ClusterRole: enabled with meshGateway, connectInject and client.grpc enabled" {
+@test "meshGateway/ClusterRole: enabled with meshGateway, connectInject enabled" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-clusterrole.yaml  \
+      -s templates/mesh-gateway-clusterrole.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -26,10 +23,9 @@ load _helpers
 @test "meshGateway/ClusterRole: rules for PodSecurityPolicy" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-clusterrole.yaml  \
+      -s templates/mesh-gateway-clusterrole.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       . | tee /dev/stderr |
       yq -r '.rules[0].resources[0]' | tee /dev/stderr)
@@ -39,10 +35,9 @@ load _helpers
 @test "meshGateway/ClusterRole: rules for global.acls.manageSystemACLs=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-clusterrole.yaml  \
+      -s templates/mesh-gateway-clusterrole.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq -r '.rules[0].resources[0]' | tee /dev/stderr)
@@ -52,7 +47,7 @@ load _helpers
 @test "meshGateway/ClusterRole: rules for meshGateway.wanAddress.source=Service" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-clusterrole.yaml  \
+      -s templates/mesh-gateway-clusterrole.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'meshGateway.service.enabled=true' \
@@ -66,11 +61,10 @@ load _helpers
 @test "meshGateway/ClusterRole: rules is empty if no ACLs, PSPs and meshGateway.source != Service" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-clusterrole.yaml  \
+      -s templates/mesh-gateway-clusterrole.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'meshGateway.wanAddress.source=NodeIP' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -r '.rules' | tee /dev/stderr)
   [ "${actual}" = "[]" ]
@@ -79,10 +73,9 @@ load _helpers
 @test "meshGateway/ClusterRole: rules for ACLs, PSPs and mesh gateways" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-clusterrole.yaml  \
+      -s templates/mesh-gateway-clusterrole.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       --set 'meshGateway.service.enabled=true' \
