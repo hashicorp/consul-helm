@@ -1,4 +1,4 @@
-package connect
+package sync
 
 import (
 	"fmt"
@@ -45,16 +45,18 @@ func TestSyncCatalog(t *testing.T) {
 			}
 
 			releaseName := helpers.RandomName()
-			consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(), releaseName)
+			consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(t), suite.Config(), releaseName)
 
 			consulCluster.Create(t)
 
-			createTestService(t, env.DefaultContext().KubernetesClient(t), releaseName)
+			t.Logf("creating a test service and pod called %s", releaseName)
+			createTestService(t, env.DefaultContext(t).KubernetesClient(t), releaseName)
 
 			consulClient := consulCluster.SetupConsulClient(t, false)
 
+			t.Log("checking that the service has been synced to Consul")
 			var services map[string][]string
-			syncedServiceName := fmt.Sprintf("%s-%s", releaseName, env.DefaultContext().KubectlOptions().Namespace)
+			syncedServiceName := fmt.Sprintf("%s-%s", releaseName, env.DefaultContext(t).KubectlOptions().Namespace)
 			counter := &retry.Counter{Count: 10, Wait: 5 * time.Second}
 			retry.RunWith(counter, t, func(r *retry.R) {
 				var err error
@@ -64,6 +66,7 @@ func TestSyncCatalog(t *testing.T) {
 					r.Errorf("service '%s' is not in Consul's list of services %s", syncedServiceName, services)
 				}
 			})
+
 			service, _, err := consulClient.Catalog().Service(syncedServiceName, "", nil)
 			require.NoError(t, err)
 			require.Equal(t, 1, len(service))
@@ -91,14 +94,12 @@ func createTestService(t *testing.T, k8sClient *kubernetes.Clientset, name strin
 
 	pod, err := k8sClient.CoreV1().Pods("default").Create(&corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			// todo: create random name
 			Name:   name,
 			Labels: map[string]string{"app": "test-pod"},
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					// todo: create random name
 					Name:  "test-container",
 					Image: "hashicorp/http-echo:latest",
 					Args: []string{

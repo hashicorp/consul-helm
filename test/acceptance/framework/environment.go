@@ -1,6 +1,7 @@
 package framework
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/k8s"
@@ -8,20 +9,51 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+const defaultContextName = "default"
+
+// TestEnvironment represents the infrastructure environment of the test,
+// such as the kubernetes cluster(s) the test is running against
 type TestEnvironment interface {
-	DefaultContext() TestContext
-	Context(name string) TestContext
+	DefaultContext(t *testing.T) TestContext
+	Context(t *testing.T, name string) TestContext
 }
 
+// TestContext represents a specific context a test needs,
+// for example, information about a specific Kubernetes cluster.
 type TestContext interface {
 	KubectlOptions() *k8s.KubectlOptions
 	KubernetesClient(t *testing.T) *kubernetes.Clientset
 }
 
-// todo: add docs
+type kubernetesEnvironment struct {
+	contexts map[string]*kubernetesContext
+}
+
+func newKubernetesEnvironmentFromConfig(config *TestConfig) *kubernetesEnvironment {
+	defaultContext := NewContext(config.KubeNamespace, config.Kubeconfig, config.KubeContext)
+
+	return &kubernetesEnvironment{
+		contexts: map[string]*kubernetesContext{
+			defaultContextName: defaultContext,
+		},
+	}
+}
+
+func (k *kubernetesEnvironment) Context(t *testing.T, name string) TestContext {
+	ctx, ok := k.contexts[name]
+	require.Truef(t, ok, fmt.Sprintf("requested context %s not found", name))
+
+	return ctx
+}
+
+func (k *kubernetesEnvironment) DefaultContext(t *testing.T) TestContext {
+	ctx, ok := k.contexts[defaultContextName]
+	require.Truef(t, ok, "default context not found")
+
+	return ctx
+}
+
 type kubernetesContext struct {
-	// todo: add docs
-	name             string
 	pathToKubeConfig string
 	contextName      string
 	namespace        string
@@ -48,32 +80,10 @@ func (k kubernetesContext) KubernetesClient(t *testing.T) *kubernetes.Clientset 
 	return client
 }
 
-func NewDefaultContext() *kubernetesContext {
+func NewContext(namespace, pathToKubeConfig, contextName string) *kubernetesContext {
 	return &kubernetesContext{
-		name:      "default",
-		namespace: "default",
-	}
-}
-
-func NewContext(name, namespace, pathToKubeConfig, contextName string) *kubernetesContext {
-	return &kubernetesContext{
-		name:             name,
 		namespace:        namespace,
 		pathToKubeConfig: pathToKubeConfig,
 		contextName:      contextName,
 	}
-}
-
-type kubernetesEnvironment struct {
-	contexts map[string]*kubernetesContext
-}
-
-func (k *kubernetesEnvironment) Context(name string) TestContext {
-	// todo: might need to error here
-	return k.contexts[name]
-}
-
-func (k *kubernetesEnvironment) DefaultContext() TestContext {
-	// todo: might need to make it a constant
-	return k.contexts["default"]
 }

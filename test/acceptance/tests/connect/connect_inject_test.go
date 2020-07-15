@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// todo: add docs
+// Test that Connect works in a default installation
 func TestConnectInjectDefault(t *testing.T) {
 	env := suite.Environment()
 
@@ -22,19 +22,22 @@ func TestConnectInjectDefault(t *testing.T) {
 	}
 
 	releaseName := helpers.RandomName()
-	consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(), releaseName)
+	consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(t), suite.Config(), releaseName)
 
 	consulCluster.Create(t)
 
-	createServerAndClient(t, env.DefaultContext().KubectlOptions())
+	t.Log("creating static-server and static-client deployments")
+	createServerAndClient(t, env.DefaultContext(t).KubectlOptions())
 
-	checkConnection(t, env.DefaultContext().KubectlOptions(), env.DefaultContext().KubernetesClient(t), true)
+	t.Log("checking that connection is successful")
+	checkConnection(t, env.DefaultContext(t).KubectlOptions(), env.DefaultContext(t).KubernetesClient(t), true)
 }
 
+// Test that Connect works in a secure installation,
+// with ACLs and TLS enabled
 func TestConnectInjectSecure(t *testing.T) {
 	env := suite.Environment()
 
-	// maybe this could a config struct
 	helmValues := map[string]string{
 		"connectInject.enabled":        "true",
 		"global.tls.enabled":           "true",
@@ -42,20 +45,19 @@ func TestConnectInjectSecure(t *testing.T) {
 	}
 
 	releaseName := helpers.RandomName()
-	// maybe the helm cluster could know more about its own config
-	consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(), releaseName)
+	consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(t), suite.Config(), releaseName)
 
 	consulCluster.Create(t)
 
-	createServerAndClient(t, env.DefaultContext().KubectlOptions())
+	t.Log("creating static-server and static-client deployments")
+	createServerAndClient(t, env.DefaultContext(t).KubectlOptions())
 
-	// expect failure because we haven't created intention
-	checkConnection(t, env.DefaultContext().KubectlOptions(), env.DefaultContext().KubernetesClient(t), false)
+	t.Log("checking that the connection is not successful because there's no intention")
+	checkConnection(t, env.DefaultContext(t).KubectlOptions(), env.DefaultContext(t).KubernetesClient(t), false)
 
-	// setup Consul client
 	consulClient := consulCluster.SetupConsulClient(t, true)
 
-	// create intention
+	t.Log("creating intention")
 	_, _, err := consulClient.Connect().IntentionCreate(&api.Intention{
 		SourceName:      "static-client",
 		DestinationName: "static-server",
@@ -63,8 +65,8 @@ func TestConnectInjectSecure(t *testing.T) {
 	}, nil)
 	require.NoError(t, err)
 
-	// connect again and expect success
-	checkConnection(t, env.DefaultContext().KubectlOptions(), env.DefaultContext().KubernetesClient(t), true)
+	t.Log("checking that connection is successful")
+	checkConnection(t, env.DefaultContext(t).KubectlOptions(), env.DefaultContext(t).KubernetesClient(t), true)
 }
 
 func createServerAndClient(t *testing.T, options *k8s.KubectlOptions) {
@@ -72,7 +74,11 @@ func createServerAndClient(t *testing.T, options *k8s.KubectlOptions) {
 	helpers.KubectlApply(t, options, "fixtures/static-client.yaml")
 
 	t.Cleanup(func() {
-		// todo: we might need to wait for deletion here
+		// Note: this delete command won't wait for pods to be fully terminated.
+		// This shouldn't cause any test pollution because the underlying
+		// objects are deployments, and so when other tests create these
+		// they sh
+		// wait if it causes test pollu
 		helpers.KubectlDelete(t, options, "fixtures/static-server.yaml")
 		helpers.KubectlDelete(t, options, "fixtures/static-client.yaml")
 	})
@@ -88,7 +94,6 @@ func checkConnection(t *testing.T, options *k8s.KubectlOptions, client *kubernet
 	require.Len(t, pods.Items, 1)
 
 	retry.Run(t, func(r *retry.R) {
-		// todo: this is jank because we have to exec into the pod
 		output, err := helpers.RunKubectlAndGetOutputE(t, options, "exec", pods.Items[0].Name, "-c", "static-client", "--", "curl", "-vvvs", "http://127.0.0.1:1234/")
 		if expectSuccess {
 			require.NoError(r, err)

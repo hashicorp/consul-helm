@@ -9,24 +9,50 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDefaultInstallation(t *testing.T) {
-	releaseName := helpers.RandomName()
-	consulCluster := framework.NewHelmCluster(t, nil, suite.Environment().DefaultContext(), releaseName)
+// Test that the basic installation, i.e. just
+// servers and clients, works by creating a kv entry
+// and subsequently reading it from Consul.
+func TestBasicInstallation(t *testing.T) {
+	cases := []struct {
+		name       string
+		helmValues map[string]string
+	}{
+		{
+			"Default installation",
+			nil,
+		},
+		{
+			"Secure installation (with TLS and ACLs enabled)",
+			map[string]string{
+				"global.tls.enabled":           "true",
+				"global.acls.manageSystemACLs": "true",
+			},
+		},
+	}
 
-	consulCluster.Create(t)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			releaseName := helpers.RandomName()
+			consulCluster := framework.NewHelmCluster(t, nil, suite.Environment().DefaultContext(t), suite.Config(), releaseName)
 
-	client := consulCluster.SetupConsulClient(t, false)
+			consulCluster.Create(t)
 
-	// create a key-value
-	randomKey := helpers.RandomName()
-	randomValue := []byte(helpers.RandomName())
-	_, err := client.KV().Put(&api.KVPair{
-		Key:   randomKey,
-		Value: randomValue,
-	}, nil)
-	require.NoError(t, err)
+			client := consulCluster.SetupConsulClient(t, false)
 
-	kv, _, err := client.KV().Get(randomKey, nil)
-	require.NoError(t, err)
-	require.Equal(t, kv.Value, randomValue)
+			// Create a KV entry
+			randomKey := helpers.RandomName()
+			randomValue := []byte(helpers.RandomName())
+			t.Logf("creating KV entry with key %s", randomKey)
+			_, err := client.KV().Put(&api.KVPair{
+				Key:   randomKey,
+				Value: randomValue,
+			}, nil)
+			require.NoError(t, err)
+
+			t.Logf("reading value for key %s", randomKey)
+			kv, _, err := client.KV().Get(randomKey, nil)
+			require.NoError(t, err)
+			require.Equal(t, kv.Value, randomValue)
+		})
+	}
 }

@@ -17,12 +17,13 @@ func RandomName() string {
 	return fmt.Sprintf("test-%s", strings.ToLower(random.UniqueId()))
 }
 
-// todo: update docs
-// WaitForAllPodsToBeReady waits until all pods in a release called 'releaseName'
-// are in the ready status. It checks every 5 seconds for a total of 10 tries.
+// WaitForAllPodsToBeReady waits until all pods with the provided podLabelSelector
+// are in the ready status. It checks every 5 seconds for a total of 20 tries.
 // If there is at least one container in a pod that isn't ready after that,
 // it fails the test.
 func WaitForAllPodsToBeReady(t *testing.T, client *kubernetes.Clientset, namespace, podLabelSelector string) {
+	t.Helper()
+
 	counter := &retry.Counter{Count: 20, Wait: 5*time.Second}
 	retry.RunWith(counter, t, func(r *retry.R) {
 		pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: podLabelSelector})

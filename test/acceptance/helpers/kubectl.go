@@ -8,20 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func KubectlApply(t testing.TestingT, options *k8s.KubectlOptions, configPath string) {
-	_, err := RunKubectlAndGetOutputE(t, options, "apply", "-f", configPath)
-	require.NoError(t, err)
-}
-
-func KubectlDelete(t testing.TestingT, options *k8s.KubectlOptions, configPath string) {
-	_, err := RunKubectlAndGetOutputE(t, options, "delete", "-f", configPath)
-	require.NoError(t, err)
-}
-
-func RunKubectl(t testing.TestingT, options *k8s.KubectlOptions, args ...string) {
-	_, err := RunKubectlAndGetOutputE(t, options, args...)
-	require.NoError(t, err)
-}
+// The functions included in this file already exist in terratest's k8s library, however,
+// we're re-implementing them because we don't want to use their default logger
+// as it logs everything regardless of verbosity level set via go test -v flags.
 
 func RunKubectlAndGetOutputE(t testing.TestingT, options *k8s.KubectlOptions, args ...string) (string, error) {
 	cmdArgs := []string{}
@@ -42,4 +31,19 @@ func RunKubectlAndGetOutputE(t testing.TestingT, options *k8s.KubectlOptions, ar
 		Logger: logger.TestingT,
 	}
 	return shell.RunCommandAndGetOutputE(t, command)
+}
+
+func KubectlApply(t testing.TestingT, options *k8s.KubectlOptions, configPath string) {
+	_, err := RunKubectlAndGetOutputE(t, options, "apply", "-f", configPath)
+	require.NoError(t, err)
+}
+
+func KubectlDelete(t testing.TestingT, options *k8s.KubectlOptions, configPath string) {
+	_, err := RunKubectlAndGetOutputE(t, options, "delete", "-f", configPath)
+	require.NoError(t, err)
+}
+
+func RunKubectl(t testing.TestingT, options *k8s.KubectlOptions, args ...string) {
+	_, err := RunKubectlAndGetOutputE(t, options, args...)
+	require.NoError(t, err)
 }

@@ -18,22 +18,42 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// Cluster represents a consul cluster object
 type Cluster interface {
 	Create(t *testing.T)
 	Destroy(t *testing.T)
 	Upgrade(t *testing.T)
-	SetupConsulClient(t *testing.T, secure bool) (*api.Client)
+	SetupConsulClient(t *testing.T, secure bool) *api.Client
 }
 
+// HelmCluster implements Cluster and uses Helm
+// to create, destroy, and upgrade consul
 type HelmCluster struct {
 	helmOptions *helm.Options
 	releaseName string
 	kubernetesClient *kubernetes.Clientset
 }
 
-func NewHelmCluster(t *testing.T, helmValues map[string]string, ctx TestContext, releaseName string) Cluster {
+func NewHelmCluster(
+	t *testing.T,
+	helmValues map[string]string,
+	ctx TestContext,
+	cfg *TestConfig,
+	releaseName string,) Cluster {
+
+	// Deploy single-server cluster by default unless helmValues overwrites that
+	values := map[string]string{
+		"server.replicas": "1",
+		"server.bootstrapExpect": "1",
+	}
+	valuesFromConfig := cfg.HelmValuesFromConfig()
+
+	// Merge all helm values
+	mergeMaps(values, valuesFromConfig)
+	mergeMaps(values, helmValues)
+
 	opts := &helm.Options{
-		SetValues:      helmValues,
+		SetValues:      values,
 		KubectlOptions: ctx.KubectlOptions(),
 		Logger:         logger.TestingT,
 	}
@@ -50,7 +70,7 @@ func (h *HelmCluster) Create(t *testing.T) {
 	t.Cleanup(func() {
 		h.Destroy(t)
 	})
-	// todo: replace this with helm install --wait
+
 	helpers.WaitForAllPodsToBeReady(t, h.kubernetesClient, h.helmOptions.KubectlOptions.Namespace, fmt.Sprintf("release=%s", h.releaseName))
 }
 
@@ -75,7 +95,7 @@ func (h *HelmCluster) Upgrade(t *testing.T) {
 	t.Errorf("not implemented yet")
 }
 
-func (h *HelmCluster) SetupConsulClient(t *testing.T, secure bool) (*api.Client) {
+func (h *HelmCluster) SetupConsulClient(t *testing.T, secure bool) *api.Client {
 	namespace := h.helmOptions.KubectlOptions.Namespace
 	config := api.DefaultConfig()
 	localPort := freeport.MustTake(1)[0]
@@ -120,4 +140,12 @@ func (h *HelmCluster) SetupConsulClient(t *testing.T, secure bool) (*api.Client)
 	require.NoError(t, err)
 
 	return consulClient
+}
+
+// mergeValues will merge the values in b with values in a and save in a.
+// If there are conflicts, the values in b will overwrite the values in a.
+func mergeMaps(a, b map[string]string) {
+	for k, v := range b {
+		a[k] = v
+	}
 }
