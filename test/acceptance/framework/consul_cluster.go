@@ -39,7 +39,7 @@ func NewHelmCluster(
 	helmValues map[string]string,
 	ctx TestContext,
 	cfg *TestConfig,
-	releaseName string,) Cluster {
+	releaseName string) Cluster {
 
 	// Deploy single-server cluster by default unless helmValues overwrites that
 	values := map[string]string{
