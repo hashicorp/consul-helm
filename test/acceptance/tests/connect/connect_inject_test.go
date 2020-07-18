@@ -2,6 +2,7 @@ package connect
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/hashicorp/consul-helm/test/acceptance/framework"
@@ -92,13 +93,18 @@ func checkConnection(t *testing.T, options *k8s.KubectlOptions, client *kubernet
 	require.NoError(t, err)
 	require.Len(t, pods.Items, 1)
 
-	retry.Run(t, func(r *retry.R) {
+	retrier := &retry.Timer{
+		Timeout: 10 * time.Second,
+		Wait:    500 * time.Millisecond,
+	}
+	retry.RunWith(retrier, t, func(r *retry.R) {
 		output, err := helpers.RunKubectlAndGetOutputE(t, options, "exec", pods.Items[0].Name, "-c", "static-client", "--", "curl", "-vvvs", "http://127.0.0.1:1234/")
 		if expectSuccess {
 			require.NoError(r, err)
 			require.Contains(r, output, "hello world")
 		} else {
 			require.Error(t, err)
+			require.Contains(t, output, "command terminated with exit code 52")
 		}
 	})
 }

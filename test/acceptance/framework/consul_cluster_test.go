@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Test that if TestConfig has values that need to provided
+// Test that if TestConfig has values that need to be provided
 // to a helm install, it will respect the helmValues over
 // the values from TestConfig.
 func TestNewHelmCluster(t *testing.T) {
