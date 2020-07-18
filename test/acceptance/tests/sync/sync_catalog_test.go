@@ -117,7 +117,7 @@ func createTestService(t *testing.T, k8sClient *kubernetes.Clientset, name strin
 		},
 	})
 	require.NoError(t, err)
-	t.Cleanup(func() {
+	helpers.Cleanup(t, func() {
 		k8sClient.CoreV1().Services("default").Delete(svc.Name, nil)
 		k8sClient.CoreV1().Pods("default").Delete(pod.Name, nil)
 	})

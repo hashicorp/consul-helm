@@ -2,7 +2,10 @@ package helpers
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -51,4 +54,25 @@ func WaitForAllPodsToBeReady(t *testing.T, client *kubernetes.Clientset, namespa
 			r.Errorf("%d out of %d containers are ready", totalNumContainers-numNotReadyContainers, totalNumContainers)
 		}
 	})
+}
+
+// Sets up a goroutine that will wait for interrupt signals
+// and call cleanup function when it catches it.
+func SetupInterruptHandler(cleanup func()) {
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Println("\r- Ctrl+C pressed in Terminal. Cleaning up resources.")
+		cleanup()
+		os.Exit(1)
+	}()
+}
+
+// Cleanup will both register a cleanup function with t
+// and SetupInterruptHandler to make sure resources get cleaned up
+// if an interrupt signal is caught.
+func Cleanup(t *testing.T, cleanup func()) {
+	SetupInterruptHandler(cleanup)
+	t.Cleanup(cleanup)
 }

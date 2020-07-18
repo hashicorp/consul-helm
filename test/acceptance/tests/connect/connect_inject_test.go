@@ -73,12 +73,11 @@ func createServerAndClient(t *testing.T, options *k8s.KubectlOptions) {
 	helpers.KubectlApply(t, options, "fixtures/static-server.yaml")
 	helpers.KubectlApply(t, options, "fixtures/static-client.yaml")
 
-	t.Cleanup(func() {
+	helpers.Cleanup(t, func() {
 		// Note: this delete command won't wait for pods to be fully terminated.
 		// This shouldn't cause any test pollution because the underlying
 		// objects are deployments, and so when other tests create these
 		// they sh
-		// wait if it causes test pollu
 		helpers.KubectlDelete(t, options, "fixtures/static-server.yaml")
 		helpers.KubectlDelete(t, options, "fixtures/static-client.yaml")
 	})

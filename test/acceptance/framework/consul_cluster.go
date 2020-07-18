@@ -1,6 +1,7 @@
 package framework
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -65,16 +66,26 @@ func NewHelmCluster(
 }
 
 func (h *HelmCluster) Create(t *testing.T) {
-	// todo: don't hard-code helm-chart path like this
-	helm.Install(t, h.helmOptions, "../../../..", h.releaseName)
-	t.Cleanup(func() {
+	t.Helper()
+
+	// Make sure we delete the cluster if we receive SIGINT.
+	// Register cleanup so that we delete the cluster when test finishes.
+	helpers.Cleanup(t, func() {
 		h.Destroy(t)
 	})
+
+	// Fail if there are any existing installations of the Helm chart.
+	h.checkForPriorInstallations(t)
+
+	// todo: don't hard-code helm-chart path like this
+	helm.Install(t, h.helmOptions, "../../../..", h.releaseName)
 
 	helpers.WaitForAllPodsToBeReady(t, h.kubernetesClient, h.helmOptions.KubectlOptions.Namespace, fmt.Sprintf("release=%s", h.releaseName))
 }
 
 func (h *HelmCluster) Destroy(t *testing.T) {
+	t.Helper()
+
 	helm.Delete(t, h.helmOptions, h.releaseName, false)
 
 	// delete PVCs
@@ -96,6 +107,8 @@ func (h *HelmCluster) Upgrade(t *testing.T) {
 }
 
 func (h *HelmCluster) SetupConsulClient(t *testing.T, secure bool) *api.Client {
+	t.Helper()
+
 	namespace := h.helmOptions.KubectlOptions.Namespace
 	config := api.DefaultConfig()
 	localPort := freeport.MustTake(1)[0]
@@ -110,7 +123,7 @@ func (h *HelmCluster) SetupConsulClient(t *testing.T, secure bool) *api.Client {
 		require.NoError(t, err)
 		caFile, err := ioutil.TempFile("", "")
 		require.NoError(t, err)
-		t.Cleanup(func() {
+		helpers.Cleanup(t, func() {
 			require.NoError(t, os.Remove(caFile.Name()))
 		})
 
@@ -140,6 +153,25 @@ func (h *HelmCluster) SetupConsulClient(t *testing.T, secure bool) *api.Client {
 	require.NoError(t, err)
 
 	return consulClient
+}
+
+// checkForPriorInstallations checks if there is an existing Helm release
+// for this Helm chart already installed. If there is, it fails the tests.
+func (h *HelmCluster) checkForPriorInstallations(t *testing.T) {
+	t.Helper()
+
+	// check if there's an existing cluster and fail if there is
+	output, err := helm.RunHelmCommandAndGetOutputE(t, h.helmOptions, "list", "--output", "json")
+	require.NoError(t, err)
+
+	var installedReleases []map[string]string
+
+	err = json.Unmarshal([]byte(output), &installedReleases)
+	require.NoError(t, err)
+
+	for _, r := range installedReleases {
+		require.NotContains(t, r["chart"], "consul", fmt.Sprintf("detected an existing installation of Consul %s", r["chart"]))
+	}
 }
 
 // mergeValues will merge the values in b with values in a and save in a.
