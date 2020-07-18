@@ -15,11 +15,15 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// Test that sync catalog works in both the default installation and
+// the secure installation when TLS and ACLs are enabled.
+// The test will create a test service and a pod and will
+// wait for the service to be synced *to* consul.
 func TestSyncCatalog(t *testing.T) {
 	cases := []struct {
 		name       string
 		helmValues map[string]string
-		secure
+		secure     bool
 	}{
 		{
 			"Default installation",
@@ -75,6 +79,8 @@ func TestSyncCatalog(t *testing.T) {
 
 }
 
+// createTestService creates a test Kubernetes service and its backend pod
+// with the provided name.
 func createTestService(t *testing.T, k8sClient *kubernetes.Clientset, name string) {
 	// Create a service in k8s and check that it exists in Consul
 	svc, err := k8sClient.CoreV1().Services("default").Create(&corev1.Service{

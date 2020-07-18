@@ -70,6 +70,8 @@ func TestConnectInjectSecure(t *testing.T) {
 	checkConnection(t, env.DefaultContext(t).KubectlOptions(), env.DefaultContext(t).KubernetesClient(t), true)
 }
 
+// createServerAndClient sets up static-server and static-client
+// deployments that will be talking to each other over Connect.
 func createServerAndClient(t *testing.T, options *k8s.KubectlOptions) {
 	helpers.KubectlApply(t, options, "fixtures/static-server.yaml")
 	helpers.KubectlApply(t, options, "fixtures/static-client.yaml")
@@ -78,7 +80,7 @@ func createServerAndClient(t *testing.T, options *k8s.KubectlOptions) {
 		// Note: this delete command won't wait for pods to be fully terminated.
 		// This shouldn't cause any test pollution because the underlying
 		// objects are deployments, and so when other tests create these
-		// they sh
+		// they should have different pod names.
 		helpers.KubectlDelete(t, options, "fixtures/static-server.yaml")
 		helpers.KubectlDelete(t, options, "fixtures/static-client.yaml")
 	})
@@ -88,23 +90,26 @@ func createServerAndClient(t *testing.T, options *k8s.KubectlOptions) {
 	helpers.RunKubectl(t, options, "wait", "--for=condition=available", "deploy/static-client")
 }
 
+// checkConnection checks if static-client can talk to static-server.
+// If expectSuccess is true, it will expect connection to succeed,
+// otherwise it will expect failure due to intentions.
 func checkConnection(t *testing.T, options *k8s.KubectlOptions, client *kubernetes.Clientset, expectSuccess bool) {
 	pods, err := client.CoreV1().Pods(options.Namespace).List(metav1.ListOptions{LabelSelector: "app=static-client"})
 	require.NoError(t, err)
 	require.Len(t, pods.Items, 1)
 
 	retrier := &retry.Timer{
-		Timeout: 10 * time.Second,
+		Timeout: 20 * time.Second,
 		Wait:    500 * time.Millisecond,
 	}
 	retry.RunWith(retrier, t, func(r *retry.R) {
-		output, err := helpers.RunKubectlAndGetOutputE(t, options, "exec", pods.Items[0].Name, "-c", "static-client", "--", "curl", "-vvvs", "http://127.0.0.1:1234/")
+		output, err := helpers.RunKubectlAndGetOutputE(t, options, "exec", pods.Items[0].Name, "-c", "static-client", "--", "curl", "-vvvsf", "http://127.0.0.1:1234/")
 		if expectSuccess {
 			require.NoError(r, err)
 			require.Contains(r, output, "hello world")
 		} else {
 			require.Error(t, err)
-			require.Contains(t, output, "command terminated with exit code 52")
+			require.Contains(t, output, "503 Service Unavailable")
 		}
 	})
 }
