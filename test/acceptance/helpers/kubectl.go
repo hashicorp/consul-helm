@@ -8,12 +8,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// The functions included in this file already exist in terratest's k8s library, however,
+// Functions included in this file already exist in terratest's k8s library, however,
 // we're re-implementing them because we don't want to use their default logger
 // as it logs everything regardless of verbosity level set via go test -v flags.
 
+// RunKubectlAndGetOutputE runs an arbitrary kubectl command provided via args
+// and returns its output and error.
 func RunKubectlAndGetOutputE(t testing.TestingT, options *k8s.KubectlOptions, args ...string) (string, error) {
-	cmdArgs := []string{}
+	var cmdArgs []string
 	if options.ContextName != "" {
 		cmdArgs = append(cmdArgs, "--context", options.ContextName)
 	}
@@ -33,16 +35,24 @@ func RunKubectlAndGetOutputE(t testing.TestingT, options *k8s.KubectlOptions, ar
 	return shell.RunCommandAndGetOutputE(t, command)
 }
 
+// KubectlApply takes a path to a Kubernetes YAML file and
+// applies it to the cluster by running 'kubectl apply -f'.
+// If there's an error applying the file, fail the test.
 func KubectlApply(t testing.TestingT, options *k8s.KubectlOptions, configPath string) {
 	_, err := RunKubectlAndGetOutputE(t, options, "apply", "-f", configPath)
 	require.NoError(t, err)
 }
 
+// KubectlDelete takes a path to a Kubernetes YAML file and
+// deletes it from the cluster by running 'kubectl delete -f'.
+// If there's an error deleting the file, fail the test.
 func KubectlDelete(t testing.TestingT, options *k8s.KubectlOptions, configPath string) {
 	_, err := RunKubectlAndGetOutputE(t, options, "delete", "-f", configPath)
 	require.NoError(t, err)
 }
 
+// RunKubectl runs an arbitrary kubectl command provided via args and ignores the output.
+// If there's an error running the command, fail the test.
 func RunKubectl(t testing.TestingT, options *k8s.KubectlOptions, args ...string) {
 	_, err := RunKubectlAndGetOutputE(t, options, args...)
 	require.NoError(t, err)
