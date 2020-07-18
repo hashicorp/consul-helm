@@ -106,7 +106,8 @@ func (h *HelmCluster) Destroy(t *testing.T) {
 }
 
 func (h *HelmCluster) Upgrade(t *testing.T) {
-	t.Errorf("not implemented yet")
+	helm.Upgrade(t, h.helmOptions, helmChartPath, h.releaseName)
+	helpers.WaitForAllPodsToBeReady(t, h.kubernetesClient, h.helmOptions.KubectlOptions.Namespace, fmt.Sprintf("release=%s", h.releaseName))
 }
 
 func (h *HelmCluster) SetupConsulClient(t *testing.T, secure bool) *api.Client {
