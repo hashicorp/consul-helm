@@ -19,12 +19,14 @@ func TestSyncCatalog(t *testing.T) {
 	cases := []struct {
 		name       string
 		helmValues map[string]string
+		secure
 	}{
 		{
 			"Default installation",
 			map[string]string{
 				"syncCatalog.enabled": "true",
 			},
+			false,
 		},
 		{
 			"Secure installation (with TLS and ACLs enabled)",
@@ -33,6 +35,7 @@ func TestSyncCatalog(t *testing.T) {
 				"global.tls.enabled":           "true",
 				"global.acls.manageSystemACLs": "true",
 			},
+			true,
 		},
 	}
 
@@ -40,19 +43,15 @@ func TestSyncCatalog(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			env := suite.Environment()
 
-			helmValues := map[string]string{
-				"syncCatalog.enabled": "true",
-			}
-
 			releaseName := helpers.RandomName()
-			consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(t), suite.Config(), releaseName)
+			consulCluster := framework.NewHelmCluster(t, c.helmValues, env.DefaultContext(t), suite.Config(), releaseName)
 
 			consulCluster.Create(t)
 
 			t.Logf("creating a test service and pod called %s", releaseName)
 			createTestService(t, env.DefaultContext(t).KubernetesClient(t), releaseName)
 
-			consulClient := consulCluster.SetupConsulClient(t, false)
+			consulClient := consulCluster.SetupConsulClient(t, c.secure)
 
 			t.Log("checking that the service has been synced to Consul")
 			var services map[string][]string

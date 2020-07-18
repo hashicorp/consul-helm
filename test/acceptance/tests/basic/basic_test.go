@@ -16,10 +16,12 @@ func TestBasicInstallation(t *testing.T) {
 	cases := []struct {
 		name       string
 		helmValues map[string]string
+		secure     bool
 	}{
 		{
 			"Default installation",
 			nil,
+			false,
 		},
 		{
 			"Secure installation (with TLS and ACLs enabled)",
@@ -27,17 +29,18 @@ func TestBasicInstallation(t *testing.T) {
 				"global.tls.enabled":           "true",
 				"global.acls.manageSystemACLs": "true",
 			},
+			true,
 		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			releaseName := helpers.RandomName()
-			consulCluster := framework.NewHelmCluster(t, nil, suite.Environment().DefaultContext(t), suite.Config(), releaseName)
+			consulCluster := framework.NewHelmCluster(t, c.helmValues, suite.Environment().DefaultContext(t), suite.Config(), releaseName)
 
 			consulCluster.Create(t)
 
-			client := consulCluster.SetupConsulClient(t, false)
+			client := consulCluster.SetupConsulClient(t, c.secure)
 
 			// Create a KV entry
 			randomKey := helpers.RandomName()
