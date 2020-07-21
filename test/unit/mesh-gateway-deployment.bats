@@ -4,20 +4,17 @@ load _helpers
 
 @test "meshGateway/Deployment: disabled by default" {
   cd `chart_dir`
-  local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
-      . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+  assert_empty helm template \
+      -s templates/mesh-gateway-deployment.yaml  \
+      .
 }
 
-@test "meshGateway/Deployment: enabled with meshGateway, connectInject and client.grpc enabled" {
+@test "meshGateway/Deployment: enabled with meshGateway, connectInject enabled" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -29,10 +26,9 @@ load _helpers
 @test "meshGateway/Deployment: fails if connectInject.enabled=false" {
   cd `chart_dir`
   run helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
-      --set 'connectInject.enabled=false' \
-      --set 'client.grpc=true' .
+      --set 'connectInject.enabled=false' .
   [ "$status" -eq 1 ]
   [[ "$output" =~ "connectInject.enabled must be true" ]]
 }
@@ -40,7 +36,7 @@ load _helpers
 @test "meshGateway/Deployment: fails if client.grpc=false" {
   cd `chart_dir`
   run helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'client.grpc=false' \
       --set 'connectInject.enabled=true' .
@@ -51,9 +47,8 @@ load _helpers
 @test "meshGateway/Deployment: fails if global.enabled is false and clients are not explicitly enabled" {
   cd `chart_dir`
   run helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.enabled=false' .
   [ "$status" -eq 1 ]
@@ -63,9 +58,8 @@ load _helpers
 @test "meshGateway/Deployment: fails if global.enabled is true but clients are explicitly disabled" {
   cd `chart_dir`
   run helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.enabled=true' \
       --set 'client.enabled=false' .
@@ -79,10 +73,9 @@ load _helpers
 @test "meshGateway/Deployment: no extra annotations by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.metadata.annotations | length' | tee /dev/stderr)
   [ "${actual}" = "1" ]
@@ -91,10 +84,9 @@ load _helpers
 @test "meshGateway/Deployment: extra annotations can be set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.annotations=key1: value1
 key2: value2' \
       . | tee /dev/stderr |
@@ -108,10 +100,9 @@ key2: value2' \
 @test "meshGateway/Deployment: replicas defaults to 2" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -r '.spec.replicas' | tee /dev/stderr)
   [ "${actual}" = "2" ]
@@ -120,10 +111,9 @@ key2: value2' \
 @test "meshGateway/Deployment: replicas can be overridden" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.replicas=3' \
       . | tee /dev/stderr |
       yq -r '.spec.replicas' | tee /dev/stderr)
@@ -136,10 +126,9 @@ key2: value2' \
 @test "meshGateway/Deployment: affinity defaults to one per node" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].topologyKey' | tee /dev/stderr)
   [ "${actual}" = "kubernetes.io/hostname" ]
@@ -148,10 +137,9 @@ key2: value2' \
 @test "meshGateway/Deployment: affinity can be overridden" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.affinity=key: value' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.affinity.key' | tee /dev/stderr)
@@ -164,10 +152,9 @@ key2: value2' \
 @test "meshGateway/Deployment: no tolerations by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.tolerations' | tee /dev/stderr)
   [ "${actual}" = "null" ]
@@ -176,10 +163,9 @@ key2: value2' \
 @test "meshGateway/Deployment: tolerations can be set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.tolerations=- key: value' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.tolerations[0].key' | tee /dev/stderr)
@@ -193,10 +179,9 @@ key2: value2' \
 @test "meshGateway/Deployment: hostNetwork is not set by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.hostNetwork' | tee /dev/stderr)
   [ "${actual}" = "null" ]
@@ -205,10 +190,9 @@ key2: value2' \
 @test "meshGateway/Deployment: hostNetwork can be set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.hostNetwork=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.hostNetwork' | tee /dev/stderr)
@@ -221,10 +205,9 @@ key2: value2' \
 @test "meshGateway/Deployment: no dnsPolicy by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.dnsPolicy' | tee /dev/stderr)
   [ "${actual}" = "null" ]
@@ -233,10 +216,9 @@ key2: value2' \
 @test "meshGateway/Deployment: dnsPolicy can be set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.dnsPolicy=ClusterFirst' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.dnsPolicy' | tee /dev/stderr)
@@ -249,22 +231,20 @@ key2: value2' \
 @test "meshGateway/Deployment: envoy image has default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].image' | tee /dev/stderr)
-  [ "${actual}" = "envoyproxy/envoy:v1.13.0" ]
+  [ "${actual}" = "envoyproxy/envoy-alpine:v1.14.2" ]
 }
 
 @test "meshGateway/Deployment: envoy image can be set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.imageEnvoy=new/image' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].image' | tee /dev/stderr)
@@ -277,26 +257,24 @@ key2: value2' \
 @test "meshGateway/Deployment: resources has default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
 
-  [ $(echo "${actual}" | yq -r '.requests.memory') = "128Mi" ]
-  [ $(echo "${actual}" | yq -r '.requests.cpu') = "250m" ]
-  [ $(echo "${actual}" | yq -r '.limits.memory') = "256Mi" ]
-  [ $(echo "${actual}" | yq -r '.limits.cpu') = "500m" ]
+  [ $(echo "${actual}" | yq -r '.requests.memory') = "100Mi" ]
+  [ $(echo "${actual}" | yq -r '.requests.cpu') = "100m" ]
+  [ $(echo "${actual}" | yq -r '.limits.memory') = "100Mi" ]
+  [ $(echo "${actual}" | yq -r '.limits.cpu') = "100m" ]
 }
 
 @test "meshGateway/Deployment: resources can be overridden" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.resources.foo=bar' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].resources.foo' | tee /dev/stderr)
@@ -307,7 +285,7 @@ key2: value2' \
 @test "meshGateway/Deployment: resources can be overridden with string" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
@@ -323,10 +301,9 @@ key2: value2' \
 @test "meshGateway/Deployment: containerPort defaults to 8443" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr \
       | yq  '.spec.template.spec.containers[0]' | tee /dev/stderr)
 
@@ -338,10 +315,9 @@ key2: value2' \
 @test "meshGateway/Deployment: containerPort can be overridden" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.containerPort=9443' \
       . | tee /dev/stderr \
       | yq  '.spec.template.spec.containers[0]' | tee /dev/stderr)
@@ -357,10 +333,9 @@ key2: value2' \
 @test "meshGateway/Deployment: fails if consulServiceName is set and acls.manageSystemACLs is true" {
   cd `chart_dir`
   run helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.consulServiceName=override' \
       --set 'global.acls.manageSystemACLs=true' \
       .
@@ -371,10 +346,9 @@ key2: value2' \
 @test "meshGateway/Deployment: does not fail if consulServiceName is set to mesh-gateway and acls.manageSystemACLs is true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.consulServiceName=mesh-gateway' \
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr \
@@ -386,10 +360,9 @@ key2: value2' \
 @test "meshGateway/Deployment: consulServiceName can be set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.consulServiceName=overridden' \
       . | tee /dev/stderr \
       | yq '.spec.template.spec.containers[0]' | tee /dev/stderr )
@@ -403,10 +376,9 @@ key2: value2' \
 @test "meshGateway/Deployment: healthchecks are on by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr \
       | yq '.spec.template.spec.containers[0]' | tee /dev/stderr )
 
@@ -422,10 +394,9 @@ key2: value2' \
 @test "meshGateway/Deployment: no hostPort by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].ports[0].hostPort' | tee /dev/stderr)
 
@@ -435,10 +406,9 @@ key2: value2' \
 @test "meshGateway/Deployment: can set a hostPort" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.hostPort=443' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].ports[0].hostPort' | tee /dev/stderr)
@@ -452,10 +422,9 @@ key2: value2' \
 @test "meshGateway/Deployment: no priorityClassName by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.priorityClassName' | tee /dev/stderr)
 
@@ -465,10 +434,9 @@ key2: value2' \
 @test "meshGateway/Deployment: can set a priorityClassName" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.priorityClassName=name' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.priorityClassName' | tee /dev/stderr)
@@ -482,10 +450,9 @@ key2: value2' \
 @test "meshGateway/Deployment: no nodeSelector by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.nodeSelector' | tee /dev/stderr)
 
@@ -495,10 +462,9 @@ key2: value2' \
 @test "meshGateway/Deployment: can set a nodeSelector" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'client.grpc=true' \
       --set 'meshGateway.nodeSelector=key: value' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.nodeSelector.key' | tee /dev/stderr)
@@ -509,33 +475,47 @@ key2: value2' \
 #--------------------------------------------------------------------
 # global.tls.enabled
 
-@test "meshGateway/Deployment: sets TLS flags when global.tls.enabled" {
+@test "meshGateway/Deployment: sets TLS env variables when global.tls.enabled" {
   cd `chart_dir`
   local env=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].env[]' | tee /dev/stderr)
 
-  local actual
-  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
   [ "${actual}" = 'https://$(HOST_IP):8501' ]
 
-    local actual
-    actual=$(echo $env | jq -r '. | select(.name == "CONSUL_GRPC_ADDR") | .value' | tee /dev/stderr)
-    [ "${actual}" = 'https://$(HOST_IP):8502' ]
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_GRPC_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'https://$(HOST_IP):8502' ]
 
-  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
-    [ "${actual}" = "/consul/tls/ca/tls.crt" ]
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
+  [ "${actual}" = "/consul/tls/ca/tls.crt" ]
+}
+
+@test "meshGateway/Deployment: sets TLS env variables in lifecycle sidecar when global.tls.enabled" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/mesh-gateway-deployment.yaml  \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[1].env[]' | tee /dev/stderr)
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'https://$(HOST_IP):8501' ]
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
+  [ "${actual}" = "/consul/tls/ca/tls.crt" ]
 }
 
 @test "meshGateway/Deployment: can overwrite CA secret with the provided one" {
   cd `chart_dir`
   local ca_cert_volume=$(helm template \
-      -x templates/client-snapshot-agent-deployment.yaml  \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.tls.enabled=true' \
@@ -562,7 +542,7 @@ key2: value2' \
 @test "meshGateway/Deployment: consul-auto-encrypt-ca-cert volume is added when TLS with auto-encrypt is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.tls.enabled=true' \
@@ -575,7 +555,7 @@ key2: value2' \
 @test "meshGateway/Deployment: consul-auto-encrypt-ca-cert volumeMount is added when TLS with auto-encrypt is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.tls.enabled=true' \
@@ -588,7 +568,7 @@ key2: value2' \
 @test "meshGateway/Deployment: get-auto-encrypt-client-ca init container is created when TLS with auto-encrypt is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.tls.enabled=true' \
@@ -601,7 +581,7 @@ key2: value2' \
 @test "meshGateway/Deployment: consul-ca-cert volume is not added if externalServers.enabled=true and externalServers.useSystemRoots=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.tls.enabled=true' \
@@ -620,7 +600,7 @@ key2: value2' \
 @test "meshGateway/Deployment: service-init init container" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
@@ -669,7 +649,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container with acls.manageSystemACLs=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.acls.manageSystemACLs=true' \
@@ -725,7 +705,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container with global.federation.enabled=true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'global.federation.enabled=true' \
@@ -779,7 +759,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container containerPort and wanAddress.port can be changed" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'meshGateway.containerPort=8888' \
@@ -827,7 +807,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container wanAddress.source=NodeIP" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'meshGateway.wanAddress.source=NodeIP' \
@@ -873,7 +853,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container wanAddress.source=NodeName" {
   cd `chart_dir`
   local obj=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'meshGateway.wanAddress.source=NodeName' \
@@ -925,7 +905,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container wanAddress.source=Static fails if wanAddress.static is empty" {
   cd `chart_dir`
   run helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'meshGateway.wanAddress.source=Static' \
@@ -939,7 +919,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container wanAddress.source=Static" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'meshGateway.wanAddress.source=Static' \
@@ -986,7 +966,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container wanAddress.source=Service fails if service.enable is false" {
   cd `chart_dir`
   run helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'meshGateway.wanAddress.source=Service' \
@@ -1000,7 +980,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container wanAddress.source=Service, type=LoadBalancer" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'meshGateway.wanAddress.source=Service' \
@@ -1053,7 +1033,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container wanAddress.source=Service, type=NodePort" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'meshGateway.wanAddress.source=Service' \
@@ -1102,7 +1082,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container wanAddress.source=Service, type=NodePort fails if service.nodePort is null" {
   cd `chart_dir`
   run helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'meshGateway.wanAddress.source=Service' \
@@ -1117,7 +1097,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container wanAddress.source=Service, type=ClusterIP" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'meshGateway.wanAddress.source=Service' \
@@ -1169,7 +1149,7 @@ EOF
 @test "meshGateway/Deployment: service-init init container consulServiceName can be changed" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/mesh-gateway-deployment.yaml  \
+      -s templates/mesh-gateway-deployment.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
       --set 'meshGateway.consulServiceName=new-name' \
