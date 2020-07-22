@@ -6,6 +6,7 @@ jobs:
   unit-helm2:
     docker:
       # This image is built from test/docker/Test.dockerfile
+      # helm2 must use 0.3.0 version of the image
       - image: hashicorpdev/consul-helm-test:0.3.0
 
     steps:
@@ -15,7 +16,7 @@ jobs:
           command: bats ./test/unit
   unit-helm3:
     docker:
-      - image: hashicorpdev/consul-helm-test:0.4.0
+      - image: hashicorpdev/consul-helm-test:0.5.0
 
     steps:
       - checkout
@@ -27,8 +28,7 @@ jobs:
   acceptance:
     docker:
       # This image is build from test/docker/Test.dockerfile
-      # version 0.4.0 uses helm v3 as default
-      - image: hashicorpdev/consul-helm-test:0.4.0
+      - image: hashicorpdev/consul-helm-test:0.5.0
 
     steps:
       - checkout
@@ -43,7 +43,14 @@ jobs:
 
       - run:
           name: Run acceptance tests
-          command: bats ./test/acceptance
+          working_directory: test/acceptance/tests
+          command: |
+            if [ -n "$CIRCLE_PR_NUMBER" ]; then
+                echo "Skipping acceptance tests for forked PRs; marking step successful."
+                circleci step halt
+            fi
+
+            gotestsum ./... -- -p 1
 
       - run:
           name: terraform destroy
@@ -89,9 +96,6 @@ workflows:
           requires:
             - unit-helm2
             - unit-helm3
-          filters:
-            branches:
-              only: master
   update-helm-charts-index:
     jobs:
       - update-helm-charts-index:
