@@ -37,13 +37,16 @@ jobs:
       # Restore go module cache if there is one
       - restore_cache:
           keys:
-            - consul-helm-modcache-v1-{{ checksum "go.mod" }}
+            - consul-helm-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
 
-      - run: go mod download
+      - run:
+          name: go mod download
+          working_directory: test/acceptance
+          command: go mod download
 
       # Save go module cache if the go.mod file has changed
       - save_cache:
-          key: consul-helm-modcache-v1-{{ checksum "go.mod" }}
+          key: consul-helm-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
           paths:
             - "/go/pkg/mod"
 
@@ -82,7 +85,7 @@ jobs:
       # Restore go module cache if there is one
       - restore_cache:
           keys:
-            - consul-helm-modcache-v1-{{ checksum "go.mod" }}
+            - consul-helm-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
 
       - run:
           name: Run acceptance tests
