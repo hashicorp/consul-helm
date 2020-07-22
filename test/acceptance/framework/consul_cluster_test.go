@@ -24,7 +24,7 @@ func TestNewHelmCluster(t *testing.T) {
 	require.Equal(t, cluster.(*HelmCluster).helmOptions.SetValues, helmValues)
 }
 
-type ctx struct {}
+type ctx struct{}
 
 func (c *ctx) KubectlOptions() *k8s.KubectlOptions {
 	return &k8s.KubectlOptions{}
