@@ -93,6 +93,8 @@ jobs:
           path: /tmp/test-results
 
   acceptance:
+    environment:
+      - TEST_RESULTS: /tmp/test-results
     docker:
       # This image is build from test/docker/Test.dockerfile
       - image: hashicorpdev/consul-helm-test:0.5.0
