@@ -52,9 +52,8 @@ jobs:
           paths:
             - "/go/pkg/mod"
 
-      # check go fmt output because it does not report non-zero when there are fmt changes
       - run:
-          name: check go fmt
+          name: go fmt
           command: |
             files=$(go fmt ./...)
             if [ -n "$files" ]; then
