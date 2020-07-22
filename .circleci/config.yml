@@ -1,6 +1,10 @@
 version: 2.1
 orbs:
   slack: circleci/slack@3.4.2
+executors:
+  go:
+    docker:
+      - image: circleci/golang:1.14
 
 jobs:
   unit-helm2:
@@ -25,6 +29,40 @@ jobs:
           name: Run Unit Tests
           command: bats ./test/unit
 
+  go-fmt-and-vet:
+    executor: go
+    steps:
+      - checkout
+
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-modcache-v1-{{ checksum "go.mod" }}
+
+      - run: go mod download
+
+      # Save go module cache if the go.mod file has changed
+      - save_cache:
+          key: consul-helm-modcache-v1-{{ checksum "go.mod" }}
+          paths:
+            - "/go/pkg/mod"
+
+      # check go fmt output because it does not report non-zero when there are fmt changes
+      - run:
+          name: check go fmt
+          command: |
+            files=$(go fmt ./...)
+            if [ -n "$files" ]; then
+              echo "The following file(s) do not conform to go fmt:"
+              echo "$files"
+              exit 1
+            fi
+
+      - run:
+          name: go vet
+          working_directory: test/acceptance
+          command: go vet ./...
+
   acceptance:
     docker:
       # This image is build from test/docker/Test.dockerfile
@@ -40,6 +78,11 @@ jobs:
             echo "${GOOGLE_CREDENTIALS}" | gcloud auth activate-service-account --key-file=-
 
             terraform apply -var project=${CLOUDSDK_CORE_PROJECT} -var init_cli=true -auto-approve test/terraform
+
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-modcache-v1-{{ checksum "go.mod" }}
 
       - run:
           name: Run acceptance tests
@@ -90,8 +133,13 @@ workflows:
   version: 2
   test:
     jobs:
+      - go-fmt-and-vet
       - unit-helm2
+        requires:
+          - go-fmt-and-vet
       - unit-helm3
+        requires:
+          - go-fmt-and-vet
       - acceptance:
           requires:
             - unit-helm2
