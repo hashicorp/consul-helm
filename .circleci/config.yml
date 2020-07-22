@@ -5,6 +5,8 @@ executors:
   go:
     docker:
       - image: circleci/golang:1.14
+    environment:
+      - TEST_RESULTS: /tmp/test-results
 
 jobs:
   unit-helm2:
@@ -66,6 +68,30 @@ jobs:
           working_directory: test/acceptance
           command: go vet ./...
 
+  unit-acceptance-framework:
+    executor: go
+    steps:
+      - checkout
+
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+
+      - run: mkdir -p $TEST_RESULTS
+
+      # check go fmt output because it does not report non-zero when there are fmt changes
+      - run:
+          name: Run tests
+          working_directory: test/acceptance/framework
+          command: |
+            gotestsum --junitfile $TEST_RESULTS/gotestsum-report.xml ./... -- -p 4
+
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+
   acceptance:
     docker:
       # This image is build from test/docker/Test.dockerfile
@@ -87,6 +113,8 @@ jobs:
           keys:
             - consul-helm-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
 
+      - run: mkdir -p $TEST_RESULTS
+
       - run:
           name: Run acceptance tests
           working_directory: test/acceptance/tests
@@ -96,7 +124,12 @@ jobs:
                 circleci step halt
             fi
 
-            gotestsum ./... -- -p 1
+            gotestsum --junitfile $TEST_RESULTS/gotestsum-report.xml ./... -- -p 1
+
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
 
       - run:
           name: terraform destroy
@@ -137,17 +170,17 @@ workflows:
   test:
     jobs:
       - go-fmt-and-vet
-      - unit-helm2:
+      - unit-acceptance-framework:
           requires:
             - go-fmt-and-vet
-      - unit-helm3:
-          requires:
-            - go-fmt-and-vet
+      - unit-helm2
+      - unit-helm3
       - acceptance:
           requires:
             - go-fmt-and-vet
             - unit-helm2
             - unit-helm3
+            - unit-acceptance-framework
   update-helm-charts-index:
     jobs:
       - update-helm-charts-index:
