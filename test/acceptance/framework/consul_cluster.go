@@ -36,7 +36,7 @@ type Cluster interface {
 type HelmCluster struct {
 	helmOptions      *helm.Options
 	releaseName      string
-	kubernetesClient *kubernetes.Clientset
+	kubernetesClient kubernetes.Interface
 }
 
 func NewHelmCluster(

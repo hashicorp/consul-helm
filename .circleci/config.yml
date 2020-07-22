@@ -177,7 +177,6 @@ workflows:
       - unit-helm3
       - acceptance:
           requires:
-            - go-fmt-and-vet
             - unit-helm2
             - unit-helm3
             - unit-acceptance-framework
