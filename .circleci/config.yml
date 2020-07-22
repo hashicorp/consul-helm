@@ -134,14 +134,15 @@ workflows:
   test:
     jobs:
       - go-fmt-and-vet
-      - unit-helm2
-        requires:
-          - go-fmt-and-vet
-      - unit-helm3
-        requires:
-          - go-fmt-and-vet
+      - unit-helm2:
+          requires:
+            - go-fmt-and-vet
+      - unit-helm3:
+          requires:
+            - go-fmt-and-vet
       - acceptance:
           requires:
+            - go-fmt-and-vet
             - unit-helm2
             - unit-helm3
   update-helm-charts-index:
