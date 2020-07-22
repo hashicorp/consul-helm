@@ -52,8 +52,9 @@ jobs:
           paths:
             - "/go/pkg/mod"
 
+      # check go fmt output because it does not report non-zero when there are fmt changes
       - run:
-          name: go fmt
+          name: check go fmt
           command: |
             files=$(go fmt ./...)
             if [ -n "$files" ]; then
@@ -79,7 +80,6 @@ jobs:
 
       - run: mkdir -p $TEST_RESULTS
 
-      # check go fmt output because it does not report non-zero when there are fmt changes
       - run:
           name: Run tests
           working_directory: test/acceptance/framework
