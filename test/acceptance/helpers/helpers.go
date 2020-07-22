@@ -28,7 +28,7 @@ func RandomName() string {
 func WaitForAllPodsToBeReady(t *testing.T, client *kubernetes.Clientset, namespace, podLabelSelector string) {
 	t.Helper()
 
-	counter := &retry.Counter{Count: 20, Wait: 5*time.Second}
+	counter := &retry.Counter{Count: 20, Wait: 5 * time.Second}
 	retry.RunWith(counter, t, func(r *retry.R) {
 		pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: podLabelSelector})
 		require.NoError(r, err)
