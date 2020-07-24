@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/hashicorp/consul-helm/test/acceptance/framework"
 	"github.com/hashicorp/consul-helm/test/acceptance/helpers"
 	"github.com/hashicorp/consul/api"
@@ -43,7 +44,8 @@ func TestMeshGatewayDefault(t *testing.T) {
 
 	// Get the federation secret from the primary cluster and apply it to secondary cluster
 	federationSecretName := fmt.Sprintf("%s-consul-federation", releaseName)
-	secretYAML, err := helpers.RunKubectlAndGetOutputE(t, env.DefaultContext(t).KubectlOptions(), "get", "secret", federationSecretName, "-o", "yaml")
+	t.Logf("retrieving federation secret %s from the primary cluster and applying to the secondary", federationSecretName)
+	secretYAML, err := helpers.RunKubectlAndGetOutputWithLoggerE(t, env.DefaultContext(t).KubectlOptions(), logger.Discard, "get", "secret", federationSecretName, "-o", "yaml")
 	require.NoError(t, err)
 	helpers.KubectlApplyFromString(t, secondaryContext.KubectlOptions(), secretYAML)
 
@@ -126,8 +128,8 @@ func TestConnectInjectSecure(t *testing.T) {
 
 	// Get the federation secret from the primary cluster and apply it to secondary cluster
 	federationSecretName := fmt.Sprintf("%s-consul-federation", releaseName)
-	// this command prints secrets to logs
-	secretYAML, err := helpers.RunKubectlAndGetOutputE(t, env.DefaultContext(t).KubectlOptions(), "get", "secret", federationSecretName, "-o", "yaml")
+	t.Logf("retrieving federation secret %s from the primary cluster and applying to the secondary", federationSecretName)
+	secretYAML, err := helpers.RunKubectlAndGetOutputWithLoggerE(t, env.DefaultContext(t).KubectlOptions(), logger.Discard,"get", "secret", federationSecretName, "-o", "yaml")
 	require.NoError(t, err)
 	helpers.KubectlApplyFromString(t, secondaryContext.KubectlOptions(), secretYAML)
 
@@ -207,6 +209,7 @@ func createServer(t *testing.T, options *k8s.KubectlOptions) {
 	helpers.RunKubectl(t, options, "wait", "--for=condition=available", "deploy/static-server")
 }
 
+// createServer sets up static-client deployment
 func createClient(t *testing.T, options *k8s.KubectlOptions) {
 	helpers.KubectlApply(t, options, "fixtures/static-client.yaml")
 
