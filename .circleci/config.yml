@@ -117,6 +117,13 @@ jobs:
 
       - run: mkdir -p $TEST_RESULTS
 
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+
+      - run: mkdir -p $TEST_RESULTS
+
       - run:
           name: Run acceptance tests
           working_directory: test/acceptance/tests
