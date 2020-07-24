@@ -36,7 +36,7 @@ func TestFlags_validate(t *testing.T) {
 			true,
 		},
 		{
-			"enable multi cluster: no error when secondary kubeconfig bot not kubecontext is provided",
+			"enable multi cluster: no error when secondary kubeconfig but not kubecontext is provided",
 			fields{
 				flagEnableMultiCluster:   true,
 				flagSecondaryKubeconfig:  "foo",
@@ -45,7 +45,7 @@ func TestFlags_validate(t *testing.T) {
 			false,
 		},
 		{
-			"enable multi cluster: no error when secondary kubecontext bot not kubeconfig is provided",
+			"enable multi cluster: no error when secondary kubecontext but not kubeconfig is provided",
 			fields{
 				flagEnableMultiCluster:   true,
 				flagSecondaryKubeconfig:  "",
