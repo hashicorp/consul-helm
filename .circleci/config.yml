@@ -92,8 +92,6 @@ jobs:
           path: /tmp/test-results
 
   acceptance:
-    environment:
-      - TEST_RESULTS: /tmp/test-results
     docker:
       # This image is build from test/docker/Test.dockerfile
       - image: hashicorpdev/consul-helm-test:0.5.0
@@ -120,6 +118,9 @@ jobs:
       - run:
           name: Run acceptance tests
           working_directory: test/acceptance/tests
+          # The tests are using go test instead of gotestsum so that we can catch interrupt signals.
+          # Unfortunately, if an interrupt is issued, gotestsum does not pass the signal to the go test process
+          # and the cannot clean up resources before terminating.
           command: |
             if [ -n "$CIRCLE_PR_NUMBER" ]; then
                 echo "Skipping acceptance tests for forked PRs; marking step successful."
@@ -128,12 +129,7 @@ jobs:
             primary_context=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .context_names.value[0])
             secondary_context=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .context_names.value[1])
 
-            gotestsum --junitfile $TEST_RESULTS/gotestsum-report.xml ./... -- -p 1 -enable-multi-cluster -kubecontext=$primary_context -secondary-kubecontext=$secondary_context
-
-      - store_test_results:
-          path: /tmp/test-results
-      - store_artifacts:
-          path: /tmp/test-results
+            go test ./... -p 1 -enable-multi-cluster -kubecontext=$primary_context -secondary-kubecontext=$secondary_context
 
       - run:
           name: terraform destroy
