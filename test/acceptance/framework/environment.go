@@ -9,7 +9,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-const defaultContextName = "default"
+const (
+	DefaultContextName   = "default"
+	SecondaryContextName = "secondary"
+)
 
 // TestEnvironment represents the infrastructure environment of the test,
 // such as the kubernetes cluster(s) the test is running against
@@ -32,11 +35,19 @@ type kubernetesEnvironment struct {
 func newKubernetesEnvironmentFromConfig(config *TestConfig) *kubernetesEnvironment {
 	defaultContext := NewContext(config.KubeNamespace, config.Kubeconfig, config.KubeContext)
 
-	return &kubernetesEnvironment{
+	// Create a kubernetes environment with default context.
+	kenv := &kubernetesEnvironment{
 		contexts: map[string]*kubernetesContext{
-			defaultContextName: defaultContext,
+			DefaultContextName: defaultContext,
 		},
 	}
+
+	// Add secondary context if multi cluster tests are enabled.
+	if config.EnableMultiCluster {
+		kenv.contexts[SecondaryContextName] = NewContext(config.SecondaryKubeNamespace, config.SecondaryKubeconfig, config.SecondaryKubeContext)
+	}
+
+	return kenv
 }
 
 func (k *kubernetesEnvironment) Context(t *testing.T, name string) TestContext {
@@ -47,7 +58,7 @@ func (k *kubernetesEnvironment) Context(t *testing.T, name string) TestContext {
 }
 
 func (k *kubernetesEnvironment) DefaultContext(t *testing.T) TestContext {
-	ctx, ok := k.contexts[defaultContextName]
+	ctx, ok := k.contexts[DefaultContextName]
 	require.Truef(t, ok, "default context not found")
 
 	return ctx

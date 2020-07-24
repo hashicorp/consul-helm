@@ -6,6 +6,11 @@ type TestConfig struct {
 	KubeContext   string
 	KubeNamespace string
 
+	EnableMultiCluster     bool
+	SecondaryKubeconfig    string
+	SecondaryKubeContext   string
+	SecondaryKubeNamespace string
+
 	ConsulImage    string
 	ConsulK8SImage string
 }
