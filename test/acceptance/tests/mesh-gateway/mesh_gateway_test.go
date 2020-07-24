@@ -129,7 +129,7 @@ func TestConnectInjectSecure(t *testing.T) {
 	// Get the federation secret from the primary cluster and apply it to secondary cluster
 	federationSecretName := fmt.Sprintf("%s-consul-federation", releaseName)
 	t.Logf("retrieving federation secret %s from the primary cluster and applying to the secondary", federationSecretName)
-	secretYAML, err := helpers.RunKubectlAndGetOutputWithLoggerE(t, env.DefaultContext(t).KubectlOptions(), logger.Discard,"get", "secret", federationSecretName, "-o", "yaml")
+	secretYAML, err := helpers.RunKubectlAndGetOutputWithLoggerE(t, env.DefaultContext(t).KubectlOptions(), logger.Discard, "get", "secret", federationSecretName, "-o", "yaml")
 	require.NoError(t, err)
 	helpers.KubectlApplyFromString(t, secondaryContext.KubectlOptions(), secretYAML)
 
