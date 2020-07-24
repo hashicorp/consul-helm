@@ -134,7 +134,6 @@ jobs:
             fi
             primary_context=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .context_names.value[0])
             secondary_context=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .context_names.value[1])
-            echo $primary_context $secondary_context
 
             gotestsum --junitfile /tmp/gotestsum-report.xml -- ./... -p 1 -enable-multi-cluster -kubecontext=$primary_context -secondary-kubecontext=$secondary_context
 
