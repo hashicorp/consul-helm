@@ -19,6 +19,8 @@ type TestFlags struct {
 	flagConsulImage    string
 	flagConsulK8sImage string
 
+	flagNoCleanupOnFailure bool
+
 	once sync.Once
 }
 
@@ -47,6 +49,10 @@ func (t *TestFlags) init() {
 	flag.StringVar(&t.flagSecondaryKubecontext, "secondary-kubecontext", "", "The name of the Kubernetes context for the secondary cluster to use. "+
 		"If this is blank, the context set as the current context will be used by default.")
 	flag.StringVar(&t.flagSecondaryNamespace, "secondary-namespace", "default", "The Kubernetes namespace to use in the secondary k8s cluster.")
+
+	flag.BoolVar(&t.flagNoCleanupOnFailure, "no-cleanup-on-failure", false,
+		"If true, the tests will not cleanup resources they create when they finish running."+
+			"Note this flag must be run with -failfast flag, otherwise subsequent tests will fail.")
 }
 
 func (t *TestFlags) validate() error {
@@ -71,5 +77,7 @@ func (t *TestFlags) testConfigFromFlags() *TestConfig {
 
 		ConsulImage:    t.flagConsulImage,
 		ConsulK8SImage: t.flagConsulK8sImage,
+
+		NoCleanupOnFailure: t.flagNoCleanupOnFailure,
 	}
 }

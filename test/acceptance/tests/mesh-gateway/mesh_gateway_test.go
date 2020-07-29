@@ -79,6 +79,7 @@ func TestMeshGatewayDefault(t *testing.T) {
 	secondaryConsulCluster.Create(t)
 
 	// Verify federation between servers
+	t.Log("verifying federation was successful")
 	consulClient := primaryConsulCluster.SetupConsulClient(t, false)
 	members, err := consulClient.Agent().Members(true)
 	require.NoError(t, err)
@@ -87,10 +88,10 @@ func TestMeshGatewayDefault(t *testing.T) {
 
 	// Check that we can connect services over the mesh gateways
 	t.Log("creating static-server in dc2")
-	createServer(t, secondaryContext.KubectlOptions())
+	createServer(t, suite.Config(), secondaryContext.KubectlOptions())
 
 	t.Log("creating static-client in dc1")
-	createClient(t, env.DefaultContext(t).KubectlOptions())
+	createClient(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
 
 	t.Log("checking that connection is successful")
 	checkConnection(t, env.DefaultContext(t).KubectlOptions(), env.DefaultContext(t).KubernetesClient(t), true)
@@ -98,7 +99,7 @@ func TestMeshGatewayDefault(t *testing.T) {
 
 // Test that Connect and wan federation over mesh gateways work in a secure installation,
 // with ACLs and TLS with auto-encrypt enabled
-func TestConnectInjectSecure(t *testing.T) {
+func TestMeshGatewaySecure(t *testing.T) {
 	env := suite.Environment()
 
 	primaryHelmValues := map[string]string{
@@ -176,10 +177,10 @@ func TestConnectInjectSecure(t *testing.T) {
 
 	// Check that we can connect services over the mesh gateways
 	t.Log("creating static-server in dc2")
-	createServer(t, secondaryContext.KubectlOptions())
+	createServer(t, suite.Config(), secondaryContext.KubectlOptions())
 
 	t.Log("creating static-client in dc1")
-	createClient(t, env.DefaultContext(t).KubectlOptions())
+	createClient(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
 
 	t.Log("creating intention")
 	_, _, err = consulClient.Connect().IntentionCreate(&api.Intention{
@@ -194,10 +195,10 @@ func TestConnectInjectSecure(t *testing.T) {
 }
 
 // createServer sets up static-server deployment
-func createServer(t *testing.T, options *k8s.KubectlOptions) {
+func createServer(t *testing.T, cfg *framework.TestConfig, options *k8s.KubectlOptions) {
 	helpers.KubectlApply(t, options, "fixtures/static-server.yaml")
 
-	helpers.Cleanup(t, func() {
+	helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
 		// Note: this delete command won't wait for pods to be fully terminated.
 		// This shouldn't cause any test pollution because the underlying
 		// objects are deployments, and so when other tests create these
@@ -210,10 +211,10 @@ func createServer(t *testing.T, options *k8s.KubectlOptions) {
 }
 
 // createServer sets up static-client deployment
-func createClient(t *testing.T, options *k8s.KubectlOptions) {
+func createClient(t *testing.T, cfg *framework.TestConfig, options *k8s.KubectlOptions) {
 	helpers.KubectlApply(t, options, "fixtures/static-client.yaml")
 
-	helpers.Cleanup(t, func() {
+	helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
 		// Note: this delete command won't wait for pods to be fully terminated.
 		// This shouldn't cause any test pollution because the underlying
 		// objects are deployments, and so when other tests create these
@@ -238,7 +239,7 @@ func checkConnection(t *testing.T, options *k8s.KubectlOptions, client kubernete
 		Wait:    500 * time.Millisecond,
 	}
 	retry.RunWith(retrier, t, func(r *retry.R) {
-		output, err := helpers.RunKubectlAndGetOutputE(t, options, "exec", pods.Items[0].Name, "-c", "static-client", "--", "curl", "-vvvsf", "http://127.0.0.1:1234/")
+		output, err := helpers.RunKubectlAndGetOutputE(t, options, "exec", pods.Items[0].Name, "-c", "static-client", "--", "curl", "-vvvsSf", "http://127.0.0.1:1234/")
 		if expectSuccess {
 			require.NoError(r, err)
 			require.Contains(r, output, "hello world")
