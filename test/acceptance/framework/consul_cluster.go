@@ -64,9 +64,9 @@ func NewHelmCluster(
 		Logger:         logger.TestingT,
 	}
 	return &HelmCluster{
-		helmOptions:      opts,
-		releaseName:      releaseName,
-		kubernetesClient: ctx.KubernetesClient(t),
+		helmOptions:        opts,
+		releaseName:        releaseName,
+		kubernetesClient:   ctx.KubernetesClient(t),
 		noCleanupOnFailure: cfg.NoCleanupOnFailure,
 	}
 }
