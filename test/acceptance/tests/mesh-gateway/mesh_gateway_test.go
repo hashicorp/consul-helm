@@ -21,6 +21,9 @@ import (
 func TestMeshGatewayDefault(t *testing.T) {
 	env := suite.Environment()
 
+	primaryContext := env.DefaultContext(t)
+	secondaryContext := env.Context(t, framework.SecondaryContextName)
+
 	primaryHelmValues := map[string]string{
 		"global.datacenter":                        "dc1",
 		"global.tls.enabled":                       "true",
@@ -37,15 +40,13 @@ func TestMeshGatewayDefault(t *testing.T) {
 	releaseName := helpers.RandomName()
 
 	// Install the primary consul cluster in the default kubernetes context
-	primaryConsulCluster := framework.NewHelmCluster(t, primaryHelmValues, env.DefaultContext(t), suite.Config(), releaseName)
+	primaryConsulCluster := framework.NewHelmCluster(t, primaryHelmValues, primaryContext, suite.Config(), releaseName)
 	primaryConsulCluster.Create(t)
-
-	secondaryContext := env.Context(t, framework.SecondaryContextName)
 
 	// Get the federation secret from the primary cluster and apply it to secondary cluster
 	federationSecretName := fmt.Sprintf("%s-consul-federation", releaseName)
 	t.Logf("retrieving federation secret %s from the primary cluster and applying to the secondary", federationSecretName)
-	secretYAML, err := helpers.RunKubectlAndGetOutputWithLoggerE(t, env.DefaultContext(t).KubectlOptions(), logger.Discard, "get", "secret", federationSecretName, "-o", "yaml")
+	secretYAML, err := helpers.RunKubectlAndGetOutputWithLoggerE(t, primaryContext.KubectlOptions(), logger.Discard, "get", "secret", federationSecretName, "-o", "yaml")
 	require.NoError(t, err)
 	helpers.KubectlApplyFromString(t, secondaryContext.KubectlOptions(), secretYAML)
 
@@ -91,16 +92,19 @@ func TestMeshGatewayDefault(t *testing.T) {
 	createServer(t, suite.Config(), secondaryContext.KubectlOptions())
 
 	t.Log("creating static-client in dc1")
-	createClient(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
+	createClient(t, suite.Config(), primaryContext.KubectlOptions())
 
 	t.Log("checking that connection is successful")
-	checkConnection(t, env.DefaultContext(t).KubectlOptions(), env.DefaultContext(t).KubernetesClient(t), true)
+	checkConnection(t, primaryContext.KubectlOptions(), primaryContext.KubernetesClient(t), true)
 }
 
 // Test that Connect and wan federation over mesh gateways work in a secure installation,
 // with ACLs and TLS with auto-encrypt enabled
 func TestMeshGatewaySecure(t *testing.T) {
 	env := suite.Environment()
+
+	primaryContext := env.DefaultContext(t)
+	secondaryContext := env.Context(t, framework.SecondaryContextName)
 
 	primaryHelmValues := map[string]string{
 		"global.datacenter":            "dc1",
@@ -122,15 +126,13 @@ func TestMeshGatewaySecure(t *testing.T) {
 	releaseName := helpers.RandomName()
 
 	// Install the primary consul cluster in the default kubernetes context
-	primaryConsulCluster := framework.NewHelmCluster(t, primaryHelmValues, env.DefaultContext(t), suite.Config(), releaseName)
+	primaryConsulCluster := framework.NewHelmCluster(t, primaryHelmValues, primaryContext, suite.Config(), releaseName)
 	primaryConsulCluster.Create(t)
-
-	secondaryContext := env.Context(t, framework.SecondaryContextName)
 
 	// Get the federation secret from the primary cluster and apply it to secondary cluster
 	federationSecretName := fmt.Sprintf("%s-consul-federation", releaseName)
 	t.Logf("retrieving federation secret %s from the primary cluster and applying to the secondary", federationSecretName)
-	secretYAML, err := helpers.RunKubectlAndGetOutputWithLoggerE(t, env.DefaultContext(t).KubectlOptions(), logger.Discard, "get", "secret", federationSecretName, "-o", "yaml")
+	secretYAML, err := helpers.RunKubectlAndGetOutputWithLoggerE(t, primaryContext.KubectlOptions(), logger.Discard, "get", "secret", federationSecretName, "-o", "yaml")
 	require.NoError(t, err)
 	helpers.KubectlApplyFromString(t, secondaryContext.KubectlOptions(), secretYAML)
 
@@ -180,7 +182,7 @@ func TestMeshGatewaySecure(t *testing.T) {
 	createServer(t, suite.Config(), secondaryContext.KubectlOptions())
 
 	t.Log("creating static-client in dc1")
-	createClient(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
+	createClient(t, suite.Config(), primaryContext.KubectlOptions())
 
 	t.Log("creating intention")
 	_, _, err = consulClient.Connect().IntentionCreate(&api.Intention{
@@ -191,7 +193,7 @@ func TestMeshGatewaySecure(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("checking that connection is successful")
-	checkConnection(t, env.DefaultContext(t).KubectlOptions(), env.DefaultContext(t).KubernetesClient(t), true)
+	checkConnection(t, primaryContext.KubectlOptions(), primaryContext.KubernetesClient(t), true)
 }
 
 // createServer sets up static-server deployment
