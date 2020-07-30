@@ -27,7 +27,7 @@ const helmChartPath = "../../../.."
 type Cluster interface {
 	Create(t *testing.T)
 	Destroy(t *testing.T)
-	// Upgrade runs helm upgrade. It will update the helm values from the
+	// Upgrade runs helm upgrade. It will merge the helm values from the
 	// initial install with helmValues. Any keys that were previously set
 	// will be overridden by the helmValues keys.
 	Upgrade(t *testing.T, helmValues map[string]string)

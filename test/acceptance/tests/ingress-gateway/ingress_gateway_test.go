@@ -14,142 +14,87 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// Test that ingress gateways work in a default installation.
-func TestIngressGatewayDefault(t *testing.T) {
-	env := suite.Environment()
+// Test that ingress gateways work in a default installation and a secure installation.
+func TestIngressGateway(t *testing.T) {
+	for _, secure := range []bool{false, true} {
+		testName := fmt.Sprintf("secure: %t", secure)
+		t.Run(testName, func(t *testing.T) {
+			env := suite.Environment()
 
-	// Initially we start without ingress gateways enabled because we need
-	// to create their config entry first.
-	helmValues := map[string]string{
-		"connectInject.enabled": "true",
-	}
+			helmValues := map[string]string{
+				"connectInject.enabled":                "true",
+				"ingressGateways.enabled":              "1",
+				"ingressGateways.gateways[0].name":     "ingress-gateway",
+				"ingressGateways.gateways[0].replicas": "1",
+			}
+			if secure {
+				helmValues["global.acls.manageSystemACLs"] = "true"
+				helmValues["global.tls.enabled"] = "true"
+			}
 
-	releaseName := helpers.RandomName()
-	consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(t), suite.Config(), releaseName)
+			releaseName := helpers.RandomName()
+			consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(t), suite.Config(), releaseName)
 
-	consulCluster.Create(t)
+			consulCluster.Create(t)
 
-	t.Log("creating server")
-	createServer(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
+			t.Log("creating server")
+			createServer(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
 
-	// We use a "bounce" pod so that we can make calls to the ingress gateway
-	// via kubectl exec without needing a route into the cluster from the test machine.
-	t.Log("creating bounce pod")
-	createBouncePod(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
+			// We use a "bounce" pod so that we can make calls to the ingress gateway
+			// via kubectl exec without needing a route into the cluster from the test machine.
+			t.Log("creating bounce pod")
+			createBouncePod(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
 
-	// With the cluster up, we can create our ingress-gateway config entry.
-	t.Log("creating config entry")
-	consulClient := consulCluster.SetupConsulClient(t, false)
+			// With the cluster up, we can create our ingress-gateway config entry.
+			t.Log("creating config entry")
+			consulClient := consulCluster.SetupConsulClient(t, secure)
 
-	// Create config entry
-	created, _, err := consulClient.ConfigEntries().Set(&api.IngressGatewayConfigEntry{
-		Kind: api.IngressGateway,
-		Name: "ingress-gateway",
-		Listeners: []api.IngressListener{
-			{
-				Port:     8080,
-				Protocol: "tcp",
-				Services: []api.IngressService{
+			// Create config entry
+			created, _, err := consulClient.ConfigEntries().Set(&api.IngressGatewayConfigEntry{
+				Kind: api.IngressGateway,
+				Name: "ingress-gateway",
+				Listeners: []api.IngressListener{
 					{
-						Name: "static-server",
+						Port:     8080,
+						Protocol: "tcp",
+						Services: []api.IngressService{
+							{
+								Name: "static-server",
+							},
+						},
 					},
 				},
-			},
-		},
-	}, nil)
-	require.NoError(t, err)
-	require.Equal(t, true, created, "config entry failed")
+			}, nil)
+			require.NoError(t, err)
+			require.Equal(t, true, created, "config entry failed")
 
-	// Now we can upgrade the cluster and enable ingress gateways.
-	t.Log("upgrading helm release with ingress gateways enabled")
-	consulCluster.Upgrade(t, map[string]string{
-		"ingressGateways.enabled":              "1",
-		"ingressGateways.gateways[0].name":     "ingress-gateway",
-		"ingressGateways.gateways[0].replicas": "1",
-	})
+			k8sClient := env.DefaultContext(t).KubernetesClient(t)
+			k8sOptions := env.DefaultContext(t).KubectlOptions()
 
-	// With the ingress gateway up, we test that we can make a call to it
-	// via the bounce pod. It should route to the static-server pod.
-	t.Log("trying calls to ingress gateway")
-	k8sClient := env.DefaultContext(t).KubernetesClient(t)
-	k8sOptions := env.DefaultContext(t).KubectlOptions()
-	checkConnection(t, releaseName, k8sOptions, k8sClient, true)
-}
+			// If ACLs are enabled, test that intentions prevent connections.
+			if secure {
+				// With the ingress gateway up, we test that we can make a call to it
+				// via the bounce pod. It should fail to connect with the
+				// static-server pod because of intentions.
+				t.Log("testing intentions prevent ingress")
+				checkConnection(t, releaseName, k8sOptions, k8sClient, false)
 
-// Test that ingress gateways work with ACLs and TLS enabled.
-func TestIngressGatewaySecure(t *testing.T) {
-	env := suite.Environment()
+				// Now we create the allow intention.
+				t.Log("creating ingress-gateway => static-server intention")
+				_, _, err = consulClient.Connect().IntentionCreate(&api.Intention{
+					SourceName:      "ingress-gateway",
+					DestinationName: "static-server",
+					Action:          api.IntentionActionAllow,
+				}, nil)
+				require.NoError(t, err)
+			}
 
-	// Initially we start without ingress gateways enabled because we need
-	// to create their config entry first.
-	helmValues := map[string]string{
-		"connectInject.enabled":        "true",
-		"global.acls.manageSystemACLs": "true",
-		"global.tls.enabled":           "true",
+			// Test that we can make a call to the ingress gateway
+			// via the bounce pod. It should route to the static-server pod.
+			t.Log("trying calls to ingress gateway")
+			checkConnection(t, releaseName, k8sOptions, k8sClient, true)
+		})
 	}
-
-	releaseName := helpers.RandomName()
-	consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(t), suite.Config(), releaseName)
-
-	consulCluster.Create(t)
-
-	t.Log("creating server")
-	createServer(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
-
-	// We use a "bounce" pod so that we can make calls to the ingress gateway
-	// via kubectl exec without needing a route into the cluster from the test machine.
-	t.Log("creating bounce pod")
-	createBouncePod(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
-
-	// With the cluster up, we can create our ingress-gateway config entry.
-	t.Log("creating config entry")
-	consulClient := consulCluster.SetupConsulClient(t, true)
-
-	// Create config entry.
-	created, _, err := consulClient.ConfigEntries().Set(&api.IngressGatewayConfigEntry{
-		Kind: api.IngressGateway,
-		Name: "ingress-gateway",
-		Listeners: []api.IngressListener{
-			{
-				Port:     8080,
-				Protocol: "tcp",
-				Services: []api.IngressService{
-					{
-						Name: "static-server",
-					},
-				},
-			},
-		},
-	}, nil)
-	require.NoError(t, err)
-	require.Equal(t, true, created, "config entry failed")
-
-	// Now we can upgrade the cluster and enable ingress gateways.
-	t.Log("upgrading helm release with ingress gateways enabled")
-	consulCluster.Upgrade(t, map[string]string{
-		"ingressGateways.enabled":              "1",
-		"ingressGateways.gateways[0].name":     "ingress-gateway",
-		"ingressGateways.gateways[0].replicas": "1",
-	})
-	k8sClient := env.DefaultContext(t).KubernetesClient(t)
-	k8sOptions := env.DefaultContext(t).KubectlOptions()
-
-	// With the ingress gateway up, we test that we can make a call to it
-	// via the bounce pod. It should route to the static-server pod but should
-	// fail because there is no intention set.
-	t.Log("trying call that should fail to ingress gateway")
-	checkConnection(t, releaseName, k8sOptions, k8sClient, false)
-
-	t.Log("creating ingress-gateway => static-server intention")
-	_, _, err = consulClient.Connect().IntentionCreate(&api.Intention{
-		SourceName:      "ingress-gateway",
-		DestinationName: "static-server",
-		Action:          api.IntentionActionAllow,
-	}, nil)
-	require.NoError(t, err)
-
-	t.Log("trying call that should succeed to ingress gateway")
-	checkConnection(t, releaseName, k8sOptions, k8sClient, true)
 }
 
 // checkConnection checks if bounce pod can talk to static-server.
