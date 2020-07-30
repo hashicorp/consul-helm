@@ -120,6 +120,7 @@ jobs:
       - run:
           name: Run acceptance tests
           working_directory: test/acceptance/tests
+          no_output_timeout: 30m
           command: |
             if [ -n "$CIRCLE_PR_NUMBER" ]; then
                 echo "Skipping acceptance tests for forked PRs; marking step successful."
