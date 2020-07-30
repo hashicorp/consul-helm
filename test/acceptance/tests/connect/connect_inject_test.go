@@ -108,8 +108,8 @@ func checkConnection(t *testing.T, options *k8s.KubectlOptions, client kubernete
 			require.NoError(r, err)
 			require.Contains(r, output, "hello world")
 		} else {
-			require.Error(t, err)
-			require.Contains(t, output, "503 Service Unavailable")
+			require.Error(r, err)
+			require.Contains(r, output, "503 Service Unavailable")
 		}
 	})
 }
