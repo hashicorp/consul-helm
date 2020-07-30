@@ -1,9 +1,6 @@
 package helpers
 
 import (
-	"io/ioutil"
-	"os"
-
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/shell"
@@ -51,23 +48,6 @@ func RunKubectlAndGetOutputWithLoggerE(t testing.TestingT, options *k8s.KubectlO
 func KubectlApply(t testing.TestingT, options *k8s.KubectlOptions, configPath string) {
 	_, err := RunKubectlAndGetOutputE(t, options, "apply", "-f", configPath)
 	require.NoError(t, err)
-}
-
-// KubectlApplyFromString takes Kubernetes YAML config string, saves it to a temp file and
-// applies it to the cluster by running 'kubectl apply -f'.
-// If there's an error applying the file, fail the test.
-func KubectlApplyFromString(t testing.TestingT, options *k8s.KubectlOptions, configData string) {
-	tempConfigFile, err := ioutil.TempFile("", "")
-	require.NoError(t, err)
-
-	// Note: this will remove the file as soon as *this* function terminates.
-	// This is OK though, since we can always get that configuration by running kubectl get.
-	defer os.Remove(tempConfigFile.Name())
-
-	_, err = tempConfigFile.WriteString(configData)
-	require.NoError(t, err)
-
-	KubectlApply(t, options, tempConfigFile.Name())
 }
 
 // KubectlDelete takes a path to a Kubernetes YAML file and
