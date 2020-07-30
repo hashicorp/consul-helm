@@ -23,7 +23,7 @@ func TestIngressGateway(t *testing.T) {
 
 			helmValues := map[string]string{
 				"connectInject.enabled":                "true",
-				"ingressGateways.enabled":              "1",
+				"ingressGateways.enabled":              "true",
 				"ingressGateways.gateways[0].name":     "ingress-gateway",
 				"ingressGateways.gateways[0].replicas": "1",
 			}
