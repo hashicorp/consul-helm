@@ -68,6 +68,7 @@ type kubernetesContext struct {
 	pathToKubeConfig string
 	contextName      string
 	namespace        string
+	client           kubernetes.Interface
 }
 
 func (k kubernetesContext) KubectlOptions() *k8s.KubectlOptions {
@@ -79,6 +80,10 @@ func (k kubernetesContext) KubectlOptions() *k8s.KubectlOptions {
 }
 
 func (k kubernetesContext) KubernetesClient(t *testing.T) kubernetes.Interface {
+	if k.client != nil {
+		return k.client
+	}
+
 	configPath, err := k.KubectlOptions().GetConfigPath(t)
 	require.NoError(t, err)
 
@@ -87,6 +92,8 @@ func (k kubernetesContext) KubernetesClient(t *testing.T) kubernetes.Interface {
 
 	client, err := kubernetes.NewForConfig(config)
 	require.NoError(t, err)
+
+	k.client = client
 
 	return client
 }
