@@ -17,7 +17,7 @@ metadata:
   {{- end }}
 spec:
 {{- if .Values.dns.type }}
-type: {{ .Values.dns.type }}
+  type: {{ .Values.dns.type }}
 {{- end }}
 {{- if .Values.dns.clusterIP }}
   clusterIP: {{ .Values.dns.clusterIP }}
