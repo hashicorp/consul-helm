@@ -3,6 +3,7 @@ package framework
 import (
 	"errors"
 	"flag"
+	"io/ioutil"
 	"sync"
 )
 
@@ -20,6 +21,8 @@ type TestFlags struct {
 	flagConsulK8sImage string
 
 	flagNoCleanupOnFailure bool
+
+	flagDebugDirectory string
 
 	once sync.Once
 }
@@ -53,6 +56,9 @@ func (t *TestFlags) init() {
 	flag.BoolVar(&t.flagNoCleanupOnFailure, "no-cleanup-on-failure", false,
 		"If true, the tests will not cleanup resources they create when they finish running."+
 			"Note this flag must be run with -failfast flag, otherwise subsequent tests will fail.")
+
+	flag.StringVar(&t.flagDebugDirectory, "debug-directory", "", "The directory where to dump debug information about test runs, "+
+		"such as logs, pod definitions etc. If not provided, a temporary directory will be created by the tests.")
 }
 
 func (t *TestFlags) validate() error {
@@ -64,7 +70,17 @@ func (t *TestFlags) validate() error {
 	return nil
 }
 
-func (t *TestFlags) testConfigFromFlags() *TestConfig {
+func (t *TestFlags) testConfigFromFlags() (*TestConfig, error) {
+	tempDir := t.flagDebugDirectory
+
+	if tempDir == "" {
+		var err error
+		tempDir, err = ioutil.TempDir("", "test")
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &TestConfig{
 		Kubeconfig:    t.flagKubeconfig,
 		KubeContext:   t.flagKubecontext,
@@ -79,5 +95,6 @@ func (t *TestFlags) testConfigFromFlags() *TestConfig {
 		ConsulK8SImage: t.flagConsulK8sImage,
 
 		NoCleanupOnFailure: t.flagNoCleanupOnFailure,
-	}
+		DebugDirectory:     tempDir,
+	}, nil
 }
