@@ -190,7 +190,7 @@ func (h *HelmCluster) checkForPriorInstallations(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, r := range installedReleases {
-		require.NotContains(t, r["chart"], "consul", fmt.Sprintf("detected an existing installation of Consul %s", r["chart"]))
+		require.NotContains(t, r["chart"], "consul", fmt.Sprintf("detected an existing installation of Consul %s, release name: %s", r["chart"], r["name"]))
 	}
 }
 
