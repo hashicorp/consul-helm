@@ -44,6 +44,7 @@ func TestTerminatingGateway(t *testing.T) {
 			Port:              80,
 			TaggedAddresses:   nil,
 			EnableTagOverride: false,
+		})
 		require.NoError(t, err)
 
 		// Create the config entry for the terminating gateway
