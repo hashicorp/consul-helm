@@ -36,7 +36,7 @@ func TestTerminatingGateway(t *testing.T) {
 
 		// Register the external service
 		t.Log("registering the service")
-		if err := consulClient.Agent().ServiceRegister(&api.AgentServiceRegistration{
+		err := consulClient.Agent().ServiceRegister(&api.AgentServiceRegistration{
 			Address:           "example.com",
 			Meta:              map[string]string{"external-node": "true", "external-probe": "true"},
 			ID:                "example",
@@ -44,9 +44,7 @@ func TestTerminatingGateway(t *testing.T) {
 			Port:              80,
 			TaggedAddresses:   nil,
 			EnableTagOverride: false,
-		}); err != nil {
-			require.NoError(t, err)
-		}
+		require.NoError(t, err)
 
 		// Create the config entry for the terminating gateway
 		t.Log("creating config entry")
