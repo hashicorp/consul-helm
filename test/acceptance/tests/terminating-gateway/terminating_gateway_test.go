@@ -15,62 +15,58 @@ import (
 
 // Test that terminating gateways work in a default installation.
 func TestTerminatingGateway(t *testing.T) {
-	testName := "Terminating GW non-acl"
-	t.Run(testName, func(t *testing.T) {
-		env := suite.Environment()
+	env := suite.Environment()
+	helmValues := map[string]string{
+		"connectInject.enabled":                    "true",
+		"terminatingGateways.enabled":              "true",
+		"terminatingGateways.gateways[0].name":     "terminating-gateway",
+		"terminatingGateways.gateways[0].replicas": "1",
+	}
 
-		helmValues := map[string]string{
-			"connectInject.enabled":                    "true",
-			"terminatingGateways.enabled":              "true",
-			"terminatingGateways.gateways[0].name":     "terminating-gateway",
-			"terminatingGateways.gateways[0].replicas": "1",
-		}
+	t.Log("creating consul cluster")
+	releaseName := helpers.RandomName()
+	consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(t), suite.Config(), releaseName)
+	consulCluster.Create(t)
 
-		t.Log("creating consul cluster")
-		releaseName := helpers.RandomName()
-		consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(t), suite.Config(), releaseName)
-		consulCluster.Create(t)
+	// Once the cluster is up register the external service, then create the config entry.
+	consulClient := consulCluster.SetupConsulClient(t, false)
 
-		// Once the cluster is up register the external service, then create the config entry.
-		consulClient := consulCluster.SetupConsulClient(t, false)
-
-		// Register the external service
-		t.Log("registering the service")
-		err := consulClient.Agent().ServiceRegister(&api.AgentServiceRegistration{
-			Address:           "example.com",
-			Meta:              map[string]string{"external-node": "true", "external-probe": "true"},
-			ID:                "example",
-			Name:              "example-http",
-			Port:              80,
-			TaggedAddresses:   nil,
-			EnableTagOverride: false,
-		})
-		require.NoError(t, err)
-
-		// Create the config entry for the terminating gateway
-		t.Log("creating config entry")
-		created, _, err := consulClient.ConfigEntries().Set(&api.TerminatingGatewayConfigEntry{
-			Kind:     api.TerminatingGateway,
-			Name:     "terminating-gateway",
-			Services: []api.LinkedService{{Name: "example-http"}},
-		}, nil)
-		require.NoError(t, err)
-		require.True(t, created, "config entry failed")
-
-		k8sClient := env.DefaultContext(t).KubernetesClient(t)
-		k8sOptions := env.DefaultContext(t).KubectlOptions()
-
-		// Deploy the static client
-		t.Log("deploying static client")
-		deployStaticClient(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
-
-		// Test that we can make a call to the terminating gateway
-		t.Log("trying calls to terminating gateway")
-		checkConnection(t, k8sOptions, k8sClient)
+	// Register the external service
+	t.Log("registering the external service")
+	err := consulClient.Agent().ServiceRegister(&api.AgentServiceRegistration{
+		Address:           "example.com",
+		Meta:              map[string]string{"external-node": "true", "external-probe": "true"},
+		ID:                "example-http",
+		Name:              "example-http",
+		Port:              80,
+		TaggedAddresses:   nil,
+		EnableTagOverride: false,
 	})
+	require.NoError(t, err)
+
+	// Create the config entry for the terminating gateway
+	t.Log("creating config entry")
+	created, _, err := consulClient.ConfigEntries().Set(&api.TerminatingGatewayConfigEntry{
+		Kind:     api.TerminatingGateway,
+		Name:     "terminating-gateway",
+		Services: []api.LinkedService{{Name: "example-http"}},
+	}, nil)
+	require.NoError(t, err)
+	require.True(t, created, "config entry failed")
+
+	k8sClient := env.DefaultContext(t).KubernetesClient(t)
+	k8sOptions := env.DefaultContext(t).KubectlOptions()
+
+	// Deploy the static client
+	t.Log("deploying static client")
+	deployStaticClient(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
+
+	// Test that we can make a call to the terminating gateway
+	t.Log("trying calls to terminating gateway")
+	checkConnection(t, k8sOptions, k8sClient)
 }
 
-// checkConnection checks if static-client can connect through the terminating gateway.
+// checkConnection checks if static-client can connect to the external service through the terminating gateway.
 func checkConnection(t *testing.T, options *k8s.KubectlOptions, client kubernetes.Interface) {
 	pods, err := client.CoreV1().Pods(options.Namespace).List(metav1.ListOptions{LabelSelector: "app=static-client"})
 	require.NoError(t, err)
