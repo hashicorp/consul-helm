@@ -26,14 +26,11 @@ func TestTerminatingGateway(t *testing.T) {
 			"terminatingGateways.gateways[0].replicas": "1",
 		}
 
+		t.Log("creating consul cluster")
 		releaseName := helpers.RandomName()
 		consulCluster := framework.NewHelmCluster(t, helmValues, env.DefaultContext(t), suite.Config(), releaseName)
-
 		consulCluster.Create(t)
 
-		/*t.Log("creating server")
-		createServer(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
-		*/
 		// Once the cluster is up register the external service, then create the config entry.
 		consulClient := consulCluster.SetupConsulClient(t, false)
 
@@ -42,7 +39,8 @@ func TestTerminatingGateway(t *testing.T) {
 		if err := consulClient.Agent().ServiceRegister(&api.AgentServiceRegistration{
 			Address:           "example.com",
 			Meta:              map[string]string{"external-node": "true", "external-probe": "true"},
-			ID:                "example-http",
+			ID:                "example",
+			Name:              "example-http",
 			Port:              80,
 			TaggedAddresses:   nil,
 			EnableTagOverride: false,
@@ -50,17 +48,12 @@ func TestTerminatingGateway(t *testing.T) {
 			require.NoError(t, err)
 		}
 
-		var ls []api.LinkedService
-		ls = append(ls, api.LinkedService{
-			Name: "example-http",
-		})
-
 		// Create the config entry for the terminating gateway
 		t.Log("creating config entry")
 		created, _, err := consulClient.ConfigEntries().Set(&api.TerminatingGatewayConfigEntry{
 			Kind:     api.TerminatingGateway,
 			Name:     "terminating-gateway",
-			Services: ls,
+			Services: []api.LinkedService{{Name: "example-http"}},
 		}, nil)
 		require.NoError(t, err)
 		require.Equal(t, true, created, "config entry failed")
@@ -72,7 +65,7 @@ func TestTerminatingGateway(t *testing.T) {
 		t.Log("deploying static client")
 		deployStaticClient(t, suite.Config(), env.DefaultContext(t).KubectlOptions())
 
-		// Test that we can make a call from the terminating gateway
+		// Test that we can make a call to the terminating gateway
 		t.Log("trying calls to terminating gateway")
 		checkConnection(t, k8sOptions, k8sClient)
 	})
@@ -97,6 +90,5 @@ func deployStaticClient(t *testing.T, cfg *framework.TestConfig, options *k8s.Ku
 	helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
 		helpers.KubectlDelete(t, options, "fixtures/static-client.yaml")
 	})
-
 	helpers.RunKubectl(t, options, "wait", "--for=condition=available", "deploy/static-client")
 }
