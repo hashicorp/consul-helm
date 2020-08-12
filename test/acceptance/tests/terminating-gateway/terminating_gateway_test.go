@@ -54,7 +54,7 @@ func TestTerminatingGateway(t *testing.T) {
 			Services: []api.LinkedService{{Name: "example-http"}},
 		}, nil)
 		require.NoError(t, err)
-		require.Equal(t, true, created, "config entry failed")
+		require.True(t, created, "config entry failed")
 
 		k8sClient := env.DefaultContext(t).KubernetesClient(t)
 		k8sOptions := env.DefaultContext(t).KubectlOptions()
