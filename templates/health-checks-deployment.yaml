@@ -1,0 +1,188 @@
+{{- if (or (and (ne (.Values.healthChecks.enabled | toString) "-") .Values.healthChecks.enabled) (and (eq (.Values.healthChecks.enabled | toString) "-") .Values.global.enabled)) }}
+# The deployment for running the health-checks pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "consul.fullname" . }}-health-checks
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "consul.name" . }}
+      chart: {{ template "consul.chart" . }}
+      release: {{ .Release.Name }}
+      component: health-checks
+  template:
+    metadata:
+      labels:
+        app: {{ template "consul.name" . }}
+        chart: {{ template "consul.chart" . }}
+        release: {{ .Release.Name }}
+        component: health-checks
+      annotations:
+        "consul.hashicorp.com/connect-inject": "false"
+    spec:
+      serviceAccountName: {{ template "consul.fullname" . }}-health-checks
+      {{- if .Values.global.tls.enabled }}
+      volumes:
+      {{- if not (and .Values.externalServers.enabled .Values.externalServers.useSystemRoots) }}
+      - name: consul-ca-cert
+        secret:
+          {{- if .Values.global.tls.caCert.secretName }}
+          secretName: {{ .Values.global.tls.caCert.secretName }}
+          {{- else }}
+          secretName: {{ template "consul.fullname" . }}-ca-cert
+          {{- end }}
+          items:
+          - key: {{ default "tls.crt" .Values.global.tls.caCert.secretKey }}
+            path: tls.crt
+      {{- end }}
+      {{- if .Values.global.tls.enableAutoEncrypt }}
+      - name: consul-auto-encrypt-ca-cert
+        emptyDir:
+          medium: "Memory"
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: consul-health-checks
+          image: "{{ default .Values.global.imageK8S .Values.healthChecks.image }}"
+          env:
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- if (and .Values.healthChecks.aclSyncToken.secretName .Values.healthChecks.aclSyncToken.secretKey) }}
+            - name: CONSUL_HTTP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.healthChecks.aclSyncToken.secretName }}
+                  key: {{ .Values.healthChecks.aclSyncToken.secretKey }}
+            {{- end }}
+            {{- if .Values.global.acls.manageSystemACLs }}
+            - name: CONSUL_HTTP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ template "consul.fullname" . }}-health-checks-acl-token"
+                  key: "token"
+            {{- end}}
+            {{- if .Values.global.tls.enabled }}
+            {{- if .Values.client.enabled }}
+            - name: CONSUL_HTTP_ADDR
+              value: https://$(HOST_IP):8501
+            {{- else }}
+            - name: CONSUL_HTTP_ADDR
+              value: https://{{ template "consul.fullname" . }}-server:8501
+            {{- end }}
+            - name: CONSUL_CACERT
+              value: /consul/tls/ca/tls.crt
+            {{- else }}
+            {{- if .Values.client.enabled }}
+            - name: CONSUL_HTTP_ADDR
+              value: http://$(HOST_IP):8500
+            {{- else }}
+            - name: CONSUL_HTTP_ADDR
+              value: http://{{ template "consul.fullname" . }}-server:8500
+            {{- end }}
+            {{- end }}
+          {{- if .Values.global.tls.enabled }}
+          volumeMounts:
+            {{- if .Values.global.tls.enableAutoEncrypt }}
+            - name: consul-auto-encrypt-ca-cert
+            {{- else }}
+            - name: consul-ca-cert
+            {{- end }}
+              mountPath: /consul/tls/ca
+              readOnly: true
+          {{- end }}
+          command:
+            - "/bin/sh"
+            - "-ec"
+            - |
+              consul-k8s health-checks \
+                {{- if .Values.healthChecks.k8sSourceNamespace }}
+                -k8s-source-namespace="{{ .Values.healthChecks.k8sSourceNamespace}}" \
+                {{- end }}
+                {{- range $value := .Values.healthChecks.k8sAllowNamespaces }}
+                -allow-k8s-namespace="{{ $value }}" \
+                {{- end }}
+                {{- range $value := .Values.healthChecks.k8sDenyNamespaces }}
+                -deny-k8s-namespace="{{ $value }}" \
+                {{- end }}
+                -k8s-write-namespace=${NAMESPACE} \
+                {{- if .Values.healthChecks.logLevel }}
+                -log-level={{ .Values.healthChecks.logLevel }} \
+                {{- end }}
+                {{- if .Values.global.acls.manageSystemACLs }}
+                -consul-cross-namespace-acl-policy=cross-namespace-policy \
+                {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+              scheme: HTTP
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+              scheme: HTTP
+            failureThreshold: 5
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          {{- with .Values.healthChecks.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- if or .Values.global.acls.manageSystemACLs (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) }}
+      initContainers:
+      {{- if .Values.global.acls.manageSystemACLs }}
+      - name: sync-acl-init
+        image: {{ .Values.global.imageK8S }}
+        command:
+          - "/bin/sh"
+          - "-ec"
+          - |
+            consul-k8s acl-init \
+              -secret-name="{{ template "consul.fullname" . }}-health-checks-acl-token" \
+              -k8s-namespace={{ .Release.Namespace }}
+        resources:
+          requests:
+            memory: "25Mi"
+            cpu: "50m"
+          limits:
+            memory: "25Mi"
+            cpu: "50m"
+      {{- end }}
+      {{- if (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) }}
+      {{- include "consul.getAutoEncryptClientCA" . | nindent 6 }}
+      {{- end }}
+      {{- end }}
+      {{- if .Values.healthChecks.nodeSelector }}
+      nodeSelector:
+        {{ tpl .Values.healthChecks.nodeSelector . | indent 8 | trim }}
+      {{- end }}
+      {{- if .Values.healthChecks.affinity }}
+      affinity:
+        {{ tpl .Values.healthChecks.affinity . | indent 8 | trim }}
+      {{- end }}
+      {{- if .Values.healthChecks.tolerations }}
+      tolerations:
+        {{ tpl .Values.healthChecks.tolerations . | indent 8 | trim }}
+      {{- end }}
+{{- end }}

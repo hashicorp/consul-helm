@@ -1,0 +1,20 @@
+{{- $healthChecksEnabled := (or (and (ne (.Values.healthChecks.enabled | toString) "-") .Values.healthChecks.enabled) (and (eq (.Values.healthChecks.enabled | toString) "-") .Values.global.enabled)) }}
+{{- if $healthChecksEnabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ template "consul.fullname" . }}-health-checks
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "consul.fullname" . }}-health-checks
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "consul.fullname" . }}-health-checks
+    namespace: {{ .Release.Namespace }}
+{{- end }}

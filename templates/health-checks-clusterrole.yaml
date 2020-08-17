@@ -1,0 +1,48 @@
+{{- $healthChecksEnabled := (or (and (ne (.Values.healthChecks.enabled | toString) "-") .Values.healthChecks.enabled) (and (eq (.Values.healthChecks.enabled | toString) "-") .Values.global.enabled)) }}
+{{- if $healthChecksEnabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ template "consul.fullname" . }}-health-checks
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+rules:
+  - apiGroups: [""]
+    resources:
+      - services
+      - endpoints
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+      - create
+  - apiGroups: [""]
+    resources:
+      - nodes
+    verbs:
+      - get
+{{- if .Values.global.acls.manageSystemACLs }}
+  - apiGroups: [""]
+    resources:
+      - secrets
+    resourceNames:
+      - {{ template "consul.fullname" . }}-health-check-acl-token
+    verbs:
+      - get
+{{- end }}
+{{- if .Values.global.enablePodSecurityPolicies }}
+  - apiGroups: ["policy"]
+    resources: ["podsecuritypolicies"]
+    verbs:
+      - use
+    resourceNames:
+      - {{ template "consul.fullname" . }}-health-check
+{{- end }}
+{{- end }}
