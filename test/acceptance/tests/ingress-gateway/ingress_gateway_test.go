@@ -12,9 +12,29 @@ import (
 
 // Test that ingress gateways work in a default installation and a secure installation.
 func TestIngressGateway(t *testing.T) {
-	for _, secure := range []bool{false, true} {
-		testName := fmt.Sprintf("secure: %t", secure)
-		t.Run(testName, func(t *testing.T) {
+	cases := []struct {
+		name              string
+		secure            bool
+		enableAutoEncrypt string
+	}{
+		{
+			"default",
+			false,
+			"false",
+		},
+		{
+			"secure",
+			true,
+			"true",
+		},
+		{
+			"secure with auto-encrypt",
+			true,
+			"true",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
 			ctx := suite.Environment().DefaultContext(t)
 			cfg := suite.Config()
 
@@ -24,9 +44,10 @@ func TestIngressGateway(t *testing.T) {
 				"ingressGateways.gateways[0].name":     "ingress-gateway",
 				"ingressGateways.gateways[0].replicas": "1",
 			}
-			if secure {
+			if c.secure {
 				helmValues["global.acls.manageSystemACLs"] = "true"
 				helmValues["global.tls.enabled"] = "true"
+				helmValues["global.tls.enableAutoEncrypt"] = c.enableAutoEncrypt
 			}
 
 			releaseName := helpers.RandomName()
@@ -44,7 +65,7 @@ func TestIngressGateway(t *testing.T) {
 
 			// With the cluster up, we can create our ingress-gateway config entry.
 			t.Log("creating config entry")
-			consulClient := consulCluster.SetupConsulClient(t, secure)
+			consulClient := consulCluster.SetupConsulClient(t, c.secure)
 
 			// Create config entry
 			created, _, err := consulClient.ConfigEntries().Set(&api.IngressGatewayConfigEntry{
@@ -68,7 +89,7 @@ func TestIngressGateway(t *testing.T) {
 			k8sOptions := ctx.KubectlOptions()
 
 			// If ACLs are enabled, test that intentions prevent connections.
-			if secure {
+			if c.secure {
 				// With the ingress gateway up, we test that we can make a call to it
 				// via the bounce pod. It should fail to connect with the
 				// static-server pod because of intentions.
