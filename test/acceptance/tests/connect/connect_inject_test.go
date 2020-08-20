@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const staticClientName = "static-client"
+
 // Test that Connect works in a default installation
 func TestConnectInjectDefault(t *testing.T) {
 	cfg := suite.Config()
@@ -28,7 +30,7 @@ func TestConnectInjectDefault(t *testing.T) {
 	helpers.Deploy(t, ctx.KubectlOptions(), cfg.NoCleanupOnFailure, "fixtures/static-client.yaml")
 
 	t.Log("checking that connection is successful")
-	helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(), "static-client", true, "http://localhost:1234")
+	helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(), true, staticClientName, "http://localhost:1234")
 }
 
 // Test that Connect works in a secure installation,
@@ -69,20 +71,20 @@ func TestConnectInjectSecure(t *testing.T) {
 			helpers.Deploy(t, ctx.KubectlOptions(), cfg.NoCleanupOnFailure, "fixtures/static-client.yaml")
 
 			t.Log("checking that the connection is not successful because there's no intention")
-			helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(), "static-client", false, "http://localhost:1234")
+			helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(), false, staticClientName, "http://localhost:1234")
 
 			consulClient := consulCluster.SetupConsulClient(t, true)
 
 			t.Log("creating intention")
 			_, _, err := consulClient.Connect().IntentionCreate(&api.Intention{
-				SourceName:      "static-client",
+				SourceName:      staticClientName,
 				DestinationName: "static-server",
 				Action:          api.IntentionActionAllow,
 			}, nil)
 			require.NoError(t, err)
 
 			t.Log("checking that connection is successful")
-			helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(), "static-client", true, "http://localhost:1234")
+			helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(), true, staticClientName, "http://localhost:1234")
 		})
 	}
 }

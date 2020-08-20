@@ -10,6 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const staticClientName = "static-client"
+const staticServerName = "static-server"
+
 // Test that terminating gateways work in a default installation.
 func TestTerminatingGateway(t *testing.T) {
 	cases := []struct {
@@ -67,11 +70,11 @@ func TestTerminatingGateway(t *testing.T) {
 			t.Log("registering the external service")
 			_, err := consulClient.Catalog().Register(&api.CatalogRegistration{
 				Node:     "legacy_node",
-				Address:  "static-server",
+				Address:  staticServerName,
 				NodeMeta: map[string]string{"external-node": "true", "external-probe": "true"},
 				Service: &api.AgentService{
-					ID:      "static-server",
-					Service: "static-server",
+					ID:      staticServerName,
+					Service: staticServerName,
 					Port:    80,
 				},
 			}, &api.WriteOptions{})
@@ -112,7 +115,7 @@ func TestTerminatingGateway(t *testing.T) {
 			created, _, err := consulClient.ConfigEntries().Set(&api.TerminatingGatewayConfigEntry{
 				Kind:     api.TerminatingGateway,
 				Name:     "terminating-gateway",
-				Services: []api.LinkedService{{Name: "static-server"}},
+				Services: []api.LinkedService{{Name: staticServerName}},
 			}, nil)
 			require.NoError(t, err)
 			require.True(t, created, "config entry failed")
@@ -127,17 +130,13 @@ func TestTerminatingGateway(t *testing.T) {
 				// via the static-server. It should fail to connect with the
 				// static-server pod because of intentions.
 				t.Log("testing intentions prevent connections through the terminating gateway")
-				helpers.CheckStaticServerConnection(t,
-					ctx.KubectlOptions(),
-					"static-client",
-					false,
-					"http://localhost:1234")
+				helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(), false, staticClientName, "http://localhost:1234")
 
 				// Now we create the allow intention.
 				t.Log("creating static-client => static-server intention")
 				_, _, err = consulClient.Connect().IntentionCreate(&api.Intention{
-					SourceName:      "static-client",
-					DestinationName: "static-server",
+					SourceName:      staticClientName,
+					DestinationName: staticServerName,
 					Action:          api.IntentionActionAllow,
 				}, nil)
 				require.NoError(t, err)
@@ -145,11 +144,7 @@ func TestTerminatingGateway(t *testing.T) {
 
 			// Test that we can make a call to the terminating gateway
 			t.Log("trying calls to terminating gateway")
-			helpers.CheckStaticServerConnection(t,
-				ctx.KubectlOptions(),
-				"static-client",
-				true,
-				"http://localhost:1234")
+			helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(), true, staticClientName, "http://localhost:1234")
 		})
 	}
 }

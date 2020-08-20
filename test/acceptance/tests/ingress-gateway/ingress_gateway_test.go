@@ -94,12 +94,7 @@ func TestIngressGateway(t *testing.T) {
 				// via the bounce pod. It should fail to connect with the
 				// static-server pod because of intentions.
 				t.Log("testing intentions prevent ingress")
-				helpers.CheckStaticServerConnection(t,
-					k8sOptions,
-					"bounce",
-					false,
-					"-H", "Host: static-server.ingress.consul",
-					fmt.Sprintf("http://%s-consul-ingress-gateway:8080/", releaseName))
+				helpers.CheckStaticServerConnection(t, k8sOptions, false, "bounce", "-H", "Host: static-server.ingress.consul", fmt.Sprintf("http://%s-consul-ingress-gateway:8080/", releaseName))
 
 				// Now we create the allow intention.
 				t.Log("creating ingress-gateway => static-server intention")
@@ -114,12 +109,7 @@ func TestIngressGateway(t *testing.T) {
 			// Test that we can make a call to the ingress gateway
 			// via the bounce pod. It should route to the static-server pod.
 			t.Log("trying calls to ingress gateway")
-			helpers.CheckStaticServerConnection(t,
-				k8sOptions,
-				"bounce",
-				true,
-				"-H", "Host: static-server.ingress.consul",
-				fmt.Sprintf("http://%s-consul-ingress-gateway:8080/", releaseName))
+			helpers.CheckStaticServerConnection(t, k8sOptions, true, "bounce", "-H", "Host: static-server.ingress.consul", fmt.Sprintf("http://%s-consul-ingress-gateway:8080/", releaseName))
 		})
 	}
 }
