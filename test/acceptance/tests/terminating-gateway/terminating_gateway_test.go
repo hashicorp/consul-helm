@@ -76,7 +76,7 @@ func TestTerminatingGateway(t *testing.T) {
 					Service: staticServerName,
 					Port:    80,
 				},
-			}, &api.WriteOptions{})
+			}, nil)
 			require.NoError(t, err)
 
 			// If ACLs are enabled we need to update the token of the terminating gateway
