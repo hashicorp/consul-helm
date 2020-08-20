@@ -112,18 +112,8 @@ spec:
                 {{- if .Values.healthChecks.k8sSourceNamespace }}
                 -k8s-source-namespace="{{ .Values.healthChecks.k8sSourceNamespace}}" \
                 {{- end }}
-                {{- range $value := .Values.healthChecks.k8sAllowNamespaces }}
-                -allow-k8s-namespace="{{ $value }}" \
-                {{- end }}
-                {{- range $value := .Values.healthChecks.k8sDenyNamespaces }}
-                -deny-k8s-namespace="{{ $value }}" \
-                {{- end }}
-                -k8s-write-namespace=${NAMESPACE} \
                 {{- if .Values.healthChecks.logLevel }}
                 -log-level={{ .Values.healthChecks.logLevel }} \
-                {{- end }}
-                {{- if .Values.global.acls.manageSystemACLs }}
-                -consul-cross-namespace-acl-policy=cross-namespace-policy \
                 {{- end }}
           livenessProbe:
             httpGet:
