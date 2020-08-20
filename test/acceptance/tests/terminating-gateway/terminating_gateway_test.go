@@ -1,6 +1,8 @@
 package terminatinggateway
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -16,28 +18,25 @@ const staticServerName = "static-server"
 // Test that terminating gateways work in a default installation.
 func TestTerminatingGateway(t *testing.T) {
 	cases := []struct {
-		name              string
-		secure            bool
-		enableAutoEncrypt string
+		secure      bool
+		autoEncrypt bool
 	}{
 		{
-			"default",
 			false,
-			"false",
+			false,
 		},
 		{
-			"secure",
 			true,
-			"true",
+			true,
 		},
 		{
-			"secure with auto-encrypt",
 			true,
-			"true",
+			true,
 		},
 	}
 	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+		name := fmt.Sprintf("secure: %t, auto-encrypt: %t", c.secure, c.autoEncrypt)
+		t.Run(name, func(t *testing.T) {
 			ctx := suite.Environment().DefaultContext(t)
 			cfg := suite.Config()
 
@@ -51,7 +50,7 @@ func TestTerminatingGateway(t *testing.T) {
 			if c.secure {
 				helmValues["global.acls.manageSystemACLs"] = "true"
 				helmValues["global.tls.enabled"] = "true"
-				helmValues["global.tls.enableAutoEncrypt"] = c.enableAutoEncrypt
+				helmValues["global.tls.autoEncrypt"] = strconv.FormatBool(c.autoEncrypt)
 			}
 
 			t.Log("creating consul cluster")

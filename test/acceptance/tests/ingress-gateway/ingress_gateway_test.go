@@ -2,6 +2,7 @@ package ingressgateway
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/consul-helm/test/acceptance/framework"
@@ -13,28 +14,25 @@ import (
 // Test that ingress gateways work in a default installation and a secure installation.
 func TestIngressGateway(t *testing.T) {
 	cases := []struct {
-		name              string
-		secure            bool
-		enableAutoEncrypt string
+		secure      bool
+		autoEncrypt bool
 	}{
 		{
-			"default",
 			false,
-			"false",
+			false,
 		},
 		{
-			"secure",
 			true,
-			"true",
+			false,
 		},
 		{
-			"secure with auto-encrypt",
 			true,
-			"true",
+			true,
 		},
 	}
 	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+		name := fmt.Sprintf("secure: %t; auto-encrypt: %t", c.secure, c.autoEncrypt)
+		t.Run(name, func(t *testing.T) {
 			ctx := suite.Environment().DefaultContext(t)
 			cfg := suite.Config()
 
@@ -47,7 +45,7 @@ func TestIngressGateway(t *testing.T) {
 			if c.secure {
 				helmValues["global.acls.manageSystemACLs"] = "true"
 				helmValues["global.tls.enabled"] = "true"
-				helmValues["global.tls.enableAutoEncrypt"] = c.enableAutoEncrypt
+				helmValues["global.tls.autoEncrypt"] = strconv.FormatBool(c.autoEncrypt)
 			}
 
 			releaseName := helpers.RandomName()
