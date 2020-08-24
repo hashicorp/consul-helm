@@ -1,0 +1,33 @@
+{{- if .Values.controller.enabled }}
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: {{ template "consul.fullname" . }}-controller-validating-webhook-configuration
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    component: controller
+  annotations:
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ template "consul.fullname" . }}-controller
+webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: {{ template "consul.fullname" . }}-controller-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-consul-hashicorp-com-v1alpha1-servicedefaults
+  failurePolicy: Fail
+  name: vservicedefaults.kb.io
+  rules:
+  - apiGroups:
+    - consul.hashicorp.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - servicedefaults
+{{- end }}
