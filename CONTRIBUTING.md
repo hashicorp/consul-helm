@@ -277,7 +277,6 @@ Each test belongs to a test **suite** that contains a test **environment** and t
 A test **environment** contains references to one or more test **contexts**,
 which represents one Kubernetes cluster.
 
-
 Unless your test requires multiple Kubernetes clusters,
 use the `DefaultContext` function.
 Please see [mesh gateway tests](https://github.com/hashicorp/consul-helm/blob/2b1ba043ee0ecacae9a35c33db31c8376f1fc2f9/test/acceptance/tests/mesh-gateway/mesh_gateway_test.go)
@@ -297,10 +296,10 @@ func TestExample(t *testing.T) {
   }
   
   // Generate a random name for this test. 
-  releaseName := helpers.RandomName(t)
+  releaseName := helpers.RandomName()
 
   // Create a new Consul cluster object.
-  consulCluster := framework.NewHelmCluster(t, helmValues, ctx, releaseName)
+  consulCluster := framework.NewHelmCluster(t, helmValues, ctx, cfg, releaseName)
   
   // Create the Consul cluster with Helm.
   consulCluster.Create(t)
@@ -313,7 +312,7 @@ func TestExample(t *testing.T) {
 
 Depending on the test you're writing, you may need to write assertions
 either by running `kubectl` commands, calling the Kubernetes API, or
-Consul API. 
+the Consul API.
 
 To run `kubectl` commands, you need to get `KubectlOptions` from the test context.
 There are a number of `kubectl` commands available in the `helpers/kubectl.go` file.
@@ -336,7 +335,7 @@ indicating whether the client needs to be secure or not (i.e. whether TLS and AC
 
 ```go
 consulClient := consulCluster.SetupConsulClient(t, true)
-services, _, err = consulClient.Catalog().Services(nil)
+consulServices, _, err := consulClient.Catalog().Services(nil)
 ```
 
 #### Cleaning Up Resources
@@ -348,7 +347,7 @@ However, if your tests create Kubernetes objects, you need to clean them up your
 calling `helpers.Cleanup` function.
 
 **Note:** If you want to keep resources after a test run for debugging purposes,
-you can run tests with `-no-cleanup-on-failure` flag to keep resources after a test run.
+you can run tests with `-no-cleanup-on-failure` flag.
 You need to make sure to clean them up manually before running tests again.
 
 #### When to Add Acceptance Tests
@@ -361,7 +360,7 @@ Here are some things to consider before adding a test:
   then perhaps it could be tested by either a unit test in this repository or a test in the
   [consul-k8s](https://github.com/hashicorp/consul-k8s) repository.
 * Is the test you're going to write for a feature that is scoped to one of the underlying componenets of this Helm chart,
-  either Consul itself of consul-k8s? In that case, it should be tested there rather than in the Helm chart.
+  either Consul itself or consul-k8s? In that case, it should be tested there rather than in the Helm chart.
   For example, we don't expect acceptance tests to include all the permutations of the consul-k8s commands
   and their respective flags. Something like that should be tested in the consul-k8s repository.
  
