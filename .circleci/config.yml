@@ -126,11 +126,11 @@ jobs:
                 echo "Skipping acceptance tests for forked PRs; marking step successful."
                 circleci step halt
             fi
-            primary_context=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .context_names.value[0])
-            secondary_context=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .context_names.value[1])
-            kubectl config get-contexts
+            primary=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .cluster_names.value[0])
+            secondary=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .cluster_names.value[1])
 
-            gotestsum --junitfile $TEST_RESULTS/gotestsum-report.xml -- ./... -p 1 -timeout 20m -enable-multi-cluster -kubecontext=$primary_context -secondary-kubecontext=$secondary_context
+            gotestsum --junitfile $TEST_RESULTS/gotestsum-report.xml -- ./... -p 1 -timeout 20m -enable-multi-cluster \
+              -kubeconfig=$HOME/.kube/$primary -secondary-kubeconfig=$HOME/.kube/$secondary
 
       - store_test_results:
           path: /tmp/test-results

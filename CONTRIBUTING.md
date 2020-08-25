@@ -279,9 +279,9 @@ which represents one Kubernetes cluster.
 
 
 Unless your test requires multiple Kubernetes clusters,
-you should use the `DefaultContext` function.
+use the `DefaultContext` function.
 Please see [mesh gateway tests](https://github.com/hashicorp/consul-helm/blob/2b1ba043ee0ecacae9a35c33db31c8376f1fc2f9/test/acceptance/tests/mesh-gateway/mesh_gateway_test.go)
-for an example on how to use two contexts.
+for an example of how to use two contexts.
 
 ```go
 func TestExample(t *testing.T) {
