@@ -9,3 +9,8 @@ sources:
   - https://github.com/hashicorp/consul
   - https://github.com/hashicorp/consul-helm
   - https://github.com/hashicorp/consul-k8s
+dependencies:
+  - name: prometheus
+    version: 11.12.0
+    repository: "@stable"
+    condition: "prometheus.enabled"
