@@ -109,7 +109,7 @@ Below is the list of available flags:
 ```
 
 **Note:** There is a Terraform configuration in the
-[`test/terraform/gke`](https://github.com/hashicorp/consul-helm/tree/master/test/terraform) directory
+[`test/terraform/gke`](./test/terraform/gke) directory
 that can be used to quickly bring up a GKE cluster and configure
 `kubectl` and `helm` locally. This can be used to quickly spin up a test
 cluster for acceptance tests. Unit tests _do not_ require a running Kubernetes
@@ -229,9 +229,15 @@ If you are adding a feature that fits thematically with one of the existing test
 then you need to add your test cases to the existing test files.
 Otherwise, you will need to create a new test suite.
 
+We recommend to start by either copying the [example test](test/acceptance/tests/example/example_test.go)
+or the whole [example test suite](test/acceptance/tests/example),
+depending on the test you need to add.
+
 #### Adding Test Suites
 
-To add a test suite, create a new package directory and add a `main_test.go` file.
+To add a test suite, copy the [example test suite](test/acceptance/tests/example)
+and uncomment the code you need in the [`main_test.go`](test/acceptance/tests/example/main_test.go) file.
+
 At a minimum, this file needs to contain the following:
 
 ```go
@@ -272,15 +278,13 @@ func TestMain(m *testing.M) {
 
 #### Example Test
 
+We recommend using the [example test](test/acceptance/tests/example/example_test.go)
+as a starting point for adding your tests.
+
 To write a test, you need access to the environment and context to run it against.
 Each test belongs to a test **suite** that contains a test **environment** and test **configuration** created from flags passed to `go test`.
 A test **environment** contains references to one or more test **contexts**,
 which represents one Kubernetes cluster.
-
-Unless your test requires multiple Kubernetes clusters,
-use the `DefaultContext` function.
-Please see [mesh gateway tests](https://github.com/hashicorp/consul-helm/blob/2b1ba043ee0ecacae9a35c33db31c8376f1fc2f9/test/acceptance/tests/mesh-gateway/mesh_gateway_test.go)
-for an example of how to use two contexts.
 
 ```go
 func TestExample(t *testing.T) {
@@ -307,6 +311,9 @@ func TestExample(t *testing.T) {
   // Make test assertions.
 }
 ```
+
+Please see [mesh gateway tests](test/acceptance/tests/mesh-gateway/mesh_gateway_test.go)
+for an example of how to use write a test that uses multiple contexts.
 
 #### Writing Assertions
 
