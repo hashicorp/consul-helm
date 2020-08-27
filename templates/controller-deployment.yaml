@@ -39,10 +39,11 @@ spec:
         - containerPort: 8443
           name: https
       - args:
+        - controller
         - --metrics-addr=127.0.0.1:8080
         - --enable-leader-election
         command:
-        - /manager
+        - consul-k8s
         env:
         - name: HOST_IP
           valueFrom:
