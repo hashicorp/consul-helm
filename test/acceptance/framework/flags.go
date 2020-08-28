@@ -56,8 +56,8 @@ func (t *TestFlags) init() {
 		"If true, the tests will not cleanup resources they create when they finish running."+
 			"Note this flag must be run with -failfast flag, otherwise subsequent tests will fail.")
 
-	flag.StringVar(&t.flagDebugDirectory, "debug-directory", "", "The directory where to dump debug information about test runs, "+
-		"such as logs, pod definitions etc. If not provided, a temporary directory will be created by the tests.")
+	flag.StringVar(&t.flagDebugDirectory, "debug-directory", "", "The directory where to write debug information about test runs, "+
+		"such as logs and pod definitions. If not provided, a temporary directory will be created by the tests.")
 }
 
 func (t *TestFlags) validate() error {

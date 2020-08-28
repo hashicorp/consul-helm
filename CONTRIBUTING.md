@@ -91,7 +91,7 @@ Below is the list of available flags:
 -consul-k8s-image string
     The consul-k8s image to use for all tests.
 -debug-directory
-    The directory where to dump debug information about test runs, such as logs, pod definitions etc. If not provided, a temporary directory will be created by the tests.
+    The directory where to write debug information about test runs, uch as logs and pod definitions. If not provided, a temporary directory will be created by the tests.
 -enable-multi-cluster
     If true, the tests that require multiple Kubernetes clusters will be run. At least one of -secondary-kubeconfig or -secondary-kubecontext is required when this flag is used.
 -kubeconfig string
