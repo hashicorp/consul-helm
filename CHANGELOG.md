@@ -6,7 +6,7 @@ IMPROVEMENTS:
 * Catalog Sync: Can now be run when Consul clients are disabled. It will make API calls to the Consul servers instead. [[GH-570](https://github.com/hashicorp/consul-helm/pull/570)]
 
 BREAKING CHANGES:
-* `connectInject.imageEnvoy` and `meshGateway.imageEnvoy` have been removed and now inherit `global.imageEnvoy`
+* `connectInject.imageEnvoy` and `meshGateway.imageEnvoy` have been removed and now inherit from `global.imageEnvoy`
   which is now standardized across terminating/ingress/mesh gateways and connectInject.
   `global.imageEnvoy` is now a required parameter. [GH-585](https://github.com/hashicorp/consul-helm/pull/585)
 
