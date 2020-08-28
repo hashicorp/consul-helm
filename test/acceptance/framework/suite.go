@@ -3,6 +3,7 @@ package framework
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"testing"
 )
 
@@ -24,8 +25,12 @@ func NewSuite(m *testing.M) Suite {
 
 	flag.Parse()
 
+	testConfig := flags.testConfigFromFlags()
+
 	return &suite{
 		m:     m,
+		env:   newKubernetesEnvironmentFromConfig(testConfig),
+		cfg:   testConfig,
 		flags: flags,
 	}
 }
@@ -37,14 +42,15 @@ func (s *suite) Run() int {
 		return 1
 	}
 
-	testConfig, err := s.flags.testConfigFromFlags()
-	if err != nil {
-		fmt.Printf("Failed to create test config: %s\n", err)
-		return 1
+	// Create test debug directory if it doesn't exist
+	if s.cfg.DebugDirectory == "" {
+		var err error
+		s.cfg.DebugDirectory, err = ioutil.TempDir("", "consul-test")
+		if err != nil {
+			fmt.Printf("Failed to create debug directory: %s\n", err)
+			return 1
+		}
 	}
-
-	s.env = newKubernetesEnvironmentFromConfig(testConfig)
-	s.cfg = testConfig
 
 	return s.m.Run()
 }

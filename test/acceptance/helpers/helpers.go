@@ -164,13 +164,6 @@ func WritePodsDebugInfoIfFailed(t *testing.T, kubectlOptions *k8s.KubectlOptions
 
 		contextName := kubernetesContextFromOptions(t, kubectlOptions)
 
-		// Create a temporary directory if one isn't provided.
-		if debugDirectory == "" {
-			var err error
-			debugDirectory, err = ioutil.TempDir("", "consul-test")
-			require.NoError(t, err)
-		}
-
 		// Create a directory for the test
 		testDebugDirectory := filepath.Join(debugDirectory, t.Name(), contextName)
 		require.NoError(t, os.MkdirAll(testDebugDirectory, 0755))

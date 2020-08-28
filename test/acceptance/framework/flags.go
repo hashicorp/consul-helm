@@ -3,7 +3,6 @@ package framework
 import (
 	"errors"
 	"flag"
-	"io/ioutil"
 	"sync"
 )
 
@@ -70,16 +69,8 @@ func (t *TestFlags) validate() error {
 	return nil
 }
 
-func (t *TestFlags) testConfigFromFlags() (*TestConfig, error) {
+func (t *TestFlags) testConfigFromFlags() *TestConfig {
 	tempDir := t.flagDebugDirectory
-
-	if tempDir == "" {
-		var err error
-		tempDir, err = ioutil.TempDir("", "test")
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	return &TestConfig{
 		Kubeconfig:    t.flagKubeconfig,
@@ -96,5 +87,5 @@ func (t *TestFlags) testConfigFromFlags() (*TestConfig, error) {
 
 		NoCleanupOnFailure: t.flagNoCleanupOnFailure,
 		DebugDirectory:     tempDir,
-	}, nil
+	}
 }

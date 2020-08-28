@@ -88,19 +88,9 @@ func (k kubernetesContext) KubernetesClient(t *testing.T) kubernetes.Interface {
 		return k.client
 	}
 
-	configPath, err := k.KubectlOptions().GetConfigPath(t)
-	require.NoError(t, err)
-
-	t.Logf("Creating client from config path at %s for context %s", configPath, k.kubeContextName)
-	config, err := k8s.LoadApiClientConfigE(configPath, k.kubeContextName)
-	require.NoError(t, err)
-
-	client, err := kubernetes.NewForConfig(config)
-	require.NoError(t, err)
-
 	k.client = helpers.KubernetesClientFromOptions(t, k.KubectlOptions())
 
-	return client
+	return k.client
 }
 
 func NewContext(namespace, pathToKubeConfig, kubeContextName string) *kubernetesContext {
