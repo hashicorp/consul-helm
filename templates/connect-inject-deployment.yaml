@@ -81,9 +81,7 @@ spec:
               consul-k8s inject-connect \
                 -default-inject={{ .Values.connectInject.default }} \
                 -consul-image="{{ default .Values.global.image .Values.connectInject.imageConsul }}" \
-                {{ if .Values.global.imageEnvoy -}}
                 -envoy-image="{{ .Values.global.imageEnvoy }}" \
-                {{ end -}}
                 -consul-k8s-image="{{ default .Values.global.imageK8S .Values.connectInject.image }}" \
                 -listen=:8080 \
                 {{- if .Values.connectInject.overrideAuthMethodName }}
