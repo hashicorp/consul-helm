@@ -10,7 +10,7 @@ metadata:
     release: {{ .Release.Name }}
     component: controller
 spec:
-  replicas: 1
+  replicas: {{ .Values.controller.replicas }}
   selector:
     matchLabels:
       app: {{ template "consul.name" . }}
