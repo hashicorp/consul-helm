@@ -55,7 +55,7 @@ func TestConnectInjectNamespaces(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-
+			// todo: add an assertion that the services are created in the right namespace
 			ctx := suite.Environment().DefaultContext(t)
 
 			helmValues := map[string]string{
