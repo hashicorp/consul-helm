@@ -16,6 +16,8 @@ type TestFlags struct {
 	flagSecondaryKubecontext string
 	flagSecondaryNamespace   string
 
+	flagEnableEnterprise bool
+
 	flagConsulImage    string
 	flagConsulK8sImage string
 
@@ -52,6 +54,10 @@ func (t *TestFlags) init() {
 		"If this is blank, the context set as the current context will be used by default.")
 	flag.StringVar(&t.flagSecondaryNamespace, "secondary-namespace", "default", "The Kubernetes namespace to use in the secondary k8s cluster.")
 
+	flag.BoolVar(&t.flagEnableEnterprise, "enable-enterprise", false,
+		"If true, the test suite will run tests for enterprise features. "+
+			"Note that some features may require setting the enterprise license flags below.")
+
 	flag.BoolVar(&t.flagNoCleanupOnFailure, "no-cleanup-on-failure", false,
 		"If true, the tests will not cleanup Kubernetes resources they create when they finish running."+
 			"Note this flag must be run with -failfast flag, otherwise subsequent tests will fail.")
@@ -81,6 +87,8 @@ func (t *TestFlags) testConfigFromFlags() *TestConfig {
 		SecondaryKubeconfig:    t.flagSecondaryKubeconfig,
 		SecondaryKubeContext:   t.flagSecondaryKubecontext,
 		SecondaryKubeNamespace: t.flagSecondaryNamespace,
+
+		EnableEnterprise: t.flagEnableEnterprise,
 
 		ConsulImage:    t.flagConsulImage,
 		ConsulK8SImage: t.flagConsulK8sImage,

@@ -8,8 +8,8 @@ import (
 
 func TestConfig_HelmValuesFromConfig(t *testing.T) {
 	type fields struct {
-		ConsulImage    string
-		ConsulK8SImage string
+		ConsulImage      string
+		ConsulK8SImage   string
 	}
 	tests := []struct {
 		name   string
@@ -53,7 +53,18 @@ func TestConfig_HelmValuesFromConfig(t *testing.T) {
 				ConsulImage:    tt.fields.ConsulImage,
 				ConsulK8SImage: tt.fields.ConsulK8SImage,
 			}
-			require.Equal(t, cfg.HelmValuesFromConfig(), tt.want)
+			values, err := cfg.HelmValuesFromConfig()
+			require.NoError(t, err)
+			require.Equal(t, values, tt.want)
 		})
 	}
+}
+
+func TestConfig_HelmValuesFromConfig_EntImage(t *testing.T) {
+	cfg := &TestConfig{EnableEnterprise: true}
+
+	values, err := cfg.HelmValuesFromConfig()
+	require.NoError(t, err)
+
+	require.Contains(t, values["global.image"], "consul-enterprise")
 }
