@@ -31,7 +31,7 @@ func TestConnectInject(t *testing.T) {
 			ctx := suite.Environment().DefaultContext(t)
 
 			helmValues := map[string]string{
-				"connectInject.enabled": "true",
+				"connectInject.enabled":        "true",
 				"global.tls.enabled":           strconv.FormatBool(c.secure),
 				"global.tls.enableAutoEncrypt": strconv.FormatBool(c.autoEncrypt),
 				"global.acls.manageSystemACLs": strconv.FormatBool(c.secure),

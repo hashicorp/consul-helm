@@ -62,7 +62,7 @@ func TestConnectInjectNamespaces(t *testing.T) {
 				"global.enableConsulNamespaces":                             "true",
 				"connectInject.enabled":                                     "true",
 				"connectInject.consulNamespaces.consulDestinationNamespace": c.destinationNamespace,
-				"connectInject.consulNamespaces.mirroringK8S":                  strconv.FormatBool(c.mirrorK8S),
+				"connectInject.consulNamespaces.mirroringK8S":               strconv.FormatBool(c.mirrorK8S),
 
 				"global.acls.manageSystemACLs": strconv.FormatBool(c.secure),
 				"global.tls.enabled":           strconv.FormatBool(c.secure),
