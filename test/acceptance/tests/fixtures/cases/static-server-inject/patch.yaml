@@ -3,9 +3,6 @@ kind: Deployment
 metadata:
   name: static-server
 spec:
-  selector:
-    matchLabels:
-      app: static-server
   template:
     metadata:
       annotations:
