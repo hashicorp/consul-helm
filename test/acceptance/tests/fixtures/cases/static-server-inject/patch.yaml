@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: static-server
+spec:
+  selector:
+    matchLabels:
+      app: static-server
+  template:
+    metadata:
+      annotations:
+        "consul.hashicorp.com/connect-inject": "true"
