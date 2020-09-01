@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: static-client
 spec:
+
   template:
     metadata:
       annotations:
