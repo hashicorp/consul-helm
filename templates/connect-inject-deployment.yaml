@@ -79,6 +79,9 @@ spec:
               CONSUL_FULLNAME="{{template "consul.fullname" . }}"
 
               consul-k8s inject-connect \
+                {{- if .Values.connectInject.healthChecks.enabled }}
+                -enable-connect-inject-health-checks=true \
+                {{- end }}
                 -default-inject={{ .Values.connectInject.default }} \
                 -consul-image="{{ default .Values.global.image .Values.connectInject.imageConsul }}" \
                 -envoy-image="{{ .Values.global.imageEnvoy }}" \

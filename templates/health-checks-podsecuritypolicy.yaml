@@ -1,4 +1,4 @@
-{{- if (and .Values.global.enablePodSecurityPolicies (or (and (ne (.Values.healthChecks.enabled | toString) "-") .Values.healthChecks.enabled) (and (eq (.Values.healthChecks.enabled | toString) "-") .Values.global.enabled))) }}
+{{- if (and .Values.global.enablePodSecurityPolicies (or (and (ne (.Values.connectInject.healthChecks.enabled | toString) "-") .Values.connectInject.healthChecks.enabled) (and (eq (.Values.connectInject.healthChecks.enabled | toString) "-") .Values.global.enabled))) }}
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:

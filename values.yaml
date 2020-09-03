@@ -627,84 +627,6 @@ ui:
     # ServiceSpec object.
     additionalSpec: null
 
-# Health Checks
-# Consul agent.
-healthChecks:
-  # True if you want to enable the catalog sync. Set to "-" to inherit from
-  # global.enabled.
-  enabled: false
-  image: null
-  default: true # true will sync by default, otherwise requires annotation
-
-  # k8sPrefix is the service prefix to prepend to services before registering
-  # with Kubernetes. For example "consul-" will register all services
-  # prepended with "consul-". (Consul -> Kubernetes sync)
-  k8sPrefix: null
-
-  # k8sAllowNamespaces is a list of k8s namespaces to sync the k8s services from.
-  # If a k8s namespace is not included  in this list or is listed in `k8sDenyNamespaces`,
-  # services in that k8s namespace will not be synced even if they are explicitly
-  # annotated. Use ["*"] to automatically allow all k8s namespaces.
-  #
-  # For example, ["namespace1", "namespace2"] will only allow services in the k8s
-  # namespaces `namespace1` and `namespace2` to be synced and registered
-  # with Consul. All other k8s namespaces will be ignored.
-  #
-  # To deny all namespaces, set this to [].
-  #
-  # Note: `k8sDenyNamespaces` takes precedence over values defined here.
-  # Requires consul-k8s v0.12+
-  k8sAllowNamespaces: ["*"]
-
-  # k8sDenyNamespaces is a list of k8s namespaces that should not have their
-  # services synced. This list takes precedence over `k8sAllowNamespaces`.
-  # `*` is not supported because then nothing would be allowed to sync.
-  # Requires consul-k8s v0.12+.
-  #
-  # For example, if `k8sAllowNamespaces` is `["*"]` and `k8sDenyNamespaces` is
-  # `["namespace1", "namespace2"]`, then all k8s namespaces besides "namespace1"
-  # and "namespace2" will be synced.
-  k8sDenyNamespaces: ["kube-system", "kube-public"]
-
-  # [DEPRECATED] Use k8sAllowNamespaces and k8sDenyNamespaces instead. For
-  # backwards compatibility, if both this and the allow/deny lists are set,
-  # the allow/deny lists will be ignored.
-  # k8sSourceNamespace is the Kubernetes namespace to watch for service
-  # changes and sync to Consul. If this is not set then it will default
-  # to all namespaces.
-  k8sSourceNamespace: null
-
-  # addK8SNamespaceSuffix appends Kubernetes namespace suffix to
-  # each service name synced to Consul, separated by a dash.
-  # For example, for a service 'foo' in the default namespace,
-  # the sync process will create a Consul service named 'foo-default'.
-  # Set this flag to true to avoid registering services with the same name
-  # but in different namespaces as instances for the same Consul service.
-  # Namespace suffix is not added if 'annotationServiceName' is provided.
-  addK8SNamespaceSuffix: true
-
-  # aclSyncToken refers to a Kubernetes secret that you have created that contains
-  # an ACL token for your Consul cluster which allows the sync process the correct
-  # permissions. This is only needed if ACLs are enabled on the Consul cluster.
-  aclSyncToken:
-    secretName: null
-    secretKey: null
-
-  # Affinity Settings
-  # This should be a multi-line string matching the affinity object
-  affinity: null
-
-  # Resource settings for sync catalog pods.
-  resources:
-    requests:
-      memory: "50Mi"
-      cpu: "50m"
-    limits:
-      memory: "50Mi"
-      cpu: "50m"
-
-  # Log verbosity level. One of "trace", "debug", "info", "warn", or "error".
-  logLevel: info
 
 # syncCatalog will run the catalog sync process to sync K8S with Consul
 # services. This can run bidirectional (default) or unidirectionally (Consul
@@ -869,6 +791,18 @@ connectInject:
   enabled: false
   image: null # image for consul-k8s that contains the injector
   default: false # true will inject by default, otherwise requires annotation
+
+  # Health Checks
+  healthChecks:
+    enabled: false
+    # Resource settings for health checks operator.
+    resources:
+      requests:
+        memory: "50Mi"
+        cpu: "50m"
+      limits:
+        memory: "50Mi"
+        cpu: "50m"
 
   # The Docker image for Consul to use when performing Connect injection.
   # Defaults to global.image.

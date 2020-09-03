@@ -1,4 +1,4 @@
-{{- $healthChecksEnabled := (or (and (ne (.Values.healthChecks.enabled | toString) "-") .Values.healthChecks.enabled) (and (eq (.Values.healthChecks.enabled | toString) "-") .Values.global.enabled)) }}
+{{- $healthChecksEnabled := (or (and (ne (.Values.connectInject.healthChecks.enabled | toString) "-") .Values.connectInject.healthChecks.enabled) (and (eq (.Values.connectInject.healthChecks.enabled | toString) "-") .Values.global.enabled)) }}
 {{- if $healthChecksEnabled }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

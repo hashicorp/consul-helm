@@ -1,4 +1,4 @@
-{{- if (or (and (ne (.Values.healthChecks.enabled | toString) "-") .Values.healthChecks.enabled) (and (eq (.Values.healthChecks.enabled | toString) "-") .Values.global.enabled)) }}
+{{- if (or (and (ne (.Values.connectInject.healthChecks.enabled | toString) "-") .Values.connectInject.healthChecks.enabled) (and (eq (.Values.connectInject.healthChecks.enabled | toString) "-") .Values.global.enabled)) }}
 # The deployment for running the health-checks pod
 apiVersion: apps/v1
 kind: Deployment
@@ -51,7 +51,7 @@ spec:
       {{- end }}
       containers:
         - name: consul-health-checks
-          image: "{{ default .Values.global.imageK8S .Values.healthChecks.image }}"
+          image: "{{ default .Values.global.imageK8S .Values.connectInject.image }}"
           env:
             - name: HOST_IP
               valueFrom:
@@ -61,12 +61,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            {{- if (and .Values.healthChecks.aclSyncToken.secretName .Values.healthChecks.aclSyncToken.secretKey) }}
+            {{- if (and .Values.connectInject.aclInjectToken.secretName .Values.connectInject.aclInjectToken.secretKey) }}
             - name: CONSUL_HTTP_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.healthChecks.aclSyncToken.secretName }}
-                  key: {{ .Values.healthChecks.aclSyncToken.secretKey }}
+                  name: {{ .Values.connectInject.aclInjectToken.secretName }}
+                  key: {{ .Values.connectInject.aclInjectToken.secretKey }}
             {{- end }}
             {{- if .Values.global.acls.manageSystemACLs }}
             - name: CONSUL_HTTP_TOKEN
@@ -109,11 +109,11 @@ spec:
             - "-ec"
             - |
               consul-k8s health-checks \
-                {{- if .Values.healthChecks.k8sSourceNamespace }}
-                -k8s-source-namespace="{{ .Values.healthChecks.k8sSourceNamespace}}" \
+                {{- if .Values.connectInject.k8sSourceNamespace }}
+                -k8s-source-namespace="{{ .Values.connectInject.k8sSourceNamespace}}" \
                 {{- end }}
-                {{- if .Values.healthChecks.logLevel }}
-                -log-level={{ .Values.healthChecks.logLevel }} \
+                {{- if .Values.connectInject.logLevel }}
+                -log-level={{ .Values.connectInject.logLevel }} \
                 {{- end }}
           livenessProbe:
             httpGet:
@@ -135,7 +135,7 @@ spec:
             periodSeconds: 5
             successThreshold: 1
             timeoutSeconds: 5
-          {{- with .Values.healthChecks.resources }}
+          {{- with .Values.connectInject.healthChecks.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -163,16 +163,16 @@ spec:
       {{- include "consul.getAutoEncryptClientCA" . | nindent 6 }}
       {{- end }}
       {{- end }}
-      {{- if .Values.healthChecks.nodeSelector }}
+      {{- if .Values.connectInject.nodeSelector }}
       nodeSelector:
-        {{ tpl .Values.healthChecks.nodeSelector . | indent 8 | trim }}
+        {{ tpl .Values.connectInject.nodeSelector . | indent 8 | trim }}
       {{- end }}
-      {{- if .Values.healthChecks.affinity }}
+      {{- if .Values.connectInject.affinity }}
       affinity:
-        {{ tpl .Values.healthChecks.affinity . | indent 8 | trim }}
+        {{ tpl .Values.connectInject.affinity . | indent 8 | trim }}
       {{- end }}
-      {{- if .Values.healthChecks.tolerations }}
+      {{- if .Values.connectInject.tolerations }}
       tolerations:
-        {{ tpl .Values.healthChecks.tolerations . | indent 8 | trim }}
+        {{ tpl .Values.connectInject.tolerations . | indent 8 | trim }}
       {{- end }}
 {{- end }}
