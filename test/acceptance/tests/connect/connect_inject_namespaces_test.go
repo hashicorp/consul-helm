@@ -55,7 +55,6 @@ func TestConnectInjectNamespaces(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			// todo: add an assertion that the services are created in the right namespace
 			ctx := suite.Environment().DefaultContext(t)
 
 			helmValues := map[string]string{
@@ -99,11 +98,28 @@ func TestConnectInjectNamespaces(t *testing.T) {
 			helpers.DeployKustomize(t, staticServerOpts, cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-server-inject")
 			helpers.DeployKustomize(t, staticClientOpts, cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-namespaces")
 
+			consulClient := consulCluster.SetupConsulClient(t, c.secure)
+
+			// Make sure that services are registered in the correct namespace
+			serverQueryOpts := &api.QueryOptions{Namespace: staticServerNamespace}
+			clientQueryOpts := &api.QueryOptions{Namespace: staticClientNamespace}
+
+			if !c.mirrorK8S {
+				serverQueryOpts = &api.QueryOptions{Namespace: c.destinationNamespace}
+				clientQueryOpts = &api.QueryOptions{Namespace: c.destinationNamespace}
+			}
+			services, _, err := consulClient.Catalog().Service("static-server", "", serverQueryOpts)
+			require.NoError(t, err)
+			require.Len(t, services, 1)
+
+			services, _, err = consulClient.Catalog().Service(staticClientName, "", clientQueryOpts)
+			require.NoError(t, err)
+			require.Len(t, services, 1)
+
 			if c.secure {
 				t.Log("checking that the connection is not successful because there's no intention")
 				helpers.CheckStaticServerConnection(t, staticClientOpts, false, staticClientName, "http://localhost:1234")
 
-				consulClient := consulCluster.SetupConsulClient(t, c.secure)
 				intention := &api.Intention{
 					SourceName:      staticClientName,
 					SourceNS:        staticClientNamespace,

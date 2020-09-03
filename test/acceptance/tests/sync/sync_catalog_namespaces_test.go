@@ -16,7 +16,8 @@ import (
 const staticServerNamespace = "sync"
 const staticServerService = "static-server"
 
-// todo
+// Test that sync catalog can sync services to consul namespaces,
+// using both single namespace and mirroringK8S settings.
 func TestSyncCatalogNamespaces(t *testing.T) {
 	cfg := suite.Config()
 	if !cfg.EnableEnterprise {

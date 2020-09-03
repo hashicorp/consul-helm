@@ -49,7 +49,8 @@ func (t *TestConfig) HelmValuesFromConfig() (map[string]string, error) {
 	return helmValues, nil
 }
 
-// todo
+// entImage parses out consul version from Chart.yaml
+// and sets global.image to the consul enterprise image with that version.
 func (t *TestConfig) entImage() (string, error) {
 	// Unmarshal Chart.yaml to get appVersion (i.e. Consul version)
 	chart, err := ioutil.ReadFile(filepath.Join(helmChartPath, "Chart.yaml"))

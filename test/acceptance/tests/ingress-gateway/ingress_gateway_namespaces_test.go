@@ -14,7 +14,8 @@ import (
 
 const testNamespace = "test"
 
-// todo
+// Test we can connect through the ingress gateway when both
+// the ingress gateway and the connect service are in the same namespace.
 func TestIngressGatewaySingleNamespace(t *testing.T) {
 	cfg := suite.Config()
 	if !cfg.EnableEnterprise {
@@ -144,7 +145,8 @@ func TestIngressGatewaySingleNamespace(t *testing.T) {
 	}
 }
 
-// todo
+// Test we can connect through the ingress gateway when both
+// the ingress gateway and the connect service are in different namespaces.
 func TestIngressGatewayNamespaceMirroring(t *testing.T) {
 	cfg := suite.Config()
 	if !cfg.EnableEnterprise {
