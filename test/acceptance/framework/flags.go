@@ -16,7 +16,9 @@ type TestFlags struct {
 	flagSecondaryKubecontext string
 	flagSecondaryNamespace   string
 
-	flagEnableEnterprise bool
+	flagEnableEnterprise            bool
+	flagEnterpriseLicenseSecretName string
+	flagEnterpriseLicenseSecretKey  string
 
 	flagConsulImage    string
 	flagConsulK8sImage string
@@ -57,6 +59,10 @@ func (t *TestFlags) init() {
 	flag.BoolVar(&t.flagEnableEnterprise, "enable-enterprise", false,
 		"If true, the test suite will run tests for enterprise features. "+
 			"Note that some features may require setting the enterprise license flags below.")
+	flag.StringVar(&t.flagEnterpriseLicenseSecretName, "enterprise-license-secret-name", "",
+		"The name of the Kubernetes secret containing the enterprise license.")
+	flag.StringVar(&t.flagEnterpriseLicenseSecretKey, "enterprise-license-secret-key", "",
+		"The key of the Kubernetes secret containing the enterprise license.")
 
 	flag.BoolVar(&t.flagNoCleanupOnFailure, "no-cleanup-on-failure", false,
 		"If true, the tests will not cleanup Kubernetes resources they create when they finish running."+
@@ -72,6 +78,13 @@ func (t *TestFlags) validate() error {
 			return errors.New("at least one of -secondary-kubecontext or -secondary-kubeconfig flags must be provided if -enable-multi-cluster is set")
 		}
 	}
+
+	onlyEntSecretNameSet := t.flagEnterpriseLicenseSecretName != "" && t.flagEnterpriseLicenseSecretKey == ""
+	onlyEntSecretKeySet := t.flagEnterpriseLicenseSecretName == "" && t.flagEnterpriseLicenseSecretKey != ""
+	if onlyEntSecretNameSet || onlyEntSecretKeySet {
+		return errors.New("both of -enterprise-license-secret-name and -enterprise-license-secret-name flags must be provided; not just one")
+	}
+
 	return nil
 }
 
@@ -88,7 +101,9 @@ func (t *TestFlags) testConfigFromFlags() *TestConfig {
 		SecondaryKubeContext:   t.flagSecondaryKubecontext,
 		SecondaryKubeNamespace: t.flagSecondaryNamespace,
 
-		EnableEnterprise: t.flagEnableEnterprise,
+		EnableEnterprise:            t.flagEnableEnterprise,
+		EnterpriseLicenseSecretName: t.flagEnterpriseLicenseSecretName,
+		EnterpriseLicenseSecretKey:  t.flagEnterpriseLicenseSecretKey,
 
 		ConsulImage:    t.flagConsulImage,
 		ConsulK8SImage: t.flagConsulK8sImage,

@@ -19,7 +19,9 @@ type TestConfig struct {
 	SecondaryKubeContext   string
 	SecondaryKubeNamespace string
 
-	EnableEnterprise bool
+	EnableEnterprise            bool
+	EnterpriseLicenseSecretName string
+	EnterpriseLicenseSecretKey  string
 
 	ConsulImage    string
 	ConsulK8SImage string
@@ -41,6 +43,11 @@ func (t *TestConfig) HelmValuesFromConfig() (map[string]string, error) {
 			return nil, err
 		}
 		setIfNotEmpty(helmValues, "global.image", entImage)
+	}
+
+	if t.EnterpriseLicenseSecretName != "" && t.EnterpriseLicenseSecretKey != "" {
+		setIfNotEmpty(helmValues, "server.enterpriseLicense.secretName", t.EnterpriseLicenseSecretName)
+		setIfNotEmpty(helmValues, "server.enterpriseLicense.secretKey", t.EnterpriseLicenseSecretKey)
 	}
 
 	setIfNotEmpty(helmValues, "global.image", t.ConsulImage)
