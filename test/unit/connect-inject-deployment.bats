@@ -1288,3 +1288,53 @@ load _helpers
     yq 'any(contains("-default-sidecar-proxy-cpu-limit=0"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# priorityClassName
+
+@test "connectInject/Deployment: no priorityClassName by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.priorityClassName' | tee /dev/stderr)
+
+  [ "${actual}" = "null" ]
+}
+
+@test "connectInject/Deployment: can set a priorityClassName" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.priorityClassName=name' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.priorityClassName' | tee /dev/stderr)
+
+  [ "${actual}" = "name" ]
+}
+
+#--------------------------------------------------------------------
+# replicas
+
+@test "connectInject/Deployment: replicas defaults to 1" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.replicas' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
+}
+
+@test "connectInject/Deployment: replicas can be overridden" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/connect-inject-deployment.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.replicas=2' \
+      . | tee /dev/stderr |
+      yq -r '.spec.replicas' | tee /dev/stderr)
+  [ "${actual}" = "2" ]
+}
