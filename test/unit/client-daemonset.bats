@@ -699,11 +699,11 @@ load _helpers
   actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-ca-key") | .secret.secretName' | tee /dev/stderr)
   [ "${actual}" = "foo-ca-key" ]
 
-  # check that the volumes pulls the provided secret keys as a CA cert
+  # check that the volume pulls the provided secret keys as a CA cert
   actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-ca-cert") | .secret.items[0].key' | tee /dev/stderr)
   [ "${actual}" = "key" ]
 
-  # check that the volumes pulls the provided secret keys as a CA key
+  # check that the volume pulls the provided secret keys as a CA key
   actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-ca-key") | .secret.items[0].key' | tee /dev/stderr)
   [ "${actual}" = "key" ]
 }

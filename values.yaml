@@ -95,6 +95,10 @@ global:
   tls:
     enabled: false
 
+    # in case you want to come with your own client certificate
+    # set this to true and play arround with extraVolumes and extraConfig
+    bringOwnKey: false
+
     # enableAutoEncrypt turns on the auto-encrypt feature on
     # clients and servers.
     # It also switches consul-k8s components to retrieve the CA
