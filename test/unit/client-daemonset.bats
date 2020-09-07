@@ -699,13 +699,53 @@ load _helpers
   actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-ca-key") | .secret.secretName' | tee /dev/stderr)
   [ "${actual}" = "foo-ca-key" ]
 
-  # check that the volumes pulls the provided secret keys as a CA cert
+  # check that the volume pulls the provided secret keys as a CA cert
   actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-ca-cert") | .secret.items[0].key' | tee /dev/stderr)
   [ "${actual}" = "key" ]
 
-  # check that the volumes pulls the provided secret keys as a CA key
+  # check that the volume pulls the provided secret keys as a CA key
   actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-ca-key") | .secret.items[0].key' | tee /dev/stderr)
   [ "${actual}" = "key" ]
+}
+
+#--------------------------------------------------------------------
+# global.tls.bringOwnKey
+
+@test "client/DaemonSet: can overwrite client secret with the provided one" {
+  cd `chart_dir`
+  local spec=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.clientCert.secretName=foo-client-cert' \
+      --set 'global.tls.clientCert.secretKey=cert' \
+      --set 'global.tls.clientKey.secretKey=key' \
+      --set 'global.tls.bringOwnKey=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec' | tee /dev/stderr)
+
+  # check that the provided client cert secret is attached as a volume
+  local actual
+  actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-client-cert") | .secret.secretName' | tee /dev/stderr)
+  [ "${actual}" = "foo-client-cert" ]
+
+  # check that the volume pulls the provided secret keys as a client cert
+  actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-client-cert") | .secret.items[0].key' | tee /dev/stderr)
+  [ "${actual}" = "cert" ]
+
+  # check that the volume pulls the provided secret keys as a client key
+  actual=$(echo $spec | jq -r '.volumes[] | select(.name=="consul-client-cert") | .secret.items[1].key' | tee /dev/stderr)
+  [ "${actual}" = "key" ]
+}
+
+@test "client/DaemonSet: client certificate volume contains brought certificates when bringOwnKey is true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.bringOwnKey=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.volumes[] | select(.name == "consul-client-cert")' | tee /dev/stderr)
+  [ "${actual}" != "" ]
 }
 
 #--------------------------------------------------------------------

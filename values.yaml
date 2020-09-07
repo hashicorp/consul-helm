@@ -95,6 +95,26 @@ global:
   tls:
     enabled: false
 
+    # in case you want to come with your own client certificate
+    # set this to true
+    bringOwnKey: false
+
+    # clientCert is a Kubernetes secret containing the certificate
+    # for consul agent used for TLS communications within the Consul cluster.
+    # It can be used to communicate with servers
+    # outside kubernetes and in case you cannot provide a CA.
+    clientCert:
+      secretName: null
+      secretKey: null
+
+    # clientKey is a Kubernetes secret containing the private key
+    # for consul agent used for TLS communications within the Consul cluster.
+    # It can be used to communicate with servers
+    # outside kubernetes and in case you cannot provide a CA.
+    clientKey:
+      secretName: null
+      secretKey: null
+
     # enableAutoEncrypt turns on the auto-encrypt feature on
     # clients and servers.
     # It also switches consul-k8s components to retrieve the CA
