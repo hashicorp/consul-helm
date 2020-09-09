@@ -226,7 +226,7 @@ func TestTerminatingGatewayNamespaceMirroring(t *testing.T) {
 	}
 }
 
-const staticServerPolicyRulesNamespace = `namespace %s {
+const staticServerPolicyRulesNamespace = `namespace %q {
 service "static-server" {
   policy = "write"
 }}`

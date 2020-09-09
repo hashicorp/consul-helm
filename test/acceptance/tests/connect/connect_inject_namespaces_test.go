@@ -14,7 +14,7 @@ import (
 const staticServerNamespace = "ns1"
 const staticClientNamespace = "ns2"
 
-// Test that Connect works in a default installation
+// Test that Connect works with Consul Enterprise namespaces.
 func TestConnectInjectNamespaces(t *testing.T) {
 	cfg := suite.Config()
 	if !cfg.EnableEnterprise {
@@ -100,7 +100,12 @@ func TestConnectInjectNamespaces(t *testing.T) {
 
 			consulClient := consulCluster.SetupConsulClient(t, c.secure)
 
-			// Make sure that services are registered in the correct namespace
+			// Make sure that services are registered in the correct namespace.
+			// If mirroring is enabled, we expect services to be registered in the
+			// Consul namespace with the same name as their source
+			// Kubernetes namespace.
+			// If a single destination namespace is set, we expect all services
+			// to be registered in that destination Consul namespace. 
 			serverQueryOpts := &api.QueryOptions{Namespace: staticServerNamespace}
 			clientQueryOpts := &api.QueryOptions{Namespace: staticClientNamespace}
 
