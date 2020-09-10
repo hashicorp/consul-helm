@@ -25,9 +25,9 @@ func TestTerminatingGatewaySingleNamespace(t *testing.T) {
 	cases := []struct {
 		secure bool
 	}{
-		{
-			false,
-		},
+		//{
+		//	false,
+		//},
 		{
 			true,
 		},
@@ -190,7 +190,7 @@ func TestTerminatingGatewayNamespaceMirroring(t *testing.T) {
 				Namespace:   staticClientNamespace,
 			}
 
-			// Deploy a static-server that will play the role of an external service
+			// Deploy a static-server that will play the role of an external service.
 			t.Log("creating static-server deployment")
 			helpers.DeployKustomize(t, ns1K8SOptions, cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/bases/static-server")
 
@@ -216,7 +216,7 @@ func TestTerminatingGatewayNamespaceMirroring(t *testing.T) {
 				// With the terminating gateway up, we test that we can make a call to it
 				// via the static-server. It should fail to connect with the
 				// static-server pod because of intentions.
-				assertNoConnectionAndAddIntention(t, consulClient, ns2K8SOptions, testNamespace, testNamespace)
+				assertNoConnectionAndAddIntention(t, consulClient, ns2K8SOptions, staticClientNamespace, testNamespace)
 			}
 
 			// Test that we can make a call to the terminating gateway

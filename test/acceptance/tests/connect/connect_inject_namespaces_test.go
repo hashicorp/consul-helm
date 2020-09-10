@@ -105,7 +105,7 @@ func TestConnectInjectNamespaces(t *testing.T) {
 			// Consul namespace with the same name as their source
 			// Kubernetes namespace.
 			// If a single destination namespace is set, we expect all services
-			// to be registered in that destination Consul namespace. 
+			// to be registered in that destination Consul namespace.
 			serverQueryOpts := &api.QueryOptions{Namespace: staticServerNamespace}
 			clientQueryOpts := &api.QueryOptions{Namespace: staticClientNamespace}
 

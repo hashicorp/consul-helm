@@ -159,6 +159,14 @@ func updateTerminatingGatewayToken(t *testing.T, consulClient *api.Client, rules
 func createTerminatingGatewayConfigEntry(t *testing.T, consulClient *api.Client, gwNamespace, serviceNamespace string) {
 	t.Log("creating config entry")
 
+	if serviceNamespace != "" {
+		t.Logf("creating the %s namespace in Consul", serviceNamespace)
+		_, _, err := consulClient.Namespaces().Create(&api.Namespace{
+			Name: serviceNamespace,
+		}, nil)
+		require.NoError(t, err)
+	}
+
 	configEntry := &api.TerminatingGatewayConfigEntry{
 		Kind:      api.TerminatingGateway,
 		Name:      "terminating-gateway",
