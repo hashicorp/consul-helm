@@ -18,6 +18,9 @@ const staticServerService = "static-server"
 
 // Test that sync catalog can sync services to consul namespaces,
 // using both single namespace and mirroringK8S settings.
+// These tests currently only test non-secure and secure without auto-encrypt installations
+// because in the case of namespaces there isn't a significant distinction in code between auto-encrypt
+// and non-auto-encrypt secure installations, so testing just one is enough.
 func TestSyncCatalogNamespaces(t *testing.T) {
 	cfg := suite.Config()
 	if !cfg.EnableEnterprise {
@@ -62,8 +65,9 @@ func TestSyncCatalogNamespaces(t *testing.T) {
 			ctx := suite.Environment().DefaultContext(t)
 
 			helmValues := map[string]string{
-				"global.enableConsulNamespaces":                           "true",
-				"syncCatalog.enabled":                                     "true",
+				"global.enableConsulNamespaces": "true",
+				"syncCatalog.enabled":           "true",
+				// When mirroringK8S is set, this setting is ignored.
 				"syncCatalog.consulNamespaces.consulDestinationNamespace": c.destinationNamespace,
 				"syncCatalog.consulNamespaces.mirroringK8S":               strconv.FormatBool(c.mirrorK8S),
 				"syncCatalog.addK8SNamespaceSuffix":                       "false",

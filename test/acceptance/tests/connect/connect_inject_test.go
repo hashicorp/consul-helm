@@ -12,6 +12,7 @@ import (
 )
 
 const staticClientName = "static-client"
+const staticServerName = "static-server"
 
 // Test that Connect works in a default and a secure installation
 func TestConnectInject(t *testing.T) {
@@ -55,7 +56,7 @@ func TestConnectInject(t *testing.T) {
 				t.Log("creating intention")
 				_, _, err := consulClient.Connect().IntentionCreate(&api.Intention{
 					SourceName:      staticClientName,
-					DestinationName: "static-server",
+					DestinationName: staticServerName,
 					Action:          api.IntentionActionAllow,
 				}, nil)
 				require.NoError(t, err)

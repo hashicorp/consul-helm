@@ -76,3 +76,14 @@ func TestConfig_HelmValuesFromConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestConfig_HelmValuesFromConfig_EntImage(t *testing.T) {
+	cfg := TestConfig{
+		EnableEnterprise: true,
+		// We need to set a different path because these tests are run from a different directory.
+		helmChartPath: "../../..",
+	}
+	values, err := cfg.HelmValuesFromConfig()
+	require.NoError(t, err)
+	require.Contains(t, values["global.image"], "hashicorp/consul-enterprise")
+}

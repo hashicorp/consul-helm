@@ -16,6 +16,9 @@ const testNamespace = "ns1"
 
 // Test we can connect through the terminating gateway when both
 // the terminating gateway and the connect service are in the same namespace.
+// These tests currently only test non-secure and secure without auto-encrypt installations
+// because in the case of namespaces there isn't a significant distinction in code between auto-encrypt
+// and non-auto-encrypt secure installations, so testing just one is enough.
 func TestTerminatingGatewaySingleNamespace(t *testing.T) {
 	cfg := suite.Config()
 	if !cfg.EnableEnterprise {
@@ -25,9 +28,9 @@ func TestTerminatingGatewaySingleNamespace(t *testing.T) {
 	cases := []struct {
 		secure bool
 	}{
-		//{
-		//	false,
-		//},
+		{
+			false,
+		},
 		{
 			true,
 		},
@@ -123,6 +126,9 @@ func TestTerminatingGatewaySingleNamespace(t *testing.T) {
 
 // Test we can connect through the terminating gateway when the terminating gateway,
 // the external service, and the connect service are in different namespace.
+// These tests currently only test non-secure and secure without auto-encrypt installations
+// because in the case of namespaces there isn't a significant distinction in code between auto-encrypt
+// and non-auto-encrypt secure installations, so testing just one is enough.
 func TestTerminatingGatewayNamespaceMirroring(t *testing.T) {
 	cfg := suite.Config()
 	if !cfg.EnableEnterprise {

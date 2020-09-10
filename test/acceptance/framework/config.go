@@ -28,6 +28,8 @@ type TestConfig struct {
 
 	NoCleanupOnFailure bool
 	DebugDirectory     string
+
+	helmChartPath string
 }
 
 // HelmValuesFromConfig returns a map of Helm values
@@ -59,8 +61,12 @@ func (t *TestConfig) HelmValuesFromConfig() (map[string]string, error) {
 // entImage parses out consul version from Chart.yaml
 // and sets global.image to the consul enterprise image with that version.
 func (t *TestConfig) entImage() (string, error) {
+	if t.helmChartPath == "" {
+		t.helmChartPath = helmChartPath
+	}
+
 	// Unmarshal Chart.yaml to get appVersion (i.e. Consul version)
-	chart, err := ioutil.ReadFile(filepath.Join(helmChartPath, "Chart.yaml"))
+	chart, err := ioutil.ReadFile(filepath.Join(t.helmChartPath, "Chart.yaml"))
 	if err != nil {
 		return "", err
 	}

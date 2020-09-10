@@ -15,6 +15,9 @@ const staticServerNamespace = "ns1"
 const staticClientNamespace = "ns2"
 
 // Test that Connect works with Consul Enterprise namespaces.
+// These tests currently only test non-secure and secure without auto-encrypt installations
+// because in the case of namespaces there isn't a significant distinction in code between auto-encrypt
+// and non-auto-encrypt secure installations, so testing just one is enough.
 func TestConnectInjectNamespaces(t *testing.T) {
 	cfg := suite.Config()
 	if !cfg.EnableEnterprise {
@@ -58,8 +61,9 @@ func TestConnectInjectNamespaces(t *testing.T) {
 			ctx := suite.Environment().DefaultContext(t)
 
 			helmValues := map[string]string{
-				"global.enableConsulNamespaces":                             "true",
-				"connectInject.enabled":                                     "true",
+				"global.enableConsulNamespaces": "true",
+				"connectInject.enabled":         "true",
+				// When mirroringK8S is set, this setting is ignored.
 				"connectInject.consulNamespaces.consulDestinationNamespace": c.destinationNamespace,
 				"connectInject.consulNamespaces.mirroringK8S":               strconv.FormatBool(c.mirrorK8S),
 
@@ -113,7 +117,7 @@ func TestConnectInjectNamespaces(t *testing.T) {
 				serverQueryOpts = &api.QueryOptions{Namespace: c.destinationNamespace}
 				clientQueryOpts = &api.QueryOptions{Namespace: c.destinationNamespace}
 			}
-			services, _, err := consulClient.Catalog().Service("static-server", "", serverQueryOpts)
+			services, _, err := consulClient.Catalog().Service(staticServerName, "", serverQueryOpts)
 			require.NoError(t, err)
 			require.Len(t, services, 1)
 
@@ -128,7 +132,7 @@ func TestConnectInjectNamespaces(t *testing.T) {
 				intention := &api.Intention{
 					SourceName:      staticClientName,
 					SourceNS:        staticClientNamespace,
-					DestinationName: "static-server",
+					DestinationName: staticServerName,
 					DestinationNS:   staticServerNamespace,
 					Action:          api.IntentionActionAllow,
 				}
