@@ -11,7 +11,7 @@ metadata:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
 spec:
-  replicas: {{ .Values.syncCatalog.replicas }}
+  replicas: 1
   selector:
     matchLabels:
       app: {{ template "consul.name" . }}

@@ -641,7 +641,6 @@ syncCatalog:
   enabled: false
   image: null
   default: true # true will sync by default, otherwise requires annotation
-  replicas: 1
 
   # Optional priorityClassName.
   priorityClassName: ""
@@ -794,7 +793,6 @@ connectInject:
   enabled: false
   image: null # image for consul-k8s that contains the injector
   default: false # true will inject by default, otherwise requires annotation
-  replicas: 1
 
   # Optional priorityClassName.
   priorityClassName: ""

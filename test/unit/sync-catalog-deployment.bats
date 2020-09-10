@@ -856,27 +856,3 @@ load _helpers
 
   [ "${actual}" = "name" ]
 }
-
-#--------------------------------------------------------------------
-# replicas
-
-@test "syncCatalog/Deployment: replicas defaults to 1" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -s templates/sync-catalog-deployment.yaml  \
-      --set 'syncCatalog.enabled=true' \
-      . | tee /dev/stderr |
-      yq -r '.spec.replicas' | tee /dev/stderr)
-  [ "${actual}" = "1" ]
-}
-
-@test "syncCatalog/Deployment: replicas can be overridden" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -s templates/sync-catalog-deployment.yaml  \
-      --set 'syncCatalog.enabled=true' \
-      --set 'syncCatalog.replicas=2' \
-      . | tee /dev/stderr |
-      yq -r '.spec.replicas' | tee /dev/stderr)
-  [ "${actual}" = "2" ]
-}

@@ -1314,27 +1314,3 @@ load _helpers
 
   [ "${actual}" = "name" ]
 }
-
-#--------------------------------------------------------------------
-# replicas
-
-@test "connectInject/Deployment: replicas defaults to 1" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -s templates/connect-inject-deployment.yaml  \
-      --set 'connectInject.enabled=true' \
-      . | tee /dev/stderr |
-      yq -r '.spec.replicas' | tee /dev/stderr)
-  [ "${actual}" = "1" ]
-}
-
-@test "connectInject/Deployment: replicas can be overridden" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -s templates/connect-inject-deployment.yaml  \
-      --set 'connectInject.enabled=true' \
-      --set 'connectInject.replicas=2' \
-      . | tee /dev/stderr |
-      yq -r '.spec.replicas' | tee /dev/stderr)
-  [ "${actual}" = "2" ]
-}
