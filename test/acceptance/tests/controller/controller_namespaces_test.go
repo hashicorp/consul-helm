@@ -28,7 +28,7 @@ func TestControllerNamespaces(t *testing.T) {
 	}
 
 	// todo: remove when cert pr merged.
-	helpers.RunKubectl(t, suite.Environment().DefaultContext(t).KubectlOptions(), "apply", "--validate=false", "-f", "https://github.com/jetstack/cert-manager/releases/download/v0.15.2/cert-manager-legacy.yaml")
+	helpers.RunKubectl(t, suite.Environment().DefaultContext(t).KubectlOptions(), "apply", "--validate=false", "-f", "https://github.com/jetstack/cert-manager/releases/download/v1.0.1/cert-manager.yaml")
 
 	cases := []struct {
 		name                 string
