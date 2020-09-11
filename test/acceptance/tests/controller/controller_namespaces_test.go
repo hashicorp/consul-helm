@@ -2,6 +2,7 @@ package controller
 
 import (
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -87,18 +88,13 @@ func TestControllerNamespaces(t *testing.T) {
 			consulCluster.Create(t)
 
 			t.Logf("creating namespace %q", KubeNS)
-			helpers.RunKubectl(t, ctx.KubectlOptions(), "create", "ns", KubeNS)
+			out, err := helpers.RunKubectlAndGetOutputE(t, ctx.KubectlOptions(), "create", "ns", KubeNS)
+			if err != nil && !strings.Contains(out, "(AlreadyExists)") {
+				require.NoError(t, err)
+			}
 			helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
 				helpers.RunKubectl(t, ctx.KubectlOptions(), "delete", "ns", KubeNS)
 			})
-
-			t.Log("creating service-default CRD")
-			helpers.RunKubectl(t, ctx.KubectlOptions(), "apply", "-n", KubeNS, "-f", "../fixtures/crds")
-			helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
-				helpers.RunKubectl(t, ctx.KubectlOptions(), "delete", "-n", KubeNS, "-f", "../fixtures/crds")
-			})
-
-			consulClient := consulCluster.SetupConsulClient(t, c.secure)
 
 			// Make sure that config entries are created in the correct namespace.
 			// If mirroring is enabled, we expect config entries to be created in the
@@ -110,17 +106,61 @@ func TestControllerNamespaces(t *testing.T) {
 			if !c.mirrorK8S {
 				queryOpts = &api.QueryOptions{Namespace: c.destinationNamespace}
 			}
+			consulClient := consulCluster.SetupConsulClient(t, c.secure)
 
-			// The config entry should be created almost instantly, but wait up to 2s.
-			counter := &retry.Counter{Count: 10, Wait: 200 * time.Millisecond}
-			retry.RunWith(counter, t, func(r *retry.R) {
-				entry, _, err := consulClient.ConfigEntries().Get(api.ServiceDefaults, "foo", queryOpts)
-				require.NoError(r, err, "ns: %s", queryOpts.Namespace)
+			// Test creation.
+			{
+				t.Log("creating service-defaults CRD")
+				helpers.RunKubectl(t, ctx.KubectlOptions(), "apply", "-n", KubeNS, "-f", "../fixtures/crds")
+				helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
+					// NOTE: We're swallowing the delete error here because if
+					// the test ran successfully then this will already have
+					// been deleted.
+					helpers.RunKubectlAndGetOutputE(t, ctx.KubectlOptions(), "delete", "-n", KubeNS, "-f", "../fixtures/crds")
+				})
 
-				svcDefaultEntry, ok := entry.(*api.ServiceConfigEntry)
-				require.True(r, ok, "could not cast to ServiceConfigEntry")
-				require.Equal(r, "http", svcDefaultEntry.Protocol)
-			})
+				// On startup, the controller can take upwards of 6s to perform
+				// leader election so we may need to wait a long time for
+				// the reconcile loop to run (hence the 20s timeout here).
+				counter := &retry.Counter{Count: 20, Wait: 1 * time.Second}
+				retry.RunWith(counter, t, func(r *retry.R) {
+					entry, _, err := consulClient.ConfigEntries().Get(api.ServiceDefaults, "foo", queryOpts)
+					require.NoError(r, err, "ns: %s", queryOpts.Namespace)
+
+					svcDefaultEntry, ok := entry.(*api.ServiceConfigEntry)
+					require.True(r, ok, "could not cast to ServiceConfigEntry")
+					require.Equal(r, "http", svcDefaultEntry.Protocol)
+				})
+			}
+
+			// Test an update.
+			{
+				t.Log("patching service-defaults CRD")
+				helpers.RunKubectl(t, ctx.KubectlOptions(), "patch", "-n", KubeNS, "servicedefaults", "foo", "-p", `{"spec":{"protocol":"tcp"}}`, "--type=merge")
+
+				counter := &retry.Counter{Count: 10, Wait: 500 * time.Millisecond}
+				retry.RunWith(counter, t, func(r *retry.R) {
+					entry, _, err := consulClient.ConfigEntries().Get(api.ServiceDefaults, "foo", queryOpts)
+					require.NoError(r, err, "ns: %s", queryOpts.Namespace)
+
+					svcDefaultEntry, ok := entry.(*api.ServiceConfigEntry)
+					require.True(r, ok, "could not cast to ServiceConfigEntry")
+					require.Equal(r, "tcp", svcDefaultEntry.Protocol)
+				})
+			}
+
+			// Test a delete.
+			{
+				t.Log("deleting service-defaults CRD")
+				helpers.RunKubectl(t, ctx.KubectlOptions(), "delete", "-n", KubeNS, "servicedefaults", "foo")
+
+				counter := &retry.Counter{Count: 10, Wait: 500 * time.Millisecond}
+				retry.RunWith(counter, t, func(r *retry.R) {
+					_, _, err := consulClient.ConfigEntries().Get(api.ServiceDefaults, "foo", queryOpts)
+					require.Error(r, err)
+					require.Contains(r, err.Error(), "404 (Config entry not found")
+				})
+			}
 		})
 	}
 }
