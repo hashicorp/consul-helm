@@ -1,3 +1,4 @@
+// todo: rename package
 package example
 
 import (
