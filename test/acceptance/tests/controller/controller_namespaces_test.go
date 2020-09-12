@@ -29,7 +29,7 @@ func TestControllerNamespaces(t *testing.T) {
 	}
 
 	// todo: remove when cert pr merged.
-	helpers.RunKubectl(t, suite.Environment().DefaultContext(t).KubectlOptions(), "apply", "--validate=false", "-f", "https://github.com/jetstack/cert-manager/releases/download/v1.0.1/cert-manager.yaml")
+	//helpers.RunKubectl(t, suite.Environment().DefaultContext(t).KubectlOptions(), "apply", "--validate=false", "-f", "https://github.com/jetstack/cert-manager/releases/download/v1.0.1/cert-manager.yaml")
 
 	cases := []struct {
 		name                 string
@@ -70,7 +70,7 @@ func TestControllerNamespaces(t *testing.T) {
 			helmValues := map[string]string{
 				"global.enableConsulNamespaces": "true",
 				// todo: remove
-				"global.imageK8S": "lkysow/consul-k8s-dev:sep09-crd-ent6",
+				"global.imageK8S": "lkysow/consul-k8s-dev:sep11-crd-mergeall",
 				// todo: end
 				"controller.enabled":    "true",
 				"connectInject.enabled": "true",
@@ -111,9 +111,15 @@ func TestControllerNamespaces(t *testing.T) {
 			// Test creation.
 			{
 				t.Log("creating service-defaults CRD")
-				helpers.RunKubectl(t, ctx.KubectlOptions(), "apply", "-n", KubeNS, "-f", "../fixtures/crds")
+				retry.Run(t, func(r *retry.R) {
+					// Retry the kubectl apply because we've seen sporadic
+					// "connection refused" errors where the mutating webhook
+					// endpoint fails initially.
+					out, err := helpers.RunKubectlAndGetOutputE(t, ctx.KubectlOptions(), "apply", "-n", KubeNS, "-f", "../fixtures/crds")
+					require.NoError(r, err, "output", out)
+				})
 				helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
-					// NOTE: We're swallowing the delete error here because if
+					// NOTE: We're ignoring the delete error here because if
 					// the test ran successfully then this will already have
 					// been deleted.
 					helpers.RunKubectlAndGetOutputE(t, ctx.KubectlOptions(), "delete", "-n", KubeNS, "-f", "../fixtures/crds")
