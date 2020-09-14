@@ -111,12 +111,13 @@ func TestControllerNamespaces(t *testing.T) {
 			// Test creation.
 			{
 				t.Log("creating service-defaults CRD")
-				helpers.RunKubectl(t, ctx.KubectlOptions(), "apply", "-n", KubeNS, "-f", "../fixtures/crds")
-				helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
-					// NOTE: We're swallowing the delete error here because if
-					// the test ran successfully then this will already have
-					// been deleted.
-					helpers.RunKubectlAndGetOutputE(t, ctx.KubectlOptions(), "delete", "-n", KubeNS, "-f", "../fixtures/crds")
+				retry.Run(t, func(r *retry.R) {
+					// Retry the kubectl apply because we've seen sporadic
+					// "connection refused" errors where the mutating webhook
+					// endpoint fails initially.
+					out, err := helpers.RunKubectlAndGetOutputE(t, ctx.KubectlOptions(), "apply", "-n", KubeNS, "-f", "../fixtures/crds")
+					require.NoError(r, err, out)
+					// NOTE: No need to clean up because the namespace will be deleted.
 				})
 
 				// On startup, the controller can take upwards of 6s to perform
