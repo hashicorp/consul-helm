@@ -28,9 +28,6 @@ func TestControllerNamespaces(t *testing.T) {
 		t.Skipf("skipping this test because -enable-enterprise is not set")
 	}
 
-	// todo: remove when cert pr merged.
-	helpers.RunKubectl(t, suite.Environment().DefaultContext(t).KubectlOptions(), "apply", "--validate=false", "-f", "https://github.com/jetstack/cert-manager/releases/download/v1.0.1/cert-manager.yaml")
-
 	cases := []struct {
 		name                 string
 		destinationNamespace string
@@ -69,11 +66,9 @@ func TestControllerNamespaces(t *testing.T) {
 
 			helmValues := map[string]string{
 				"global.enableConsulNamespaces": "true",
-				// todo: remove
-				"global.imageK8S": "lkysow/consul-k8s-dev:sep09-crd-ent6",
-				// todo: end
-				"controller.enabled":    "true",
-				"connectInject.enabled": "true",
+				"controller.enabled":            "true",
+				"connectInject.enabled":         "true",
+
 				// When mirroringK8S is set, this setting is ignored.
 				"connectInject.consulNamespaces.consulDestinationNamespace": c.destinationNamespace,
 				"connectInject.consulNamespaces.mirroringK8S":               strconv.FormatBool(c.mirrorK8S),
