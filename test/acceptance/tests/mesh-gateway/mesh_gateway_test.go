@@ -8,8 +8,7 @@ import (
 	"github.com/hashicorp/consul-helm/test/acceptance/framework"
 	"github.com/hashicorp/consul-helm/test/acceptance/helpers"
 	"github.com/hashicorp/consul/api"
-	"github.com/hashicorp/serf/serf"
-	"github.com/hashicorp/serf/testutil/retry"
+	"github.com/hashicorp/consul/sdk/testutil/retry"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -223,20 +222,22 @@ func TestMeshGatewaySecure(t *testing.T) {
 // by first checking members are alive from the perspective of both servers.
 // If secure is true, it will also check that the ACL replication is running on the secondary server.
 func verifyFederation(t *testing.T, primaryClient, secondaryClient *api.Client, secure bool) {
+	const consulMemberStatusAlive = 1
+
 	retrier := &retry.Timer{Timeout: 1 * time.Minute, Wait: 1 * time.Second}
 
 	retry.RunWith(retrier, t, func(r *retry.R) {
 		members, err := primaryClient.Agent().Members(true)
 		require.NoError(r, err)
 		require.Len(r, members, 2)
-		require.Equal(r, members[0].Status, serf.StatusAlive)
-		require.Equal(r, members[1].Status, serf.StatusAlive)
+		require.Equal(r, members[0].Status, consulMemberStatusAlive)
+		require.Equal(r, members[1].Status, consulMemberStatusAlive)
 
 		members, err = secondaryClient.Agent().Members(true)
 		require.NoError(r, err)
 		require.Len(r, members, 2)
-		require.Equal(r, members[0].Status, serf.StatusAlive)
-		require.Equal(r, members[1].Status, serf.StatusAlive)
+		require.Equal(r, members[0].Status, consulMemberStatusAlive)
+		require.Equal(r, members[1].Status, consulMemberStatusAlive)
 
 		if secure {
 			replicationStatus, _, err := secondaryClient.ACL().Replication(nil)
