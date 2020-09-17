@@ -146,8 +146,15 @@ func (h *HelmCluster) SetupConsulClient(t *testing.T, secure bool) *api.Client {
 		// Overwrite remote port to HTTPS.
 		remotePort = 8501
 
-		// Get the ACL token. First, attempt to read it from the bootstrap token.
-		// If the bootstrap token doesn't exist, try to read the replication token from the federation secret.
+		// It's OK to skip TLS verification for local traffic.
+		config.TLSConfig.InsecureSkipVerify = true
+		config.Scheme = "https"
+
+		// Get the ACL token. First, attempt to read it from the bootstrap token (this will be true in primary Consul servers).
+		// If the bootstrap token doesn't exist, it means we are running against a secondary cluster
+		// and will try to read the replication token from the federation secret.
+		// In secondary servers, we don't create a bootstrap token since ACLs are only bootstrapped in the primary.
+		// Instead, we provide a replication token that serves the role of the bootstrap token.
 		aclSecret, err := h.kubernetesClient.CoreV1().Secrets(namespace).Get(h.releaseName+"-consul-bootstrap-acl-token", metav1.GetOptions{})
 		if err != nil && errors.IsNotFound(err) {
 			federationSecret := fmt.Sprintf("%s-consul-federation", h.releaseName)
@@ -159,10 +166,6 @@ func (h *HelmCluster) SetupConsulClient(t *testing.T, secure bool) *api.Client {
 		} else {
 			require.NoError(t, err)
 		}
-
-		// It's OK to skip TLS verification for local traffic.
-		config.TLSConfig.InsecureSkipVerify = true
-		config.Scheme = "https"
 	}
 
 	tunnel := k8s.NewTunnel(h.helmOptions.KubectlOptions, k8s.ResourceTypePod, fmt.Sprintf("%s-consul-server-0", h.releaseName), localPort, remotePort)
