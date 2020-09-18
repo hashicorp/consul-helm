@@ -1269,6 +1269,16 @@ ingressGateways:
   # case of annotations where both will be applied.
   gateways:
     - name: ingress-gateway
+      # Possibility to override default replicas per gateway
+      # replicas: 3
+      # Possibility to override default resources per gateway
+      # resources:
+      #   requests:
+      #     memory: "100Mi"
+      #     cpu: "100m"
+      #   limits:
+      #     memory: "500Mi"
+      #     cpu: "500m"
 
 # Configuration options for terminating gateways. Default values for all
 # terminating gateways are defined in `terminatingGateways.defaults`. Any of
