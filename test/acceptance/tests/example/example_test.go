@@ -46,7 +46,7 @@ func TestExample(t *testing.T) {
 	// Similarly, you can obtain Kubernetes client from your test context.
 	// You can use it to, for example, read all services in a namespace:
 	k8sClient := ctx.KubernetesClient(t)
-	services, err := k8sClient.CoreV1().Services(ctx.KubectlOptions(t).Namespace).List(context.TODO(), metav1.ListOptions{})
+	services, err := k8sClient.CoreV1().Services(ctx.KubectlOptions(t).Namespace).List(context.Background(), metav1.ListOptions{})
 	require.NoError(t, err)
 	require.NotNil(t, services.Items)
 

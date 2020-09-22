@@ -47,10 +47,10 @@ func TestMeshGatewayDefault(t *testing.T) {
 	// Get the federation secret from the primary cluster and apply it to secondary cluster
 	federationSecretName := fmt.Sprintf("%s-consul-federation", releaseName)
 	t.Logf("retrieving federation secret %s from the primary cluster and applying to the secondary", federationSecretName)
-	federationSecret, err := primaryContext.KubernetesClient(t).CoreV1().Secrets(primaryContext.KubectlOptions(t).Namespace).Get(context.TODO(), federationSecretName, metav1.GetOptions{})
+	federationSecret, err := primaryContext.KubernetesClient(t).CoreV1().Secrets(primaryContext.KubectlOptions(t).Namespace).Get(context.Background(), federationSecretName, metav1.GetOptions{})
 	federationSecret.ResourceVersion = ""
 	require.NoError(t, err)
-	_, err = secondaryContext.KubernetesClient(t).CoreV1().Secrets(secondaryContext.KubectlOptions(t).Namespace).Create(context.TODO(), federationSecret, metav1.CreateOptions{})
+	_, err = secondaryContext.KubernetesClient(t).CoreV1().Secrets(secondaryContext.KubectlOptions(t).Namespace).Create(context.Background(), federationSecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	// Create secondary cluster
@@ -151,10 +151,10 @@ func TestMeshGatewaySecure(t *testing.T) {
 			// Get the federation secret from the primary cluster and apply it to secondary cluster
 			federationSecretName := fmt.Sprintf("%s-consul-federation", releaseName)
 			t.Logf("retrieving federation secret %s from the primary cluster and applying to the secondary", federationSecretName)
-			federationSecret, err := primaryContext.KubernetesClient(t).CoreV1().Secrets(primaryContext.KubectlOptions(t).Namespace).Get(context.TODO(), federationSecretName, metav1.GetOptions{})
+			federationSecret, err := primaryContext.KubernetesClient(t).CoreV1().Secrets(primaryContext.KubectlOptions(t).Namespace).Get(context.Background(), federationSecretName, metav1.GetOptions{})
 			require.NoError(t, err)
 			federationSecret.ResourceVersion = ""
-			_, err = secondaryContext.KubernetesClient(t).CoreV1().Secrets(secondaryContext.KubectlOptions(t).Namespace).Create(context.TODO(), federationSecret, metav1.CreateOptions{})
+			_, err = secondaryContext.KubernetesClient(t).CoreV1().Secrets(secondaryContext.KubectlOptions(t).Namespace).Create(context.Background(), federationSecret, metav1.CreateOptions{})
 			require.NoError(t, err)
 
 			// Create secondary cluster

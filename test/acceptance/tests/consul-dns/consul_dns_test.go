@@ -43,12 +43,12 @@ func TestConsulDNS(t *testing.T) {
 			k8sClient := ctx.KubernetesClient(t)
 			contextNamespace := ctx.KubectlOptions(t).Namespace
 
-			dnsService, err := k8sClient.CoreV1().Services(contextNamespace).Get(context.TODO(), fmt.Sprintf("%s-%s", releaseName, "consul-dns"), metav1.GetOptions{})
+			dnsService, err := k8sClient.CoreV1().Services(contextNamespace).Get(context.Background(), fmt.Sprintf("%s-%s", releaseName, "consul-dns"), metav1.GetOptions{})
 			require.NoError(t, err)
 
 			dnsIP := dnsService.Spec.ClusterIP
 
-			consulServerList, err := k8sClient.CoreV1().Pods(contextNamespace).List(context.TODO(), metav1.ListOptions{
+			consulServerList, err := k8sClient.CoreV1().Pods(contextNamespace).List(context.Background(), metav1.ListOptions{
 				LabelSelector: "app=consul,component=server",
 			})
 			require.NoError(t, err)

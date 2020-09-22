@@ -41,7 +41,7 @@ func WaitForAllPodsToBeReady(t *testing.T, client kubernetes.Interface, namespac
 	// Wait up to 3m.
 	counter := &retry.Counter{Count: 36, Wait: 5 * time.Second}
 	retry.RunWith(counter, t, func(r *retry.R) {
-		pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: podLabelSelector})
+		pods, err := client.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{LabelSelector: podLabelSelector})
 		require.NoError(r, err)
 
 		var notReadyPods []string
@@ -185,7 +185,7 @@ func WritePodsDebugInfoIfFailed(t *testing.T, kubectlOptions *k8s.KubectlOptions
 		require.NoError(t, os.MkdirAll(testDebugDirectory, 0755))
 
 		t.Logf("dumping logs and pod info for %s to %s", labelSelector, testDebugDirectory)
-		pods, err := client.CoreV1().Pods(kubectlOptions.Namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
+		pods, err := client.CoreV1().Pods(kubectlOptions.Namespace).List(context.Background(), metav1.ListOptions{LabelSelector: labelSelector})
 		require.NoError(t, err)
 
 		for _, pod := range pods.Items {

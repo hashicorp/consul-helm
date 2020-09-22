@@ -6,7 +6,6 @@ require (
 	github.com/gruntwork-io/terratest v0.29.0
 	github.com/hashicorp/consul/api v1.6.0
 	github.com/hashicorp/consul/sdk v0.6.0
-	github.com/hashicorp/serf v0.9.3
 	github.com/stretchr/testify v1.5.1
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.18.3
