@@ -787,6 +787,14 @@ client:
   # @type: string
   annotations: null
 
+  # Extra labels to attach to the client pods.
+  # This should be a regular YAML map.
+  # Example:
+  #   extraLabels:
+  #     labelKey: "label-value"
+  #     otherLabelKey: "another-label-value"
+  extraLabels: null
+
   # A list of extra environment variables to set within the stateful set.
   # These could be used to include proxy settings required for cloud auto-join
   # feature, in case kubernetes cluster is behind egress http proxies. Additionally,
