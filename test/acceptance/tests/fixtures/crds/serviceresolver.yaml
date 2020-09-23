@@ -3,5 +3,4 @@ kind: ServiceResolver
 metadata:
   name: resolver
 spec:
-  redirect:
-    service: bar
+  defaultSubset: foobar
