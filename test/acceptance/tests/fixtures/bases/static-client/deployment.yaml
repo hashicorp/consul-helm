@@ -18,12 +18,4 @@ spec:
           image: tutum/curl:latest
           command: [ "/bin/sh", "-c", "--" ]
           args: [ "touch /tmp/healthy; while true; do sleep 30; done;" ]
-          readinessProbe:
-            exec:
-             command:
-             - cat
-             - /tmp/healthy
-            initialDelaySeconds: 2
-            failureThreshold: 1
-            periodSeconds: 2
       serviceAccountName: static-client
