@@ -802,7 +802,7 @@ connectInject:
   image: null # image for consul-k8s that contains the injector
   default: false # true will inject by default, otherwise requires annotation
 
-  # Health checks enables propogation of k8s pod health status to consul service instances
+  # Health checks enables propagation of k8s pod health status to Consul service instances.
   # This has the effect of marking a Consul service instance passing/critical in the case
   # that the connect-injected pod has passed/failed health checks.
   # Setting this to false will cause the health check status to not be synced.
