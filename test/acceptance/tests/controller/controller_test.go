@@ -56,15 +56,15 @@ func TestController(t *testing.T) {
 					require.NoError(r, err, out)
 					helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
 						// Ignore errors here because if the test ran as expected
-						// the custom resource will have been deleted.
+						// the custom resources will have been deleted.
 						helpers.RunKubectlAndGetOutputE(t, ctx.KubectlOptions(t), "delete", "-f", "../fixtures/crds")
 					})
 				})
 
-				// On startup, the controller can take upwards of 6s to perform
+				// On startup, the controller can take upwards of 1m to perform
 				// leader election so we may need to wait a long time for
-				// the reconcile loop to run (hence the 20s timeout here).
-				counter := &retry.Counter{Count: 20, Wait: 1 * time.Second}
+				// the reconcile loop to run (hence the 1m timeout here).
+				counter := &retry.Counter{Count: 60, Wait: 1 * time.Second}
 				retry.RunWith(counter, t, func(r *retry.R) {
 					// service-defaults
 					entry, _, err := consulClient.ConfigEntries().Get(api.ServiceDefaults, "defaults", nil)
@@ -86,6 +86,13 @@ func TestController(t *testing.T) {
 					proxyDefaultEntry, ok := entry.(*api.ProxyConfigEntry)
 					require.True(r, ok, "could not cast to ProxyConfigEntry")
 					require.Equal(r, api.MeshGatewayModeLocal, proxyDefaultEntry.MeshGateway.Mode)
+
+					// service-router
+					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceRouter, "router", nil)
+					require.NoError(r, err)
+					svcRouterEntry, ok := entry.(*api.ServiceRouterConfigEntry)
+					require.True(r, ok, "could not cast to ServiceRouterConfigEntry")
+					require.Equal(r, "/foo", svcRouterEntry.Routes[0].Match.HTTP.PathPrefix)
 				})
 			}
 
@@ -102,6 +109,10 @@ func TestController(t *testing.T) {
 				t.Log("patching proxy-defaults CRD")
 				patchMeshGatewayMode := "remote"
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "proxydefaults", "global", "-p", fmt.Sprintf(`{"spec":{"meshGateway":{"mode": "%s"}}}`, patchMeshGatewayMode), "--type=merge")
+
+				t.Log("patching service-router CRD")
+				patchPathPrefix := "/baz"
+				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "servicerouter", "router", "-p", fmt.Sprintf(`{"spec":{"routes":[{"match":{"http":{"pathPrefix":"%s"}}}]}}`, patchPathPrefix), "--type=merge")
 
 				counter := &retry.Counter{Count: 10, Wait: 500 * time.Millisecond}
 				retry.RunWith(counter, t, func(r *retry.R) {
@@ -125,6 +136,13 @@ func TestController(t *testing.T) {
 					proxyDefaultsEntry, ok := entry.(*api.ProxyConfigEntry)
 					require.True(r, ok, "could not cast to ProxyConfigEntry")
 					require.Equal(r, api.MeshGatewayModeRemote, proxyDefaultsEntry.MeshGateway.Mode)
+
+					// service-router
+					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceRouter, "router", nil)
+					require.NoError(r, err)
+					svcRouterEntry, ok := entry.(*api.ServiceRouterConfigEntry)
+					require.True(r, ok, "could not cast to ServiceRouterConfigEntry")
+					require.Equal(r, patchPathPrefix, svcRouterEntry.Routes[0].Match.HTTP.PathPrefix)
 				})
 			}
 
@@ -138,6 +156,9 @@ func TestController(t *testing.T) {
 
 				t.Log("deleting proxy-defaults CRD")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "proxydefaults", "global")
+
+				t.Log("deleting service-router CRD")
+				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "servicerouter", "router")
 
 				counter := &retry.Counter{Count: 10, Wait: 500 * time.Millisecond}
 				retry.RunWith(counter, t, func(r *retry.R) {
@@ -153,6 +174,9 @@ func TestController(t *testing.T) {
 
 					// proxy-defaults
 					_, _, err = consulClient.ConfigEntries().Get(api.ProxyDefaults, "global", nil)
+
+					// service-router
+					_, _, err = consulClient.ConfigEntries().Get(api.ServiceRouter, "router", nil)
 					require.Error(r, err)
 					require.Contains(r, err.Error(), "404 (Config entry not found")
 				})
