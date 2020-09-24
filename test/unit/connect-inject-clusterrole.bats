@@ -59,7 +59,7 @@ load _helpers
       --set 'global.enablePodSecurityPolicies=false' \
       . | tee /dev/stderr |
       yq -r '.rules | length' | tee /dev/stderr)
-  [ "${actual}" = "1" ]
+  [ "${actual}" = "2" ]
 }
 
 @test "connectInject/ClusterRole: allows podsecuritypolicies access with global.enablePodSecurityPolicies=true" {
@@ -69,7 +69,7 @@ load _helpers
       --set 'connectInject.enabled=true' \
       --set 'global.enablePodSecurityPolicies=true' \
       . | tee /dev/stderr |
-      yq -r '.rules[1].resources[0]' | tee /dev/stderr)
+      yq -r '.rules[2].resources[0]' | tee /dev/stderr)
   [ "${actual}" = "podsecuritypolicies" ]
 }
 
@@ -84,7 +84,7 @@ load _helpers
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq -r '.rules | length' | tee /dev/stderr)
-  [ "${actual}" = "1" ]
+  [ "${actual}" = "2" ]
 }
 
 @test "connectInject/ClusterRole: allow secret access with global.bootsrapACLs=true and global.enableConsulNamespaces=true" {
@@ -95,7 +95,7 @@ load _helpers
       --set 'global.acls.manageSystemACLs=true' \
       --set 'global.enableConsulNamespaces=true' \
       . | tee /dev/stderr |
-      yq -r '.rules[1].resources[0]' | tee /dev/stderr)
+      yq -r '.rules[2].resources[0]' | tee /dev/stderr)
   [ "${actual}" = "secrets" ]
 }
 
@@ -108,6 +108,6 @@ load _helpers
       --set 'global.enablePodSecurityPolicies=true' \
       --set 'global.enableConsulNamespaces=true' \
       . | tee /dev/stderr |
-      yq -r '.rules[2].resources[0]' | tee /dev/stderr)
+      yq -r '.rules[3].resources[0]' | tee /dev/stderr)
   [ "${actual}" = "secrets" ]
 }
