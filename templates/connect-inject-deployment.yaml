@@ -84,6 +84,7 @@ spec:
                 -envoy-image="{{ .Values.global.imageEnvoy }}" \
                 -consul-k8s-image="{{ default .Values.global.imageK8S .Values.connectInject.image }}" \
                 -listen=:8080 \
+                -enable-health-checks="{{ .Values.connectInject.healthChecks.enabled }}" \
                 {{- if .Values.connectInject.overrideAuthMethodName }}
                 -acl-auth-method="{{ .Values.connectInject.overrideAuthMethodName }}" \
                 {{- else if .Values.global.acls.manageSystemACLs }}
@@ -248,7 +249,8 @@ spec:
           - |
             consul-k8s acl-init \
               -secret-name="{{ template "consul.fullname" . }}-connect-inject-acl-token" \
-              -k8s-namespace={{ .Release.Namespace }}
+              -k8s-namespace={{ .Release.Namespace }} \
+              -enable-health-checks="{{ .Values.connectInject.healthChecks.enabled }}"
         resources:
           requests:
             memory: "25Mi"
