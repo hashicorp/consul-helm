@@ -111,3 +111,26 @@ load _helpers
       yq -r '.rules[3].resources[0]' | tee /dev/stderr)
   [ "${actual}" = "secrets" ]
 }
+
+@test "connectInject/ClusterRole: pod resource permission set when health checks are enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/connect-inject-clusterrole.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.healthChecks.enabled=true' \
+      . | tee /dev/stderr |
+      yq -r '.rules[1].resources[0]' | tee /dev/stderr)
+  [ "${actual}" = "pods" ]
+}
+
+@test "connectInject/ClusterRole: no pod resource permission set when health checks are disabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/connect-inject-clusterrole.yaml  \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.healthChecks.enabled=false' \
+      . | tee /dev/stderr |
+      yq -r '.rules | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
+}
+
