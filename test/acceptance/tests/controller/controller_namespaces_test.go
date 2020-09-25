@@ -110,7 +110,7 @@ func TestControllerNamespaces(t *testing.T) {
 
 			// Test creation.
 			{
-				t.Log("creating CRDs")
+				t.Log("creating custom resources")
 				retry.Run(t, func(r *retry.R) {
 					// Retry the kubectl apply because we've seen sporadic
 					// "connection refused" errors where the mutating webhook
@@ -157,19 +157,19 @@ func TestControllerNamespaces(t *testing.T) {
 
 			// Test updates.
 			{
-				t.Log("patching service-defaults CRD")
+				t.Log("patching service-defaults custom resource")
 				patchProtocol := "tcp"
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "-n", KubeNS, "servicedefaults", "defaults", "-p", fmt.Sprintf(`{"spec":{"protocol":"%s"}}`, patchProtocol), "--type=merge")
 
-				t.Log("patching service-resolver CRD")
+				t.Log("patching service-resolver custom resource")
 				patchRedirectSvc := "baz"
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "-n", KubeNS, "serviceresolver", "resolver", "-p", fmt.Sprintf(`{"spec":{"redirect":{"service": "%s"}}}`, patchRedirectSvc), "--type=merge")
 
-				t.Log("patching proxy-defaults CRD")
+				t.Log("patching proxy-defaults custom resource")
 				patchMeshGatewayMode := "remote"
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "-n", KubeNS, "proxydefaults", "global", "-p", fmt.Sprintf(`{"spec":{"meshGateway":{"mode": "%s"}}}`, patchMeshGatewayMode), "--type=merge")
 
-				t.Log("patching service-router CRD")
+				t.Log("patching service-router custom resource")
 				patchPathPrefix := "/baz"
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "-n", KubeNS, "servicerouter", "router", "-p", fmt.Sprintf(`{"spec":{"routes":[{"match":{"http":{"pathPrefix":"%s"}}}]}}`, patchPathPrefix), "--type=merge")
 
@@ -207,16 +207,16 @@ func TestControllerNamespaces(t *testing.T) {
 
 			// Test a delete.
 			{
-				t.Log("deleting service-defaults CRD")
+				t.Log("deleting service-defaults custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "-n", KubeNS, "servicedefaults", "defaults")
 
-				t.Log("deleting service-resolver CRD")
+				t.Log("deleting service-resolver custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "-n", KubeNS, "serviceresolver", "resolver")
 
-				t.Log("deleting proxy-defaults CRD")
+				t.Log("deleting proxy-defaults custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "-n", KubeNS, "proxydefaults", "global")
 
-				t.Log("deleting service-router CRD")
+				t.Log("deleting service-router custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "-n", KubeNS, "servicerouter", "router")
 
 				counter := &retry.Counter{Count: 10, Wait: 500 * time.Millisecond}
