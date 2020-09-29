@@ -20,14 +20,14 @@ webhooks:
   name: mutate-proxydefaults.consul.hashicorp.com
   rules:
     - apiGroups:
-        - consul.hashicorp.com
+      - consul.hashicorp.com
       apiVersions:
-        - v1alpha1
+      - v1alpha1
       operations:
-        - CREATE
-        - UPDATE
+      - CREATE
+      - UPDATE
       resources:
-        - proxydefaults
+      - proxydefaults
   sideEffects: None
 - clientConfig:
     caBundle: Cg==
@@ -39,14 +39,14 @@ webhooks:
   name: mutate-servicedefaults.consul.hashicorp.com
   rules:
     - apiGroups:
-        - consul.hashicorp.com
+      - consul.hashicorp.com
       apiVersions:
-        - v1alpha1
+      - v1alpha1
       operations:
-        - CREATE
-        - UPDATE
+      - CREATE
+      - UPDATE
       resources:
-        - servicedefaults
+      - servicedefaults
   sideEffects: None
 - clientConfig:
     caBundle: Cg==
@@ -58,14 +58,14 @@ webhooks:
   name: mutate-serviceresolver.consul.hashicorp.com
   rules:
     - apiGroups:
-        - consul.hashicorp.com
+      - consul.hashicorp.com
       apiVersions:
-        - v1alpha1
+      - v1alpha1
       operations:
-        - CREATE
-        - UPDATE
+      - CREATE
+      - UPDATE
       resources:
-        - serviceresolvers
+      - serviceresolvers
   sideEffects: None
 - clientConfig:
     caBundle: Cg==
@@ -77,14 +77,14 @@ webhooks:
   name: mutate-servicerouter.consul.hashicorp.com
   rules:
     - apiGroups:
-        - consul.hashicorp.com
+      - consul.hashicorp.com
       apiVersions:
-        - v1alpha1
+      - v1alpha1
       operations:
-        - CREATE
-        - UPDATE
+      - CREATE
+      - UPDATE
       resources:
-        - servicerouter
+      - servicerouters
   sideEffects: None
 - clientConfig:
     caBundle: Cg==
@@ -96,13 +96,13 @@ webhooks:
   name: mutate-servicesplitter.consul.hashicorp.com
   rules:
     - apiGroups:
-        - consul.hashicorp.com
+      - consul.hashicorp.com
       apiVersions:
-        - v1alpha1
+      - v1alpha1
       operations:
-        - CREATE
-        - UPDATE
+      - CREATE
+      - UPDATE
       resources:
-        - servicesplitters
+      - servicesplitters
   sideEffects: None
 {{- end }}
