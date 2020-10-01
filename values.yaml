@@ -809,14 +809,14 @@ connectInject:
   # Toggling this on/off is not recommended as it may leave stale Consul health checks that
   # will eventually expire and be marked critical which would require manual cleanup or
   # restarting the pod.
-  # syncPeriod defines how often a full state reconcile is done after the initial reconcile
+  # reconcilePeriod defines how often a full state reconcile is done after the initial reconcile
   # at startup is completed.
   # NOTE: It is highly recommended to enable TLS with this feature because it requires
   # making calls to Consul clients across the cluster. Without TLS enabled, these calls
   # could leak ACL tokens.
   healthChecks:
     enabled: true
-    syncPeriod: "10m"
+    reconcilePeriod: "10m"
 
   # The Docker image for Consul to use when performing Connect injection.
   # Defaults to global.image.
