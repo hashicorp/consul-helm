@@ -79,7 +79,7 @@ load _helpers
   [[ "$output" =~ "client.grpc must be true for connect injection" ]]
 }
 
-@test "connectInject/Deployment: health checks enabled by default" {
+@test "connectInject/Deployment: health checks disabled by default" {
   cd `chart_dir`
   local cmd=$(helm template \
       -s templates/connect-inject-deployment.yaml \
@@ -88,7 +88,7 @@ load _helpers
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
   local actual=$(echo "$cmd" |
-    yq 'any(contains("-enable-health-checks-controller=true"))' | tee /dev/stderr)
+    yq 'any(contains("-enable-health-checks-controller=false"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 

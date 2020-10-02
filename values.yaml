@@ -815,7 +815,7 @@ connectInject:
   # making calls to Consul clients across the cluster. Without TLS enabled, these calls
   # could leak ACL tokens.
   healthChecks:
-    enabled: true
+    enabled: false
     reconcilePeriod: "10m"
 
   # The Docker image for Consul to use when performing Connect injection.
