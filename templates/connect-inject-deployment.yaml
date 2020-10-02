@@ -250,8 +250,7 @@ spec:
           - |
             consul-k8s acl-init \
               -secret-name="{{ template "consul.fullname" . }}-connect-inject-acl-token" \
-              -k8s-namespace={{ .Release.Namespace }} \
-              -enable-health-checks={{ .Values.connectInject.healthChecks.enabled }}
+              -k8s-namespace={{ .Release.Namespace }}
         resources:
           requests:
             memory: "25Mi"

@@ -1,13 +1,9 @@
 package connect
 
 import (
-	"testing"
-	"time"
-
 	"github.com/hashicorp/consul-helm/test/acceptance/framework"
 	"github.com/hashicorp/consul-helm/test/acceptance/helpers"
-	"github.com/hashicorp/consul/api"
-	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 // Tests:
@@ -52,7 +48,7 @@ func TestHealthChecksDefault(t *testing.T) {
 // Test that Connect works in a secure installation,
 // with ACLs and TLS enabled.
 // TODO: when ACLs work enable this
-func _TestHealthChecksSecure(t *testing.T) {
+func TestHealthChecksSecure(t *testing.T) {
 	cases := []struct {
 		name              string
 		enableAutoEncrypt string
@@ -82,35 +78,21 @@ func _TestHealthChecksSecure(t *testing.T) {
 
 			releaseName := helpers.RandomName()
 			consulCluster := framework.NewHelmCluster(t, helmValues, ctx, cfg, releaseName)
-
 			consulCluster.Create(t)
 
 			t.Log("creating static-server and static-client deployments")
-			helpers.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-server-inject")
+			helpers.DeployKustomizeWithoutWait(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-server-hc")
 			helpers.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-inject")
-
-			consulClient := consulCluster.SetupConsulClient(t, true)
-
-			t.Log("creating intention")
-			_, _, err := consulClient.Connect().IntentionCreate(&api.Intention{
-				SourceName:      staticClientName,
-				DestinationName: "static-server",
-				Action:          api.IntentionActionAllow,
-			}, nil)
-			require.NoError(t, err)
-
-			// The readiness probe should take a second or two to trigger success
-			time.Sleep(time.Second * 8)
-			t.Log("checking that connection is successful")
-			helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(t), true, staticClientName, "http://localhost:1234")
-
-			helpers.RunKubectl(t, ctx.KubectlOptions(t), "exec", "-it", staticClientName, "--", "rm /tmp/healthy")
-
-			// The readiness probe takes  2s to fail
-			time.Sleep(time.Second * 8)
-			t.Log("checking that the health check has caused the connect to be failed")
+			// The readiness probe takes 2s to report success
+			t.Log("checking that connection is unsuccessful")
 			helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(t), false, staticClientName, "http://localhost:1234")
 
+			// Now remove the file so that the health check fails
+			helpers.RunKubectl(t, ctx.KubectlOptions(t), "exec", "-it", "deploy/"+staticServerName, "--", "touch", "/tmp/healthy")
+
+			// The readiness probe should take a few seconds to populate consul, CheckStaticServerConnection retries until it fails
+			t.Log("checking that connection is successful")
+			helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(t), true, staticClientName, "http://localhost:1234")
 		})
 	}
 }
