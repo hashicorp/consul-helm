@@ -88,7 +88,7 @@ load _helpers
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
   local actual=$(echo "$cmd" |
-    yq 'any(contains("-enable-health-checks=true"))' | tee /dev/stderr)
+    yq 'any(contains("-enable-health-checks-controller=true"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -115,7 +115,7 @@ load _helpers
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
   local actual=$(echo "$cmd" |
-    yq 'any(contains("-enable-health-checks=false"))' | tee /dev/stderr)
+    yq 'any(contains("-enable-health-checks-controller=false"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
