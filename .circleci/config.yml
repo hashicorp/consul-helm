@@ -249,11 +249,6 @@ workflows:
             - unit-helm2
             - unit-helm3
             - unit-acceptance-framework
-      - acceptance-openshift:
-          requires:
-            - unit-helm2
-            - unit-helm3
-            - unit-acceptance-framework
   nightly-acceptance-tests:
     triggers:
       - schedule:
