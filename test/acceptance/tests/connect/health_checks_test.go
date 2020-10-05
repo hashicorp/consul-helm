@@ -48,7 +48,7 @@ func TestHealthChecksDefault(t *testing.T) {
 // Test that Connect works in a secure installation,
 // with ACLs and TLS enabled.
 // TODO: when ACLs work enable this
-func TestHealthChecksSecure(t *testing.T) {
+func _TestHealthChecksSecure(t *testing.T) {
 	cases := []struct {
 		name              string
 		enableAutoEncrypt string
