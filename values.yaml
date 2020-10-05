@@ -235,6 +235,7 @@ global:
 
   # openshift contains configuration for running this Helm chart
   # on the Red Hat OpenShift platform.
+  # This Helm chart currently supports OpenShift v4.x+.
   openshift:
     # If true, the Helm chart will create necessary configuration for running its components
     # on OpenShift.

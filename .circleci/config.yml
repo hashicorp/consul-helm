@@ -156,6 +156,7 @@ jobs:
   acceptance-openshift:
     environment:
       - TEST_RESULTS: /tmp/test-results
+      # Primary and secondary Azure OpenShift clusters (created manually) that are used to run acceptance tests.
       - OC_PRIMARY_NAME: consul-helm-test-2757871175
       - OC_SECONDARY_NAME: consul-helm-test-3737660519
     docker:
@@ -243,27 +244,26 @@ workflows:
             - go-fmt-and-vet
       - unit-helm2
       - unit-helm3
-#      - acceptance:
-#          requires:
-#            - unit-helm2
-#            - unit-helm3
-#            - unit-acceptance-framework
+      - acceptance:
+          requires:
+            - unit-helm2
+            - unit-helm3
+            - unit-acceptance-framework
       - acceptance-openshift:
           requires:
             - unit-helm2
             - unit-helm3
             - unit-acceptance-framework
-# todo: uncomment before merging the PR
-#  nightly-acceptance-tests:
-#    triggers:
-#      - schedule:
-#          cron: "0 0 * * *"
-#          filters:
-#            branches:
-#              only:
-#                - master
-#    jobs:
-#      - acceptance-openshift
+  nightly-acceptance-tests:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - acceptance-openshift
   update-helm-charts-index:
     jobs:
       - update-helm-charts-index:
