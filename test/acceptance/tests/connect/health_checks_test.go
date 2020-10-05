@@ -44,5 +44,3 @@ func TestHealthChecksDefault(t *testing.T) {
 	t.Log("checking that connection is successful")
 	helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(t), true, staticClientName, "http://localhost:1234")
 }
-
-
