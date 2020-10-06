@@ -24,7 +24,7 @@ func TestHealthChecksDefault(t *testing.T) {
 		"global.imageK8S":                    "kschoche/consul-k8s-dev",
 		"connectInject.enabled":              "true",
 		"connectInject.healthChecks.enabled": "true",
-		"global.tls.enabled": "true",
+		"global.tls.enabled":                 "true",
 	}
 
 	releaseName := helpers.RandomName()
