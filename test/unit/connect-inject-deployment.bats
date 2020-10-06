@@ -911,6 +911,28 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
+@test "connectInject/Deployment: CONSUL_HTTP_ADDR env variable not set when healthchecks are not enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.healthChecks.enabled=false' \
+      . | tee /dev/stderr |
+      yq '[.spec.template.spec.containers[0].env[].name] | any(contains("CONSUL_HTTP_ADDR"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "connectInject/Deployment: CONSUL_HTTP_ADDR env variable set when healthchecks are enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.healthChecks.enabled=true' \
+      . | tee /dev/stderr |
+      yq '[.spec.template.spec.containers[0].env[].name] | any(contains("CONSUL_HTTP_ADDR"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
 #--------------------------------------------------------------------
 # namespaces + host ip
 
