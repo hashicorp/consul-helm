@@ -102,6 +102,13 @@ func TestController(t *testing.T) {
 					svcSplitterEntry, ok := entry.(*api.ServiceSplitterConfigEntry)
 					require.True(r, ok, "could not cast to ServiceSplitterConfigEntry")
 					require.Equal(r, float32(100), svcSplitterEntry.Splits[0].Weight)
+
+					// service-intentions
+					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, "intentions", nil)
+					require.NoError(r, err)
+					svcIntentionsEntry, ok := entry.(*api.ServiceIntentionsConfigEntry)
+					require.True(r, ok, "could not cast to ServiceIntentionsConfigEntry")
+					require.Equal(r, api.IntentionActionAllow, svcIntentionsEntry.Sources[0].Action)
 				})
 			}
 
@@ -125,6 +132,9 @@ func TestController(t *testing.T) {
 
 				t.Log("patching service-splitter custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "servicesplitter", "splitter", "-p", `{"spec": {"splits": [{"weight": 50}, {"weight": 50, "service": "other-splitter"}]}}`, "--type=merge")
+
+				t.Log("patching service-intentions custom resource")
+				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "serviceintentions", "intentions", "-p", `{"spec": {"sources": [{"name": "svc2", "action": "deny"}]}}`, "--type=merge")
 
 				counter := &retry.Counter{Count: 10, Wait: 500 * time.Millisecond}
 				retry.RunWith(counter, t, func(r *retry.R) {
@@ -164,6 +174,13 @@ func TestController(t *testing.T) {
 					require.Equal(r, float32(50), svcSplitter.Splits[0].Weight)
 					require.Equal(r, float32(50), svcSplitter.Splits[1].Weight)
 					require.Equal(r, "other-splitter", svcSplitter.Splits[1].Service)
+
+					// service-intentions
+					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, "intentions", nil)
+					require.NoError(r, err)
+					svcIntentions, ok := entry.(*api.ServiceIntentionsConfigEntry)
+					require.True(r, ok, "could not cast to ServiceIntentionsConfigEntry")
+					require.Equal(r, api.IntentionActionDeny, svcIntentions.Sources[0].Action)
 				})
 			}
 
@@ -183,6 +200,9 @@ func TestController(t *testing.T) {
 
 				t.Log("deleting service-splitter custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "servicesplitter", "splitter")
+
+				t.Log("deleting service-intentions custom resource")
+				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "serviceintentions", "intentions")
 
 				counter := &retry.Counter{Count: 10, Wait: 500 * time.Millisecond}
 				retry.RunWith(counter, t, func(r *retry.R) {
@@ -208,6 +228,11 @@ func TestController(t *testing.T) {
 
 					// service-splitter
 					_, _, err = consulClient.ConfigEntries().Get(api.ServiceSplitter, "splitter", nil)
+					require.Error(r, err)
+					require.Contains(r, err.Error(), "404 (Config entry not found")
+
+					// service-splitter
+					_, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, "intentions", nil)
 					require.Error(r, err)
 					require.Contains(r, err.Error(), "404 (Config entry not found")
 				})

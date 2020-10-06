@@ -1,4 +1,4 @@
-
+{{- if .Values.controller.enabled }}
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -32,10 +32,13 @@ spec:
         spec:
           description: ServiceIntentionsSpec defines the desired state of ServiceIntentions
           properties:
-            name:
-              type: string
-            namespace:
-              type: string
+            destination:
+              properties:
+                name:
+                  type: string
+                namespace:
+                  type: string
+              type: object
             sources:
               items:
                 properties:
@@ -48,46 +51,6 @@ spec:
                     type: string
                   namespace:
                     type: string
-                  permissions:
-                    items:
-                      properties:
-                        action:
-                          description: IntentionAction is the action that the intention represents. This can be "allow" or "deny" to allowlist or denylist intentions.
-                          type: string
-                        http:
-                          properties:
-                            header:
-                              items:
-                                properties:
-                                  exact:
-                                    type: string
-                                  invert:
-                                    type: boolean
-                                  name:
-                                    type: string
-                                  prefix:
-                                    type: string
-                                  present:
-                                    type: boolean
-                                  regex:
-                                    type: string
-                                  suffix:
-                                    type: string
-                                type: object
-                              type: array
-                            methods:
-                              items:
-                                type: string
-                              type: array
-                            pathExact:
-                              type: string
-                            pathPrefix:
-                              type: string
-                            pathRegex:
-                              type: string
-                          type: object
-                      type: object
-                    type: array
                 type: object
               type: array
           type: object
@@ -132,3 +95,4 @@ status:
     plural: ""
   conditions: []
   storedVersions: []
+{{- end }}
