@@ -15,6 +15,10 @@ load _helpers
       -s templates/crd-servicesplitters.yaml  \
       --set 'controller.enabled=true' \
       . | tee /dev/stderr |
-      yq 'length > 0' | tee /dev/stderr)
+      # The generated CRDs have "---" at the top which results in two objects
+      # being detected by yq, the first of which is null. We must therefore use
+      # yq -s so that length operates on both objects at once rather than
+      # individually, which would output false\ntrue and fail the test.
+      yq -s 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
