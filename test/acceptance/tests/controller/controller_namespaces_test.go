@@ -18,6 +18,11 @@ const (
 	KubeNS                 = "ns1"
 	ConsulDestNS           = "from-k8s"
 	DefaultConsulNamespace = "default"
+
+	// The name of a service intention in consul is
+	// the name of the destination service and is not
+	// the same as the kube name of the resource.
+	IntentionName = "svc1"
 )
 
 // Test that the controller works with Consul Enterprise namespaces.
@@ -165,7 +170,7 @@ func TestControllerNamespaces(t *testing.T) {
 					require.Equal(r, float32(100), svcSplitterEntry.Splits[0].Weight)
 
 					// service-intentions
-					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, "intentions", queryOpts)
+					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, IntentionName, queryOpts)
 					require.NoError(r, err)
 					svcIntentions, ok := entry.(*api.ServiceIntentionsConfigEntry)
 					require.True(r, ok, "could not cast to ServiceSplitterConfigEntry")
@@ -237,7 +242,7 @@ func TestControllerNamespaces(t *testing.T) {
 					require.Equal(r, "other-splitter", svcSplitter.Splits[1].Service)
 
 					// service-intentions
-					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, "intentions", queryOpts)
+					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, IntentionName, queryOpts)
 					require.NoError(r, err)
 					svcIntentions, ok := entry.(*api.ServiceIntentionsConfigEntry)
 					require.True(r, ok, "could not cast to ServiceIntentionsConfigEntry")
@@ -293,7 +298,7 @@ func TestControllerNamespaces(t *testing.T) {
 					require.Contains(r, err.Error(), "404 (Config entry not found")
 
 					// service-intentions
-					_, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, "intentions", queryOpts)
+					_, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, IntentionName, queryOpts)
 					require.Error(r, err)
 					require.Contains(r, err.Error(), "404 (Config entry not found")
 				})

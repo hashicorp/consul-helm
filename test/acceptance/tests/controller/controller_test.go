@@ -25,6 +25,11 @@ func TestController(t *testing.T) {
 		{true, true},
 	}
 
+	// The name of a service intention in consul is
+	// the name of the destination service and is not
+	// the same as the kube name of the resource.
+	const IntentionName = "svc1"
+
 	for _, c := range cases {
 		name := fmt.Sprintf("secure: %t; auto-encrypt: %t", c.secure, c.autoEncrypt)
 		t.Run(name, func(t *testing.T) {
@@ -104,7 +109,7 @@ func TestController(t *testing.T) {
 					require.Equal(r, float32(100), svcSplitterEntry.Splits[0].Weight)
 
 					// service-intentions
-					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, "intentions", nil)
+					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, IntentionName, nil)
 					require.NoError(r, err)
 					svcIntentionsEntry, ok := entry.(*api.ServiceIntentionsConfigEntry)
 					require.True(r, ok, "could not cast to ServiceIntentionsConfigEntry")
@@ -176,7 +181,7 @@ func TestController(t *testing.T) {
 					require.Equal(r, "other-splitter", svcSplitter.Splits[1].Service)
 
 					// service-intentions
-					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, "intentions", nil)
+					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, IntentionName, nil)
 					require.NoError(r, err)
 					svcIntentions, ok := entry.(*api.ServiceIntentionsConfigEntry)
 					require.True(r, ok, "could not cast to ServiceIntentionsConfigEntry")
@@ -232,7 +237,7 @@ func TestController(t *testing.T) {
 					require.Contains(r, err.Error(), "404 (Config entry not found")
 
 					// service-splitter
-					_, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, "intentions", nil)
+					_, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, IntentionName, nil)
 					require.Error(r, err)
 					require.Contains(r, err.Error(), "404 (Config entry not found")
 				})
