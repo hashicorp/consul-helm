@@ -236,7 +236,7 @@ func TestController(t *testing.T) {
 					require.Error(r, err)
 					require.Contains(r, err.Error(), "404 (Config entry not found")
 
-					// service-splitter
+					// service-intentions
 					_, _, err = consulClient.ConfigEntries().Get(api.ServiceIntentions, IntentionName, nil)
 					require.Error(r, err)
 					require.Contains(r, err.Error(), "404 (Config entry not found")
