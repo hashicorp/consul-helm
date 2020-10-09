@@ -8,16 +8,11 @@ import (
 	"testing"
 )
 
-// Tests:
-// 1. Test that health checks enabled by default works for passing+failing
-// 2. Test that health checks enabled with TLS/ACL works for passing+failing
-
-// Test that health checks work in a default installation
-// Workflow is as follows :
-// Deploy with a failing health check
-// Test that traffic fails
-// kubectl exec to the static-client and `touch /tmp/healthy`
+// TestHealthChecksSecure that health checks work in a default installation with TLS/autoencrypt permutations
+// Deploy with a passing health check
 // Test that traffic passes
+// update the container with readiness probe so that it fails
+// Test that traffic now fails
 func TestHealthChecksSecure(t *testing.T) {
 	cases := []struct {
 		secure      bool
@@ -47,11 +42,8 @@ func TestHealthChecksSecure(t *testing.T) {
 				"global.imageK8S":                    "kschoche/consul-k8s-dev",
 				"connectInject.enabled":              "true",
 				"connectInject.healthChecks.enabled": "true",
-
-				// TODO: When ACLs are supported add another test
-				//"global.acls.manageSystemACLs": strconv.FormatBool(c.secure),
-				"global.tls.enabled":     strconv.FormatBool(c.secure),
-				"global.tls.autoEncrypt": strconv.FormatBool(c.autoEncrypt),
+				"global.tls.enabled":                 strconv.FormatBool(c.secure),
+				"global.tls.autoEncrypt":             strconv.FormatBool(c.autoEncrypt),
 			}
 
 			releaseName := helpers.RandomName()
