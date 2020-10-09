@@ -46,7 +46,7 @@ FEATURES:
     enabled: true
   ```
 
-  This will install the CRDs, the controller that watches for CRD creation, and
+  This will install the CRDs, the controller that watches for CR creation, and
   a webhook certificate manager that manages the certificates for the controller's
   webhooks.
 
