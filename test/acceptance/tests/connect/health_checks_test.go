@@ -56,7 +56,7 @@ func TestHealthChecksSecure(t *testing.T) {
 			t.Log("checking that connection is successful")
 			helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(t), true, staticClientName, "http://localhost:1234")
 
-			// Now remove the file so that the health check fails
+			// Now create the file so that the health check fails
 			helpers.RunKubectl(t, ctx.KubectlOptions(t), "exec", "-it", "deploy/"+staticServerName, "--", "touch", "/tmp/unhealthy")
 
 			// The readiness probe should take a few seconds to populate consul, CheckStaticServerConnection retries until it fails
