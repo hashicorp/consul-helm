@@ -1,5 +1,7 @@
 ## Unreleased
 
+## 0.25.0 (Oct 12, 2020)
+
 FEATURES:
 
 * Support deploying this Helm chart to OpenShift 4.x. [[GH-600](https://github.com/hashicorp/consul-helm/pull/600)]
