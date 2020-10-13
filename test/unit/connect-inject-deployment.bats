@@ -92,7 +92,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "connectInject/Deployment: health checks sync period set by default" {
+@test "connectInject/Deployment: health checks reconcile period set by default" {
   cd `chart_dir`
   local cmd=$(helm template \
       -s templates/connect-inject-deployment.yaml \
@@ -911,7 +911,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "connectInject/Deployment: CONSUL_HTTP_ADDR env variable not set when healthchecks are not enabled" {
+@test "connectInject/Deployment: CONSUL_HTTP_ADDR env variable not set when health checks are disabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/connect-inject-deployment.yaml \

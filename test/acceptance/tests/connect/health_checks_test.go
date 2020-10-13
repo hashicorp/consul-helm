@@ -8,12 +8,12 @@ import (
 	"testing"
 )
 
-// TestHealthChecksSecure that health checks work in a default installation with TLS/autoencrypt permutations
+// Test that health checks work in a default installation and a secure installation with TLS/auto-encrypt permutations.
 // Deploy with a passing health check
 // Test that traffic passes
 // update the container with readiness probe so that it fails
 // Test that traffic now fails
-func TestHealthChecksSecure(t *testing.T) {
+func TestHealthChecks(t *testing.T) {
 	cases := []struct {
 		secure      bool
 		autoEncrypt bool
@@ -24,7 +24,7 @@ func TestHealthChecksSecure(t *testing.T) {
 		},
 		{
 			true,
-			true,
+			false,
 		},
 		{
 			true,
@@ -39,7 +39,6 @@ func TestHealthChecksSecure(t *testing.T) {
 			cfg := suite.Config()
 
 			helmValues := map[string]string{
-				"global.imageK8S":                    "kschoche/consul-k8s-dev",
 				"connectInject.enabled":              "true",
 				"connectInject.healthChecks.enabled": "true",
 				"global.tls.enabled":                 strconv.FormatBool(c.secure),
@@ -56,7 +55,7 @@ func TestHealthChecksSecure(t *testing.T) {
 			t.Log("checking that connection is successful")
 			helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(t), true, staticClientName, "http://localhost:1234")
 
-			// Now create the file so that the health check fails
+			// Now create the file so that the readiness probe of the static-server pod fails.
 			helpers.RunKubectl(t, ctx.KubectlOptions(t), "exec", "-it", "deploy/"+staticServerName, "--", "touch", "/tmp/unhealthy")
 
 			// The readiness probe should take a few seconds to populate consul, CheckStaticServerConnection retries until it fails

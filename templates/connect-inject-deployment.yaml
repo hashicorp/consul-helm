@@ -47,7 +47,7 @@ spec:
               value: /consul/tls/ca/tls.crt
             {{- end }}
             {{- /* A Consul client and ACL token is necessary for the connect injector if namespaces are enabled
-              or for healthChecks enabled */}}
+              or if healthChecks enabled */}}
             {{- if (or .Values.global.enableConsulNamespaces .Values.connectInject.healthChecks.enabled) }}
             - name: HOST_IP
               valueFrom:
