@@ -52,6 +52,9 @@ func TestHealthChecks(t *testing.T) {
 			t.Log("creating static-server and static-client deployments")
 			helpers.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-server-hc")
 			helpers.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-inject")
+			// TODO: it would be nice to add a codepath which makes a connection to the agent where staticServer is running
+			// so that it can fetch the healthcheck and its status and assert on this. Right now the health check status
+			// is implied by the traffic passing or not.
 			t.Log("checking that connection is successful")
 			helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(t), true, staticClientName, "http://localhost:1234")
 
