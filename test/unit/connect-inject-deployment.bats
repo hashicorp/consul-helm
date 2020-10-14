@@ -92,6 +92,20 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
+@test "connectInject/Deployment: health checks can be enabled" {
+  cd `chart_dir`
+  local cmd=$(helm template \
+      -s templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.healthChecks.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-enable-health-checks-controller=true"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
 @test "connectInject/Deployment: health checks reconcile period set by default" {
   cd `chart_dir`
   local cmd=$(helm template \
@@ -922,7 +936,7 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "connectInject/Deployment: CONSUL_HTTP_ADDR env variable set when healthchecks are enabled" {
+@test "connectInject/Deployment: CONSUL_HTTP_ADDR env variable set when health checks are enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/connect-inject-deployment.yaml \
