@@ -119,8 +119,8 @@ load _helpers
       --set 'connectInject.enabled=true' \
       --set 'connectInject.healthChecks.enabled=true' \
       . | tee /dev/stderr |
-      yq -r '.rules[1].resources[0]' | tee /dev/stderr)
-  [ "${actual}" = "pods" ]
+      yq -r '.rules | map(select(.resources[0] == "pods")) | length' | tee /dev/stderr)
+  [ "${actual}" = "1" ]
 }
 
 @test "connectInject/ClusterRole: no pod resource permission set when health checks are disabled" {
@@ -130,7 +130,7 @@ load _helpers
       --set 'connectInject.enabled=true' \
       --set 'connectInject.healthChecks.enabled=false' \
       . | tee /dev/stderr |
-      yq -r '.rules | length' | tee /dev/stderr)
-  [ "${actual}" = "1" ]
+      yq -r '.rules | map(select(.resources[0] == "pods")) | length' | tee /dev/stderr)
+  [ "${actual}" = "0" ]
 }
 

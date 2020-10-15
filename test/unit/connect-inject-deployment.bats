@@ -106,19 +106,6 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "connectInject/Deployment: health checks reconcile period set by default" {
-  cd `chart_dir`
-  local cmd=$(helm template \
-      -s templates/connect-inject-deployment.yaml \
-      --set 'connectInject.enabled=true' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
-
-  local actual=$(echo "$cmd" |
-    yq 'any(contains("-health-checks-reconcile-period"))' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
-
 @test "connectInject/Deployment: health checks can be disabled" {
   cd `chart_dir`
   local cmd=$(helm template \
@@ -133,6 +120,33 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
+@test "connectInject/Deployment: health checks reconcile period set by default" {
+  cd `chart_dir`
+  local cmd=$(helm template \
+      -s templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-health-checks-reconcile-period=1m"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "connectInject/Deployment: health checks reconcile period can be set" {
+  cd `chart_dir`
+  local cmd=$(helm template \
+      -s templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.healthChecks.enabled=true' \
+      --set 'connectInject.healthChecks.reconcilePeriod=10h' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-health-checks-reconcile-period=10h"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
 
 #--------------------------------------------------------------------
 # consul and envoy images
