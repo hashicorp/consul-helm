@@ -74,6 +74,8 @@ func TestMeshGatewayDefault(t *testing.T) {
 		"server.extraVolumes[0].load":          "true",
 		"server.extraVolumes[0].items[0].key":  "serverConfigJSON",
 		"server.extraVolumes[0].items[0].path": "config.json",
+		"server.enterpriseLicense.secretName":  "",
+		"server.enterpriseLicense.secretKey":   "",
 
 		"connectInject.enabled": "true",
 
@@ -183,6 +185,8 @@ func TestMeshGatewaySecure(t *testing.T) {
 				"server.extraVolumes[0].load":          "true",
 				"server.extraVolumes[0].items[0].key":  "serverConfigJSON",
 				"server.extraVolumes[0].items[0].path": "config.json",
+				"server.enterpriseLicense.secretName":  "",
+				"server.enterpriseLicense.secretKey":   "",
 
 				"connectInject.enabled": "true",
 
