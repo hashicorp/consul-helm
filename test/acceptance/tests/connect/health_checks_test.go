@@ -9,10 +9,10 @@ import (
 )
 
 // Test that health checks work in a default installation and a secure installation with TLS/auto-encrypt permutations.
-// Deploy with a passing health check
-// Test that traffic passes
-// update the container with readiness probe so that it fails
-// Test that traffic now fails
+// Deploy with a passing health check.
+// Test that the service is accessible over the mesh.
+// Update the container with readiness probe so that it fails.
+// Test that the service is inaccessible over the mesh.
 func TestHealthChecks(t *testing.T) {
 	cases := []struct {
 		secure      bool

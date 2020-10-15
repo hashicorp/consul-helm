@@ -807,9 +807,8 @@ connectInject:
   # making calls to Consul clients across the cluster. Without TLS enabled, these calls
   # could leak ACL tokens.
   healthChecks:
-    # true has the effect of marking a Consul service instance passing/critical in the event
-    # that the connect-injected pod has passed/failed readiness checks.
-    # Setting this to false will cause the controller to not run and health check status to not be synced.
+    # Enables the Consul Health Check controller that syncs the readiness checks on
+    # connect-injected services with the agent.
     enabled: false
     # reconcilePeriod defines how often a full state reconcile is done after the initial reconcile
     # at startup is completed.
