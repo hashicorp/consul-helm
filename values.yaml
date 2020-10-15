@@ -30,7 +30,7 @@ global:
   #   image: "consul:1.5.0"
   #   # Consul Enterprise 1.5.0
   #   image: "hashicorp/consul-enterprise:1.5.0-ent"
-  image: "consul:1.8.2"
+  image: "consul:1.8.4"
 
   # array of objects containing image pull secret names that will be applied to
   # each service account.
@@ -53,7 +53,7 @@ global:
   # If using acls.manageSystemACLs then must be >= 0.10.1.
   # If using connect inject then must be >= 0.10.1.
   # If using Consul Enterprise namespaces, must be >= 0.12.
-  imageK8S: "hashicorp/consul-k8s:0.18.1"
+  imageK8S: "hashicorp/consul-k8s:0.19.0"
 
   # datacenter is the name of the datacenter that the agents should register
   # as. This can't be changed once the Consul cluster is up and running
@@ -231,7 +231,15 @@ global:
   # imageEnvoy is the name (and tag) of the Envoy Docker image used for the
   # connect-injected sidecar proxies and the mesh, terminating, and ingress gateways.
   # See https://www.consul.io/docs/connect/proxies/envoy for full compatibility matrix between Consul and Envoy.
-  imageEnvoy: "envoyproxy/envoy-alpine:v1.14.2"
+  imageEnvoy: "envoyproxy/envoy-alpine:v1.14.4"
+
+  # openshift contains configuration for running this Helm chart
+  # on the Red Hat OpenShift platform.
+  # This Helm chart currently supports OpenShift v4.x+.
+  openshift:
+    # If true, the Helm chart will create necessary configuration for running its components
+    # on OpenShift.
+    enabled: false
 
 # Server, when enabled, configures a server cluster to run. This should
 # be disabled if you plan on connecting to a Consul cluster external to
@@ -365,10 +373,6 @@ server:
     # http_proxy: http://localhost:3128,
     # https_proxy: http://localhost:3128,
     # no_proxy: internal.domain.com
-
-  # disableFsGroupSecurityContext disables setting the fsGroup securityContext for the server statefulset,
-  # this is required when using the OpenShift platform as fsGroup is automatically set to an arbitrary gid.
-  disableFsGroupSecurityContext : false
 
 # Configuration for Consul servers when the servers are running outside of Kubernetes.
 # When running external servers, configuring these values is recommended
@@ -645,6 +649,9 @@ syncCatalog:
   image: null
   default: true # true will sync by default, otherwise requires annotation
 
+  # Optional priorityClassName.
+  priorityClassName: ""
+
   # toConsul and toK8S control whether syncing is enabled to Consul or K8S
   # as a destination. If both of these are disabled, the sync will do nothing.
   toConsul: true
@@ -813,6 +820,9 @@ connectInject:
     # reconcilePeriod defines how often a full state reconcile is done after the initial reconcile
     # at startup is completed.
     reconcilePeriod: "1m"
+
+  # Optional priorityClassName.
+  priorityClassName: ""
 
   # The Docker image for Consul to use when performing Connect injection.
   # Defaults to global.image.
@@ -1009,6 +1019,39 @@ connectInject:
       limits:
         memory: "150Mi"
         cpu: "50m"
+
+# [Beta feature]
+# Controller handles config entry custom resources.
+# Requires consul >= 1.8.4.
+# ServiceIntentions require consul 1.9 Beta or greater.
+controller:
+  enabled: false
+  replicas: 1
+
+  # Log verbosity level. One of "debug", "info", "warn", or "error".
+  logLevel: info
+
+  # Resource settings for controller pods.
+  resources:
+    limits:
+      cpu: 100m
+      memory: 30Mi
+    requests:
+      cpu: 100m
+      memory: 20Mi
+
+  # Optional YAML string to specify a nodeSelector config.
+  nodeSelector: null
+
+  # Optional YAML string to specify tolerations.
+  tolerations: null
+
+  # Affinity Settings
+  # This should be a multi-line string matching the affinity object
+  affinity: null
+
+  # Optional priorityClassName.
+  priorityClassName: ""
 
 # Mesh Gateways enable Consul Connect to work across Consul datacenters.
 meshGateway:

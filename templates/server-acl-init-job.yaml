@@ -205,6 +205,10 @@ spec:
                 -acl-replication-token-file=/consul/acl/tokens/acl-replication-token \
                 {{- end }}
 
+                {{- if .Values.controller.enabled }}
+                -create-controller-token=true \
+                {{- end }}
+
                 {{- if .Values.global.enableConsulNamespaces }}
                 -enable-namespaces=true \
 
@@ -238,10 +242,10 @@ spec:
                 {{- end }}
           resources:
             requests:
-              memory: "25Mi"
+              memory: "50Mi"
               cpu: "50m"
             limits:
-              memory: "25Mi"
+              memory: "50Mi"
               cpu: "50m"
 {{- end }}
 {{- end }}
