@@ -61,7 +61,8 @@ func TestHealthChecks(t *testing.T) {
 			// Now create the file so that the readiness probe of the static-server pod fails.
 			helpers.RunKubectl(t, ctx.KubectlOptions(t), "exec", "-it", "deploy/"+staticServerName, "--", "touch", "/tmp/unhealthy")
 
-			// The readiness probe should take a few seconds to populate consul, CheckStaticServerConnection retries until it fails
+			// The readiness probe should take a moment to be reflected in Consul, CheckStaticServerConnection will retry
+			// until Consul marks the service instance unavailable for mesh traffic, causing the connection to fail.
 			t.Log("checking that connection is unsuccessful")
 			helpers.CheckStaticServerConnection(t, ctx.KubectlOptions(t), false, staticClientName, "http://localhost:1234")
 		})
