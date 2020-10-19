@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/hashicorp/consul-helm/test/acceptance/framework"
 	"github.com/hashicorp/consul-helm/test/acceptance/helpers"
 	"github.com/hashicorp/consul/api"
@@ -30,7 +31,6 @@ const (
 // because in the case of namespaces there isn't a significant distinction in code between auto-encrypt
 // and non-auto-encrypt secure installations, so testing just one is enough.
 func TestControllerNamespaces(t *testing.T) {
-	t.Skip()
 	cfg := suite.Config()
 	if !cfg.EnableEnterprise {
 		t.Skipf("skipping this test because -enable-enterprise is not set")
@@ -78,7 +78,7 @@ func TestControllerNamespaces(t *testing.T) {
 				"connectInject.enabled":         "true",
 
 				// todo: remove when Helm chart updates to 1.8.4
-				"global.image": "hashicorp/consul-enterprise:1.8.4-ent",
+				"global.image": "hashicorp/consul-enterprise:1.9.0-ent-beta1",
 
 				// When mirroringK8S is set, this setting is ignored.
 				"connectInject.consulNamespaces.consulDestinationNamespace": c.destinationNamespace,
@@ -120,14 +120,32 @@ func TestControllerNamespaces(t *testing.T) {
 			// Test creation.
 			{
 				t.Log("creating custom resources")
+				opts := &k8s.KubectlOptions{
+					ContextName: ctx.KubectlOptions(t).ContextName,
+					ConfigPath:  ctx.KubectlOptions(t).ConfigPath,
+					Namespace:   KubeNS,
+				}
 				retry.Run(t, func(r *retry.R) {
 					// Retry the kubectl apply because we've seen sporadic
 					// "connection refused" errors where the mutating webhook
 					// endpoint fails initially.
-					out, err := helpers.RunKubectlAndGetOutputE(t, ctx.KubectlOptions(t), "apply", "-n", KubeNS, "-f", "../fixtures/crds")
+					out, err := helpers.RunKubectlAndGetOutputE(t, opts, "apply", "-f", "../fixtures/crds")
 					require.NoError(r, err, out)
 					// NOTE: No need to clean up because the namespace will be deleted.
 				})
+
+				t.Log("creating service-intentions resources")
+				// ServiceIntentions needs its spec.destination.namespace field
+				// set to the Consul namespace we're registering into. Since
+				// this changes if we're mirroring or not, we use kustomize to patch
+				// that field.
+				var kustomizeDir string
+				if c.mirrorK8S {
+					kustomizeDir = "../fixtures/cases/crds-mirror-namespaces"
+				} else {
+					kustomizeDir = "../fixtures/cases/crds-single-dest-namespace"
+				}
+				helpers.KubectlApplyK(t, opts, kustomizeDir)
 
 				// On startup, the controller can take upwards of 1m to perform
 				// leader election so we may need to wait a long time for

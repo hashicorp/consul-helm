@@ -68,6 +68,12 @@ func TestController(t *testing.T) {
 					})
 				})
 
+				t.Log("creating service-intentions resources")
+				// The ServiceIntentions resource in the enterprise tests needs to
+				// use kustomize and since we share the same fixtures with OSS
+				// we need to use kustomize here too.
+				helpers.KubectlApplyK(t, ctx.KubectlOptions(t), "../fixtures/cases/crds-no-namespaces")
+
 				// On startup, the controller can take upwards of 1m to perform
 				// leader election so we may need to wait a long time for
 				// the reconcile loop to run (hence the 1m timeout here).

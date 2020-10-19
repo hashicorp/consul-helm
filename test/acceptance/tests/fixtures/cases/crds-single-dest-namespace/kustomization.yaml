@@ -1,0 +1,6 @@
+bases:
+  - ../../bases/crds
+
+patchesStrategicMerge:
+  - patch.yaml
+

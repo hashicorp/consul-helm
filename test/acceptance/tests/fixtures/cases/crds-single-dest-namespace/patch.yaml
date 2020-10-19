@@ -1,0 +1,7 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: intentions
+spec:
+  destination:
+    namespace: from-k8s

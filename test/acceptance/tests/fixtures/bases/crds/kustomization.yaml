@@ -1,0 +1,5 @@
+resources:
+  - serviceintentions.yaml
+  - servicedefaults-svc1.yaml
+  - servicedefaults-svc2.yaml
+  - servicedefaults-svc3.yaml
