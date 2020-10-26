@@ -2,10 +2,11 @@ package connect
 
 import (
 	"fmt"
-	"github.com/hashicorp/consul/api"
-	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
+
+	"github.com/hashicorp/consul/api"
+	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/consul-helm/test/acceptance/framework"
 	"github.com/hashicorp/consul-helm/test/acceptance/helpers"
@@ -42,7 +43,6 @@ func TestHealthChecks(t *testing.T) {
 			cfg := suite.Config()
 
 			helmValues := map[string]string{
-				"ui.enabled":                         "true",
 				"global.imageK8S":                    "kschoche/consul-k8s-dev",
 				"connectInject.enabled":              "true",
 				"connectInject.healthChecks.enabled": "true",
