@@ -2,6 +2,8 @@ package connect
 
 import (
 	"fmt"
+	"github.com/hashicorp/consul/api"
+	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
 
@@ -40,10 +42,13 @@ func TestHealthChecks(t *testing.T) {
 			cfg := suite.Config()
 
 			helmValues := map[string]string{
+				"ui.enabled":                         "true",
+				"global.imageK8S":                    "kschoche/consul-k8s-dev",
 				"connectInject.enabled":              "true",
 				"connectInject.healthChecks.enabled": "true",
 				"global.tls.enabled":                 strconv.FormatBool(c.secure),
 				"global.tls.autoEncrypt":             strconv.FormatBool(c.autoEncrypt),
+				"global.acls.manageSystemACLs":       strconv.FormatBool(c.secure),
 			}
 
 			releaseName := helpers.RandomName()
@@ -53,6 +58,18 @@ func TestHealthChecks(t *testing.T) {
 			t.Log("creating static-server and static-client deployments")
 			helpers.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-server-hc")
 			helpers.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-inject")
+			// If ACLs are enabled we must create an intention.
+			if c.secure {
+				consulClient := consulCluster.SetupConsulClient(t, true)
+
+				t.Log("creating intention")
+				_, _, err := consulClient.Connect().IntentionCreate(&api.Intention{
+					SourceName:      staticClientName,
+					DestinationName: staticServerName,
+					Action:          api.IntentionActionAllow,
+				}, nil)
+				require.NoError(t, err)
+			}
 			// TODO: it would be nice to add a codepath which makes a connection to the agent where staticServer is running
 			// so that it can fetch the healthcheck and its status and assert on this. Right now the health check status
 			// is implied by the traffic passing or not.
