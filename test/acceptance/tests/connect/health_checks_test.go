@@ -5,11 +5,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/consul/api"
-	"github.com/stretchr/testify/require"
-
 	"github.com/hashicorp/consul-helm/test/acceptance/framework"
 	"github.com/hashicorp/consul-helm/test/acceptance/helpers"
+	"github.com/hashicorp/consul/api"
+	"github.com/stretchr/testify/require"
 )
 
 // Test that health checks work in a default installation and a secure installation with TLS/auto-encrypt permutations.

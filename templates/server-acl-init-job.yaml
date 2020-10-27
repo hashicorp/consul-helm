@@ -102,7 +102,7 @@ spec:
                 -k8s-namespace={{ .Release.Namespace }} \
 
                 {{- if (and .Values.connectInject.enabled .Values.connectInject.healthChecks.enabled) }}
-                -enable-health-checks-controller=true \
+                -add-inject-health-checks-rules \
                 {{- end }}
 
                 {{- if .Values.externalServers.enabled }}
