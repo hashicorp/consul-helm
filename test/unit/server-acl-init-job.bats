@@ -621,7 +621,7 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+    yq 'any(contains("create-inject-token"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
@@ -668,7 +668,7 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+    yq 'any(contains("create-inject-token"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
@@ -711,7 +711,7 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+    yq 'any(contains("create-inject-token"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
@@ -755,7 +755,7 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+    yq 'any(contains("create-inject-token"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
@@ -800,7 +800,7 @@ load _helpers
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+    yq 'any(contains("create-inject-token"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
@@ -847,7 +847,7 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+    yq 'any(contains("create-inject-token"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
@@ -890,7 +890,7 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+    yq 'any(contains("create-inject-token"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
@@ -934,7 +934,7 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+    yq 'any(contains("create-inject-token"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
@@ -979,7 +979,7 @@ load _helpers
   [ "${actual}" = "false" ]
 
   local actual=$(echo $object |
-    yq 'any(contains("create-inject-namespace-token"))' | tee /dev/stderr)
+    yq 'any(contains("create-inject-token"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
   local actual=$(echo $object |
@@ -1413,9 +1413,9 @@ load _helpers
   local actual=$(helm template \
       -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
-      --set 'connectInject.enabled=true' \
       --set 'connectInject.healthChecks.enabled=true' \
-      . | tee /dev/stderr|
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-add-inject-health-checks-rules"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
@@ -1427,7 +1427,7 @@ load _helpers
       --set 'global.acls.manageSystemACLs=true' \
       --set 'connectInject.enabled=false' \
       --set 'connectInject.healthChecks.enabled=true' \
-      . | tee /dev/stderr|
+      . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-add-inject-health-checks-rules"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
@@ -1439,7 +1439,7 @@ load _helpers
       --set 'global.acls.manageSystemACLs=true' \
       --set 'connectInject.enabled=true' \
       --set 'connectInject.healthChecks.enabled=false' \
-      . | tee /dev/stderr|
+      . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command | any(contains("-add-inject-health-checks-rules"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
