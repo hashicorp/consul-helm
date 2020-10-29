@@ -199,7 +199,7 @@ jobs:
               -kubeconfig="$HOME/.kube/$OC_PRIMARY_NAME" \
               -secondary-kubeconfig="$HOME/.kube/$OC_SECONDARY_NAME" \
               -debug-directory="$TEST_RESULTS/debug" \
-              -consul-k8s-image=hashicorpdev/consul-k8s:latest
+              -consul-k8s-image=kschoche/consul-k8s-dev
 
       - store_test_results:
           path: /tmp/test-results
