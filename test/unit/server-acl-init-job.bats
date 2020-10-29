@@ -1416,7 +1416,7 @@ load _helpers
       --set 'connectInject.healthChecks.enabled=true' \
       --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].command | any(contains("-add-inject-health-checks-rules"))' | tee /dev/stderr)
+      yq '.spec.template.spec.containers[0].command | any(contains("-enable-health-checks"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -1428,7 +1428,7 @@ load _helpers
       --set 'connectInject.enabled=false' \
       --set 'connectInject.healthChecks.enabled=true' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].command | any(contains("-add-inject-health-checks-rules"))' | tee /dev/stderr)
+      yq '.spec.template.spec.containers[0].command | any(contains("-enable-health-checks"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 
@@ -1440,7 +1440,7 @@ load _helpers
       --set 'connectInject.enabled=true' \
       --set 'connectInject.healthChecks.enabled=false' \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[0].command | any(contains("-add-inject-health-checks-rules"))' | tee /dev/stderr)
+      yq '.spec.template.spec.containers[0].command | any(contains("-enable-health-checks"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
 

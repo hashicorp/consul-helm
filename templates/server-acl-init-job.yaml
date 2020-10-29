@@ -140,7 +140,7 @@ spec:
                 -inject-auth-method-host={{ .Values.externalServers.k8sAuthMethodHost }} \
                 {{- end }}
                 {{- if .Values.connectInject.healthChecks.enabled }}
-                -add-inject-health-checks-rules \
+                -enable-health-checks \
                 {{- end }}
                 {{- end }}
 
