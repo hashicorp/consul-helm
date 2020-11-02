@@ -51,14 +51,14 @@ func TestBasicInstallation(t *testing.T) {
 			// Create a KV entry
 			randomKey := helpers.RandomName()
 			randomValue := []byte(helpers.RandomName())
-			t.Logf("creating KV entry with key %s", randomKey)
+			helpers.Logf(t, "creating KV entry with key %s", randomKey)
 			_, err := client.KV().Put(&api.KVPair{
 				Key:   randomKey,
 				Value: randomValue,
 			}, nil)
 			require.NoError(t, err)
 
-			t.Logf("reading value for key %s", randomKey)
+			helpers.Logf(t, "reading value for key %s", randomKey)
 			kv, _, err := client.KV().Get(randomKey, nil)
 			require.NoError(t, err)
 			require.Equal(t, kv.Value, randomValue)

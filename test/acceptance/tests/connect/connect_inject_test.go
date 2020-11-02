@@ -43,17 +43,17 @@ func TestConnectInject(t *testing.T) {
 
 			consulCluster.Create(t)
 
-			t.Log("creating static-server and static-client deployments")
+			helpers.Log(t, "creating static-server and static-client deployments")
 			helpers.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-server-inject")
 			helpers.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-inject")
 
 			if c.secure {
-				t.Log("checking that the connection is not successful because there's no intention")
+				helpers.Log(t, "checking that the connection is not successful because there's no intention")
 				helpers.CheckStaticServerConnectionFailing(t, ctx.KubectlOptions(t), staticClientName, "http://localhost:1234")
 
 				consulClient := consulCluster.SetupConsulClient(t, true)
 
-				t.Log("creating intention")
+				helpers.Log(t, "creating intention")
 				_, _, err := consulClient.Connect().IntentionCreate(&api.Intention{
 					SourceName:      staticClientName,
 					DestinationName: staticServerName,
@@ -62,7 +62,7 @@ func TestConnectInject(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			t.Log("checking that connection is successful")
+			helpers.Log(t, "checking that connection is successful")
 			helpers.CheckStaticServerConnectionSuccessful(t, ctx.KubectlOptions(t), staticClientName, "http://localhost:1234")
 		})
 	}

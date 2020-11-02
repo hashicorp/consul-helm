@@ -36,7 +36,7 @@ func RandomName() string {
 func WaitForAllPodsToBeReady(t *testing.T, client kubernetes.Interface, namespace, podLabelSelector string) {
 	t.Helper()
 
-	t.Log("Waiting for pods to be ready.")
+	Log(t, "Waiting for pods to be ready.")
 
 	// Wait up to 7m.
 	counter := &retry.Counter{Count: 84, Wait: 5 * time.Second}
@@ -178,10 +178,10 @@ func Cleanup(t *testing.T, noCleanupOnFailure bool, cleanup func()) {
 	// might not have the information on whether the test has failed yet.
 	wrappedCleanupFunc := func() {
 		if !(noCleanupOnFailure && t.Failed()) {
-			t.Logf("cleaning up resources for %s", t.Name())
+			Logf(t, "cleaning up resources for %s", t.Name())
 			cleanup()
 		} else {
-			t.Log("skipping resource cleanup")
+			Log(t, "skipping resource cleanup")
 		}
 	}
 
@@ -203,7 +203,7 @@ func WritePodsDebugInfoIfFailed(t *testing.T, kubectlOptions *k8s.KubectlOptions
 		testDebugDirectory := filepath.Join(debugDirectory, t.Name(), contextName)
 		require.NoError(t, os.MkdirAll(testDebugDirectory, 0755))
 
-		t.Logf("dumping logs and pod info for %s to %s", labelSelector, testDebugDirectory)
+		Logf(t, "dumping logs and pod info for %s to %s", labelSelector, testDebugDirectory)
 		pods, err := client.CoreV1().Pods(kubectlOptions.Namespace).List(context.Background(), metav1.ListOptions{LabelSelector: labelSelector})
 		require.NoError(t, err)
 

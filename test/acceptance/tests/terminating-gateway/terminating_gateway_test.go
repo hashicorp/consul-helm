@@ -52,13 +52,13 @@ func TestTerminatingGateway(t *testing.T) {
 				"global.tls.autoEncrypt":       strconv.FormatBool(c.autoEncrypt),
 			}
 
-			t.Log("creating consul cluster")
+			helpers.Log(t, "creating consul cluster")
 			releaseName := helpers.RandomName()
 			consulCluster := framework.NewHelmCluster(t, helmValues, ctx, cfg, releaseName)
 			consulCluster.Create(t)
 
 			// Deploy a static-server that will play the role of an external service.
-			t.Log("creating static-server deployment")
+			helpers.Log(t, "creating static-server deployment")
 			helpers.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/bases/static-server")
 
 			// Once the cluster is up, register the external service, then create the config entry.
@@ -78,7 +78,7 @@ func TestTerminatingGateway(t *testing.T) {
 			createTerminatingGatewayConfigEntry(t, consulClient, "", "")
 
 			// Deploy the static client
-			t.Log("deploying static client")
+			helpers.Log(t, "deploying static client")
 			helpers.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-inject")
 
 			// If ACLs are enabled, test that intentions prevent connections.
@@ -90,7 +90,7 @@ func TestTerminatingGateway(t *testing.T) {
 			}
 
 			// Test that we can make a call to the terminating gateway.
-			t.Log("trying calls to terminating gateway")
+			helpers.Log(t, "trying calls to terminating gateway")
 			helpers.CheckStaticServerConnectionSuccessful(t, ctx.KubectlOptions(t), staticClientName, "http://localhost:1234")
 		})
 	}
@@ -112,14 +112,14 @@ func registerExternalService(t *testing.T, consulClient *api.Client, namespace s
 		address = fmt.Sprintf("%s.%s", staticServerName, namespace)
 		service.Namespace = namespace
 
-		t.Logf("creating the %s namespace in Consul", namespace)
+		helpers.Logf(t, "creating the %s namespace in Consul", namespace)
 		_, _, err := consulClient.Namespaces().Create(&api.Namespace{
 			Name: namespace,
 		}, nil)
 		require.NoError(t, err)
 	}
 
-	t.Log("registering the external service")
+	helpers.Log(t, "registering the external service")
 	_, err := consulClient.Catalog().Register(&api.CatalogRegistration{
 		Node:     "legacy_node",
 		Address:  address,
@@ -157,10 +157,10 @@ func updateTerminatingGatewayToken(t *testing.T, consulClient *api.Client, rules
 }
 
 func createTerminatingGatewayConfigEntry(t *testing.T, consulClient *api.Client, gwNamespace, serviceNamespace string) {
-	t.Log("creating config entry")
+	helpers.Log(t, "creating config entry")
 
 	if serviceNamespace != "" {
-		t.Logf("creating the %s namespace in Consul", serviceNamespace)
+		helpers.Logf(t, "creating the %s namespace in Consul", serviceNamespace)
 		_, _, err := consulClient.Namespaces().Create(&api.Namespace{
 			Name: serviceNamespace,
 		}, nil)
@@ -180,10 +180,10 @@ func createTerminatingGatewayConfigEntry(t *testing.T, consulClient *api.Client,
 }
 
 func assertNoConnectionAndAddIntention(t *testing.T, consulClient *api.Client, k8sOptions *k8s.KubectlOptions, sourceNS, destinationNS string) {
-	t.Log("testing intentions prevent connections through the terminating gateway")
+	helpers.Log(t, "testing intentions prevent connections through the terminating gateway")
 	helpers.CheckStaticServerConnectionFailing(t, k8sOptions, staticClientName, "http://localhost:1234")
 
-	t.Log("creating static-client => static-server intention")
+	helpers.Log(t, "creating static-client => static-server intention")
 	_, _, err := consulClient.Connect().IntentionCreate(&api.Intention{
 		SourceName:      staticClientName,
 		SourceNS:        sourceNS,

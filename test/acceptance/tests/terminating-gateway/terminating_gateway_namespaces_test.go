@@ -61,14 +61,14 @@ func TestTerminatingGatewaySingleNamespace(t *testing.T) {
 			// Create the destination namespace in the non-secure case.
 			// In the secure installation, this namespace is created by the server-acl-init job.
 			if !c.secure {
-				t.Logf("creating the %s namespace in Consul", testNamespace)
+				helpers.Logf(t, "creating the %s namespace in Consul", testNamespace)
 				_, _, err := consulClient.Namespaces().Create(&api.Namespace{
 					Name: testNamespace,
 				}, nil)
 				require.NoError(t, err)
 			}
 
-			t.Log("upgrading with terminating gateways enabled")
+			helpers.Log(t, "upgrading with terminating gateways enabled")
 			consulCluster.Upgrade(t, map[string]string{
 				"terminatingGateways.enabled":                     "true",
 				"terminatingGateways.gateways[0].name":            "terminating-gateway",
@@ -76,7 +76,7 @@ func TestTerminatingGatewaySingleNamespace(t *testing.T) {
 				"terminatingGateways.gateways[0].consulNamespace": testNamespace,
 			})
 
-			t.Logf("creating Kubernetes namespace %s", testNamespace)
+			helpers.Logf(t, "creating Kubernetes namespace %s", testNamespace)
 			helpers.RunKubectl(t, ctx.KubectlOptions(t), "create", "ns", testNamespace)
 			helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "ns", testNamespace)
@@ -89,7 +89,7 @@ func TestTerminatingGatewaySingleNamespace(t *testing.T) {
 			}
 
 			// Deploy a static-server that will play the role of an external service
-			t.Log("creating static-server deployment")
+			helpers.Log(t, "creating static-server deployment")
 			helpers.DeployKustomize(t, nsK8SOptions, cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/bases/static-server")
 
 			// Register the external service
@@ -106,7 +106,7 @@ func TestTerminatingGatewaySingleNamespace(t *testing.T) {
 			createTerminatingGatewayConfigEntry(t, consulClient, testNamespace, testNamespace)
 
 			// Deploy the static client
-			t.Log("deploying static client")
+			helpers.Log(t, "deploying static client")
 			helpers.DeployKustomize(t, nsK8SOptions, cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-namespaces")
 
 			// If ACLs are enabled, test that intentions prevent connections.
@@ -118,7 +118,7 @@ func TestTerminatingGatewaySingleNamespace(t *testing.T) {
 			}
 
 			// Test that we can make a call to the terminating gateway
-			t.Log("trying calls to terminating gateway")
+			helpers.Log(t, "trying calls to terminating gateway")
 			helpers.CheckStaticServerConnectionSuccessful(t, nsK8SOptions, staticClientName, "http://localhost:1234")
 		})
 	}
@@ -172,14 +172,14 @@ func TestTerminatingGatewayNamespaceMirroring(t *testing.T) {
 
 			consulClient := consulCluster.SetupConsulClient(t, c.secure)
 
-			t.Logf("creating Kubernetes namespace %s", testNamespace)
+			helpers.Logf(t, "creating Kubernetes namespace %s", testNamespace)
 			helpers.RunKubectl(t, ctx.KubectlOptions(t), "create", "ns", testNamespace)
 			helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "ns", testNamespace)
 			})
 
 			staticClientNamespace := "ns2"
-			t.Logf("creating Kubernetes namespace %s", staticClientNamespace)
+			helpers.Logf(t, "creating Kubernetes namespace %s", staticClientNamespace)
 			helpers.RunKubectl(t, ctx.KubectlOptions(t), "create", "ns", staticClientNamespace)
 			helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "ns", staticClientNamespace)
@@ -197,7 +197,7 @@ func TestTerminatingGatewayNamespaceMirroring(t *testing.T) {
 			}
 
 			// Deploy a static-server that will play the role of an external service.
-			t.Log("creating static-server deployment")
+			helpers.Log(t, "creating static-server deployment")
 			helpers.DeployKustomize(t, ns1K8SOptions, cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/bases/static-server")
 
 			// Register the external service
@@ -214,7 +214,7 @@ func TestTerminatingGatewayNamespaceMirroring(t *testing.T) {
 			createTerminatingGatewayConfigEntry(t, consulClient, "", testNamespace)
 
 			// Deploy the static client
-			t.Log("deploying static client")
+			helpers.Log(t, "deploying static client")
 			helpers.DeployKustomize(t, ns2K8SOptions, cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-namespaces")
 
 			// If ACLs are enabled, test that intentions prevent connections.
@@ -226,7 +226,7 @@ func TestTerminatingGatewayNamespaceMirroring(t *testing.T) {
 			}
 
 			// Test that we can make a call to the terminating gateway
-			t.Log("trying calls to terminating gateway")
+			helpers.Log(t, "trying calls to terminating gateway")
 			helpers.CheckStaticServerConnectionSuccessful(t, ns2K8SOptions, staticClientName, "http://localhost:1234")
 		})
 	}

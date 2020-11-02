@@ -87,7 +87,7 @@ func TestConnectInjectNamespaces(t *testing.T) {
 				Namespace:   staticClientNamespace,
 			}
 
-			t.Logf("creating namespaces %s and %s", staticServerNamespace, staticClientNamespace)
+			helpers.Logf(t, "creating namespaces %s and %s", staticServerNamespace, staticClientNamespace)
 			helpers.RunKubectl(t, ctx.KubectlOptions(t), "create", "ns", staticServerNamespace)
 			helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "ns", staticServerNamespace)
@@ -98,7 +98,7 @@ func TestConnectInjectNamespaces(t *testing.T) {
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "ns", staticClientNamespace)
 			})
 
-			t.Log("creating static-server and static-client deployments")
+			helpers.Log(t, "creating static-server and static-client deployments")
 			helpers.DeployKustomize(t, staticServerOpts, cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-server-inject")
 			helpers.DeployKustomize(t, staticClientOpts, cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-namespaces")
 
@@ -126,7 +126,7 @@ func TestConnectInjectNamespaces(t *testing.T) {
 			require.Len(t, services, 1)
 
 			if c.secure {
-				t.Log("checking that the connection is not successful because there's no intention")
+				helpers.Log(t, "checking that the connection is not successful because there's no intention")
 				helpers.CheckStaticServerConnectionFailing(t, staticClientOpts, staticClientName, "http://localhost:1234")
 
 				intention := &api.Intention{
@@ -144,12 +144,12 @@ func TestConnectInjectNamespaces(t *testing.T) {
 					intention.DestinationNS = c.destinationNamespace
 				}
 
-				t.Log("creating intention")
+				helpers.Log(t, "creating intention")
 				_, _, err := consulClient.Connect().IntentionCreate(intention, nil)
 				require.NoError(t, err)
 			}
 
-			t.Log("checking that connection is successful")
+			helpers.Log(t, "checking that connection is successful")
 			helpers.CheckStaticServerConnectionSuccessful(t, staticClientOpts, staticClientName, "http://localhost:1234")
 		})
 	}

@@ -54,7 +54,7 @@ func TestController(t *testing.T) {
 
 			// Test creation.
 			{
-				t.Log("creating custom resources")
+				helpers.Log(t, "creating custom resources")
 				retry.Run(t, func(r *retry.R) {
 					// Retry the kubectl apply because we've seen sporadic
 					// "connection refused" errors where the mutating webhook
@@ -120,26 +120,26 @@ func TestController(t *testing.T) {
 
 			// Test updates.
 			{
-				t.Log("patching service-defaults custom resource")
+				helpers.Log(t, "patching service-defaults custom resource")
 				patchProtocol := "tcp"
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "servicedefaults", "defaults", "-p", fmt.Sprintf(`{"spec":{"protocol":"%s"}}`, patchProtocol), "--type=merge")
 
-				t.Log("patching service-resolver custom resource")
+				helpers.Log(t, "patching service-resolver custom resource")
 				patchRedirectSvc := "baz"
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "serviceresolver", "resolver", "-p", fmt.Sprintf(`{"spec":{"redirect":{"service": "%s"}}}`, patchRedirectSvc), "--type=merge")
 
-				t.Log("patching proxy-defaults custom resource")
+				helpers.Log(t, "patching proxy-defaults custom resource")
 				patchMeshGatewayMode := "remote"
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "proxydefaults", "global", "-p", fmt.Sprintf(`{"spec":{"meshGateway":{"mode": "%s"}}}`, patchMeshGatewayMode), "--type=merge")
 
-				t.Log("patching service-router custom resource")
+				helpers.Log(t, "patching service-router custom resource")
 				patchPathPrefix := "/baz"
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "servicerouter", "router", "-p", fmt.Sprintf(`{"spec":{"routes":[{"match":{"http":{"pathPrefix":"%s"}}}]}}`, patchPathPrefix), "--type=merge")
 
-				t.Log("patching service-splitter custom resource")
+				helpers.Log(t, "patching service-splitter custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "servicesplitter", "splitter", "-p", `{"spec": {"splits": [{"weight": 50}, {"weight": 50, "service": "other-splitter"}]}}`, "--type=merge")
 
-				t.Log("patching service-intentions custom resource")
+				helpers.Log(t, "patching service-intentions custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "patch", "serviceintentions", "intentions", "-p", `{"spec": {"sources": [{"name": "svc2", "action": "deny"}, {"name": "svc3", "permissions": [{"action": "deny", "http": {"pathExact": "/foo", "methods": ["GET", "PUT"]}}]}]}}`, "--type=merge")
 
 				counter := &retry.Counter{Count: 10, Wait: 500 * time.Millisecond}
@@ -193,22 +193,22 @@ func TestController(t *testing.T) {
 
 			// Test a delete.
 			{
-				t.Log("deleting service-defaults custom resource")
+				helpers.Log(t, "deleting service-defaults custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "servicedefaults", "defaults")
 
-				t.Log("deleting service-resolver custom resource")
+				helpers.Log(t, "deleting service-resolver custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "serviceresolver", "resolver")
 
-				t.Log("deleting proxy-defaults custom resource")
+				helpers.Log(t, "deleting proxy-defaults custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "proxydefaults", "global")
 
-				t.Log("deleting service-router custom resource")
+				helpers.Log(t, "deleting service-router custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "servicerouter", "router")
 
-				t.Log("deleting service-splitter custom resource")
+				helpers.Log(t, "deleting service-splitter custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "servicesplitter", "splitter")
 
-				t.Log("deleting service-intentions custom resource")
+				helpers.Log(t, "deleting service-intentions custom resource")
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "serviceintentions", "intentions")
 
 				counter := &retry.Counter{Count: 10, Wait: 500 * time.Millisecond}

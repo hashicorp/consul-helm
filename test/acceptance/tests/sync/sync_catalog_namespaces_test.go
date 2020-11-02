@@ -87,18 +87,18 @@ func TestSyncCatalogNamespaces(t *testing.T) {
 				Namespace:   staticServerNamespace,
 			}
 
-			t.Logf("creating namespace %s", staticServerNamespace)
+			helpers.Logf(t, "creating namespace %s", staticServerNamespace)
 			helpers.RunKubectl(t, ctx.KubectlOptions(t), "create", "ns", staticServerNamespace)
 			helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
 				helpers.RunKubectl(t, ctx.KubectlOptions(t), "delete", "ns", staticServerNamespace)
 			})
 
-			t.Log("creating a static-server with a service")
+			helpers.Log(t, "creating a static-server with a service")
 			helpers.DeployKustomize(t, staticServerOpts, cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/bases/static-server")
 
 			consulClient := consulCluster.SetupConsulClient(t, c.secure)
 
-			t.Log("checking that the service has been synced to Consul")
+			helpers.Log(t, "checking that the service has been synced to Consul")
 			var services map[string][]string
 			counter := &retry.Counter{Count: 10, Wait: 5 * time.Second}
 
