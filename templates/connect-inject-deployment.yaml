@@ -86,7 +86,7 @@ spec:
                 -consul-k8s-image="{{ default .Values.global.imageK8S .Values.connectInject.image }}" \
                 -listen=:8080 \
                 {{- if .Values.connectInject.healthChecks.enabled }}
-                -enable-health-checks-controller={{ .Values.connectInject.healthChecks.enabled }} \
+                -enable-health-checks-controller=true \
                 -health-checks-reconcile-period={{ .Values.connectInject.healthChecks.reconcilePeriod }} \
                 {{- end }}
                 {{- if .Values.connectInject.overrideAuthMethodName }}
