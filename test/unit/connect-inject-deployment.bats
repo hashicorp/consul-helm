@@ -123,7 +123,7 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "connectInject/Deployment: health checks reconcile period set by default" {
+@test "connectInject/Deployment: health checks reconcile period set by default when health checks are enabled" {
   cd `chart_dir`
   local cmd=$(helm template \
       -s templates/connect-inject-deployment.yaml \
