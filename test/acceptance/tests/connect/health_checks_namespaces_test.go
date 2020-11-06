@@ -60,6 +60,9 @@ func TestHealthCheckNamespaces(t *testing.T) {
 			cfg := suite.Config()
 
 			helmValues := map[string]string{
+				// TODO: remove after tests pass CI
+				//"global.imageK8S":                    "hashicorpdev/consul-k8s",
+				//"global.image":                       "hashicorp/consul-enterprise:1.9.0-ent-beta1",
 				"global.enableConsulNamespaces":      "true",
 				"connectInject.enabled":              "true",
 				"connectInject.healthChecks.enabled": "true",
