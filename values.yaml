@@ -809,7 +809,7 @@ connectInject:
   image: null # image for consul-k8s that contains the injector
   default: false # true will inject by default, otherwise requires annotation
 
-  # healthChecks enables Synchronization of Kubernetes health probe status with Consul.
+  # healthChecks enables synchronization of Kubernetes health probe status with Consul.
   # NOTE: It is highly recommended to enable TLS with this feature because it requires
   # making calls to Consul clients across the cluster. Without TLS enabled, these calls
   # could leak ACL tokens.
