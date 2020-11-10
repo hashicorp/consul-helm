@@ -1,5 +1,114 @@
 ## Unreleased
 
+FEATURES:
+* Support for Custom Resource Definitions (CRDs) is now generally available.
+  CRDs require Consul >= 1.8.4. If you wish to use `ServiceIntentions`
+  custom resources then this requires Consul >= 1.9.0 (which is still in beta as of this release).
+  
+  To enable, set `controller.enabled: true` in your Helm configuration:
+
+  ```yaml
+  controller:
+    enabled: true
+  ```
+  
+  See [https://www.consul.io/docs/k8s/crds](https://www.consul.io/docs/k8s/crds)
+  for more information.
+
+  You may need to perform extra steps to migrate to CRDs if you are utilizing the
+  following features/settings:
+  1. Helm config `connectInject.centralConfig.defaultProtocol`
+  1. Setting the `consul.hashicorp.com/connect-service-protocol` annotation on your
+     connect pods.
+  1. Helm config `connectInject.centralConfig.proxyDefaults`
+  
+  See NOTES for further details.
+
+
+NOTES
+* If you are setting `connectInject.centralConfig.defaultProtocol` and you are
+  able to migrate to CRDs (running Consul >= 1.8.4) then you should:
+  1. Set this to `""` and run a Helm upgrade.
+  1. For new services, you must create a `ServiceDefaults` custom resource
+     for each service.
+  1. For existing services, you must create a new `ServiceDefaults` custom
+     resource for each service. Before you can create the resource, you
+     must modify the existing config entry's metadata. This must be done
+     so the custom resource can "take control" over the config entry in
+     Consul. If you do not modify the metadata, then the custom resource's
+     sync status will be `false` with the error `config entry managed in different datacenter: ""`.
+  1. Find existing `service-defaults` config entries by running `consul config list -kind service-defaults`.
+  1. For each entry, export the config to a file: `consul config read -name foo -kind service-defaults > foo.json`
+  1. Edit the file and add the key `"Meta": {"consul.hashicorp.com/source-datacenter": "dc1"}`.
+     Where `dc1` is the name of your datacenter. Make sure you add any missing commas.
+  1. Run `consul config write foo.json`
+  1. Now you're ready to create a custom resource that takes over control of this
+     config entry. The custom resource will look like:
+
+     ```yaml
+     apiVersion: consul.hashicorp.com/v1alpha1
+     kind: ServiceDefaults
+     metadata:
+       name: foo
+     spec:
+       protocol: "http"
+     ```
+
+     Where `metadata.name` is the name of your service and `spec.protocol` is
+     the default protocol you've set.
+  1. When you run `kubectl apply` on this file, the `ServiceDefaults` custom
+     resource should be created successfully and its `synced` status will be `True`.
+* If you are setting the `consul.hashicorp.com/connect-service-protocol` annotation on your
+  connect pods and you are able to migrate to CRDs (running Consul >= 1.8.4) then you should:
+  1. Follow the instructions above to edit the existing config entry's metadata
+     so the custom resource can "take control".
+  1. Follow the instructions above to create the `ServiceDefaults` config entry.
+  1. You can now remove that annotation from your deployment.
+* If you are setting `connectInject.centralConfig.proxyDefaults` and you are
+  able to migrate to CRDs (running Consul >= 1.8.4) then you should:
+  1. Set this to `""` and run a Helm upgrade. This won't affect the proxy-defaults
+     you set previously since changing this setting has no effect after initial
+     install (the reason we don't recommend using it anymore).
+  1. Get your existing proxy-defaults:
+     ```bash
+     consul config read -name global -kind proxy-defaults
+     {
+         "Kind": "proxy-defaults",
+         "Name": "global",
+         "Config": {
+             "local_connect_timeout_ms": 1000
+         },
+         "MeshGateway": {
+             "Mode": "local"
+         },
+         "Expose": {},
+         "CreateIndex": 4,
+         "ModifyIndex": 4
+     }
+     ```
+  1. Export to a file: `consul config read -name global -kind proxy-defaults > proxy-defaults.json`
+  1. Edit the file and add the key `"Meta": {"consul.hashicorp.com/source-datacenter": "dc1"}`.
+     Where `dc1` is the name of your datacenter. Make sure you add any missing commas.
+  1. Run `consul config write proxy-defaults.json`
+  1. Create a new `ProxyDefaults` custom resource:
+
+     ```yaml
+     apiVersion: consul.hashicorp.com/v1alpha1
+     kind: ProxyDefaults
+     metadata:
+       name: global
+     spec:
+       config:
+         local_connect_timeout_ms: 1000
+       meshGateway:
+         mode: local
+     ```
+
+     Note that the `"Config"` key became `config` but its contents remained
+     the same and that the `"MeshGateway"` key became `meshGateway`.
+  1. When you run `kubectl apply` on this file, the `ServiceDefaults` custom
+     resource should be created successfully and its `synced` status will be `True`.
+
 IMPROVEMENTS:
   * Connect: support passing extra arguments to the injected envoy sidecar. [[GH-675](https://github.com/hashicorp/consul-helm/pull/675)]
 
