@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/consul-helm/test/acceptance/framework/consul"
 	"github.com/hashicorp/consul-helm/test/acceptance/framework/helpers"
 	"github.com/hashicorp/consul-helm/test/acceptance/framework/k8s"
+	"github.com/hashicorp/consul-helm/test/acceptance/framework/logger"
 	"github.com/hashicorp/consul/api"
 	"github.com/stretchr/testify/require"
 )
@@ -54,7 +55,7 @@ func TestHealthChecks(t *testing.T) {
 			consulCluster := consul.NewHelmCluster(t, helmValues, ctx, cfg, releaseName)
 			consulCluster.Create(t)
 
-			t.Log("creating static-server and static-client deployments")
+			logger.Log(t, "creating static-server and static-client deployments")
 			k8s.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-server-hc")
 			k8s.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-inject")
 
@@ -74,7 +75,7 @@ func TestHealthChecks(t *testing.T) {
 			// TODO: it would be nice to add a codepath which makes a connection to the agent where staticServer is running
 			// so that it can fetch the healthcheck and its status and assert on this. Right now the health check status
 			// is implied by the traffic passing or not.
-			t.Log("checking that connection is successful")
+			logger.Log(t, "checking that connection is successful")
 			k8s.CheckStaticServerConnectionSuccessful(t, ctx.KubectlOptions(t), staticClientName, "http://localhost:1234")
 
 			// Now create the file so that the readiness probe of the static-server pod fails.
@@ -85,8 +86,8 @@ func TestHealthChecks(t *testing.T) {
 			// We are expecting a "connection reset by peer" error because in a case of health checks,
 			// there will be no healthy proxy host to connect to. That's why we can't assert that we receive an empty reply
 			// from server, which is the case when a connection is unsuccessful due to intentions in other tests.
-			t.Log("checking that connection is unsuccessful")
-			helpers.CheckStaticServerConnectionMultipleFailureMessages(
+			logger.Log(t, "checking that connection is unsuccessful")
+			k8s.CheckStaticServerConnectionMultipleFailureMessages(
 				t,
 				ctx.KubectlOptions(t),
 				false,
