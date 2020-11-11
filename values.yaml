@@ -812,7 +812,7 @@ connectInject:
   # healthChecks enables propagation of k8s pod health status to Consul service instances.
   # NOTE: It is highly recommended to enable TLS with this feature because it requires
   # making calls to Consul clients across the cluster. Without TLS enabled, these calls
-  # could leak ACL tokens.
+  # could leak ACL tokens should the cluster network become compromised.
   healthChecks:
     # Enables the Consul Health Check controller that syncs the readiness checks on
     # connect-injected services with the agent.
