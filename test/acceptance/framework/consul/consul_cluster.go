@@ -64,10 +64,12 @@ func NewHelmCluster(
 	mergeMaps(values, valuesFromConfig)
 	mergeMaps(values, helmValues)
 
+	logger := terratestLogger.New(logger.TestLogger{})
+
 	opts := &helm.Options{
 		SetValues:      values,
 		KubectlOptions: ctx.KubectlOptions(t),
-		Logger:         terratestLogger.New(logger.TestLogger{}),
+		Logger:         logger,
 	}
 	return &HelmCluster{
 		ctx:                ctx,
@@ -76,7 +78,7 @@ func NewHelmCluster(
 		kubernetesClient:   ctx.KubernetesClient(t),
 		noCleanupOnFailure: cfg.NoCleanupOnFailure,
 		debugDirectory:     cfg.DebugDirectory,
-		logger:             terratestLogger.New(logger.TestLogger{}),
+		logger:             logger,
 	}
 }
 
@@ -92,8 +94,7 @@ func (h *HelmCluster) Create(t *testing.T) {
 	// Fail if there are any existing installations of the Helm chart.
 	h.checkForPriorInstallations(t)
 
-	err := helm.InstallE(t, h.helmOptions, config.HelmChartPath, h.releaseName)
-	require.NoError(t, err)
+	helm.Install(t, h.helmOptions, config.HelmChartPath, h.releaseName)
 
 	helpers.WaitForAllPodsToBeReady(t, h.kubernetesClient, h.helmOptions.KubectlOptions.Namespace, fmt.Sprintf("release=%s", h.releaseName))
 }
