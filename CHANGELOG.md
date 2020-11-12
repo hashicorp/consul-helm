@@ -21,7 +21,9 @@ FEATURES:
   ```
 
   See [https://www.consul.io/docs/k8s/crds](https://www.consul.io/docs/k8s/crds)
-  for more information.
+  for more information. **NOTE:** Using CRDs with an existing cluster may require additional steps to migrate previously created
+  config entries so they can be managed by CRDs. See [https://www.consul.io/docs/k8s/crds/upgrade-to-crds](https://www.consul.io/docs/k8s/crds/upgrade-to-crds)
+  for full details.
 
 BREAKING CHANGES:
 * This helm release only supports consul-k8s versions 0.20+
@@ -33,9 +35,6 @@ BREAKING CHANGES:
   it was set to its default of `5m`. This change ensures the output of the check will show up in the Consul UI immediately. [[GH-674](https://github.com/hashicorp/consul-helm/pull/674)]
 * CRDs: controller default `limits.memory` increased from `30Mi` to `50Mi` and `requests.memory` increased from `20Mi` to `50Mi`
   based on observed usage. [[GH-649](https://github.com/hashicorp/consul-helm/pull/649)]
-* Using CRDs with an existing cluster may require additional steps to migrate previously created
-  config entries so they can be managed by CRDs. See [https://www.consul.io/docs/k8s/crds/upgrade-to-crds](https://www.consul.io/docs/k8s/crds/upgrade-to-crds)
-  for full details.
 
 BUG FIXES:
 * Fix issue where Consul enterprise license job would fail for Consul versions >= 1.8.1. [[GH-647](https://github.com/hashicorp/consul-helm/issues/647)]
