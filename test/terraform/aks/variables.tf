@@ -13,11 +13,6 @@ variable "client_secret" {
   description = "The client secret of the service principal to be used by Kubernetes when creating Azure resources like load balancers."
 }
 
-variable "init_cli" {
-  default     = false
-  description = "Whether to init kubectl."
-}
-
 variable "cluster_count" {
   default     = 1
   description = "The number of Kubernetes clusters to create."

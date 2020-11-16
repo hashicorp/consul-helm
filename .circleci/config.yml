@@ -128,7 +128,7 @@ jobs:
       - run:
           name: Run acceptance tests
           working_directory: test/acceptance/tests
-          no_output_timeout: 30m
+          no_output_timeout: 1h
           command: |
             eval "$(echo export primary_kubeconfig=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .kubeconfigs.value[0]))"
             eval "$(echo export secondary_kubeconfig=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .kubeconfigs.value[1]))"
@@ -234,6 +234,10 @@ jobs:
             terraform destroy -auto-approve
           when: always
 
+      - slack/status:
+          fail_only: true
+          failure_message: "AKS acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
+
   acceptance-openshift:
     environment:
       - TEST_RESULTS: /tmp/test-results
@@ -271,7 +275,7 @@ jobs:
       - run:
           name: Run acceptance tests
           working_directory: test/acceptance/tests
-          no_output_timeout: 40m
+          no_output_timeout: 1h
           command: |
             gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 40m -failfast \
               -enable-openshift \
@@ -328,10 +332,10 @@ workflows:
             - go-fmt-and-vet
       - unit-helm2
       - unit-helm3
-      - acceptance-aks-1-19:
+      - acceptance:
           requires:
-#            - unit-helm2
-#            - unit-helm3
+            - unit-helm2
+            - unit-helm3
             - unit-acceptance-framework
   nightly-acceptance-tests:
     triggers:
@@ -343,6 +347,7 @@ workflows:
                 - master
     jobs:
       - acceptance-openshift
+      - acceptance-aks-1-19
   update-helm-charts-index:
     jobs:
       - update-helm-charts-index:
