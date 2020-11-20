@@ -64,7 +64,19 @@ func DeployKustomize(t *testing.T, options *k8s.KubectlOptions, noCleanupOnFailu
 		KubectlDeleteK(t, options, kustomizeDir)
 	})
 
-	RunKubectl(t, options, "wait", "--for=condition=available", "--timeout=1m", fmt.Sprintf("deploy/%s", deployment.Name))
+	// This command on AKS often gave us the error:
+	// "The connection to the server consul-k8s-1376936457-8fc76f5b.hcp.westus2.azmk8s.io:443 was refused - did you specify the right host or port?"
+	// So now we retry up to 3 times.
+	retrier := &retry.Counter{Count: 3}
+	retry.RunWith(retrier, t, func(r *retry.R) {
+		// NOTE: It's okay to use `t` here instead of `r` because `t` is only
+		// used to error on command construction. If the command itself fails
+		// then it will return an error which we correctly use `r` with.
+		_, err := RunKubectlAndGetOutputE(t, options, "wait", "--for=condition=available", "--timeout=1m", fmt.Sprintf("deploy/%s", deployment.Name))
+		if err != nil {
+			r.Errorf("unexpected err: %s", err)
+		}
+	})
 }
 
 // CheckStaticServerConnection execs into a pod of the deployment given by deploymentName
