@@ -33,7 +33,7 @@ jobs:
           command: bats ./test/unit
   unit-helm3:
     docker:
-      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.7.0
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.8.0
 
     steps:
       - checkout
@@ -107,7 +107,7 @@ jobs:
       - TEST_RESULTS: /tmp/test-results
     docker:
       # This image is build from test/docker/Test.dockerfile
-      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.7.0
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.8.0
 
     steps:
       - run:
@@ -183,7 +183,7 @@ jobs:
       - TEST_RESULTS: /tmp/test-results
     docker:
       # This image is build from test/docker/Test.dockerfile
-      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.7.0
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.8.0
 
     steps:
       - checkout
@@ -254,7 +254,7 @@ jobs:
       - TEST_RESULTS: /tmp/test-results
     docker:
       # This image is build from test/docker/Test.dockerfile
-      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.7.0
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.8.0
 
     steps:
       - checkout
@@ -310,17 +310,19 @@ jobs:
       - store_artifacts:
           path: /tmp/test-results
 
-      - aws-assume-role
-      - run:
-          name: terraform destroy
-          working_directory: test/terraform/eks
-          command: |
-            terraform destroy -auto-approve
-          when: always
+      - when:
+          condition: true
+          steps:
+            - aws-assume-role
+            - run:
+                name: terraform destroy
+                working_directory: test/terraform/eks
+                command: |
+                  terraform destroy -auto-approve
 
 #      - slack/status:
 #          fail_only: true
-#          failure_message: "AKS acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
+#          failure_message: "EKS acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
 
   acceptance-openshift:
     environment:
@@ -330,7 +332,7 @@ jobs:
       - OC_SECONDARY_NAME: consul-helm-test-3737660519
     docker:
       # This image is build from test/docker/Test.dockerfile
-      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.7.0
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.8.0
 
     steps:
       - checkout
