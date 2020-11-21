@@ -1,6 +1,6 @@
 provider "aws" {
   version = ">= 2.28.1"
-  region  = "us-west-2"
+  region  = var.region
 }
 
 resource "random_id" "suffix" {
@@ -62,6 +62,7 @@ module "eks" {
     }
   }
 
+  manage_aws_auth    = false
   write_kubeconfig   = true
   config_output_path = pathexpand("~/.kube/consul-k8s-${random_id.suffix[count.index].dec}")
 }
