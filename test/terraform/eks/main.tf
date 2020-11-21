@@ -1,6 +1,11 @@
 provider "aws" {
   version = ">= 2.28.1"
   region  = var.region
+
+  assume_role {
+    role_arn         = var.role_arn
+    duration_seconds = 2700
+  }
 }
 
 resource "random_id" "suffix" {
