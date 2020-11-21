@@ -7,6 +7,17 @@ executors:
       - image: docker.mirror.hashicorp.services/circleci/golang:1.14
     environment:
       - TEST_RESULTS: /tmp/test-results
+commands:
+  aws-assume-role:
+    steps:
+      - run:
+          name: assume-role aws creds
+          command: |
+            # assume role has duration of 15 min (the minimum allowed)
+            CREDENTIALS="$(aws sts assume-role --duration-seconds 900 --role-arn ${AWS_ROLE_ARN} --role-session-name build-${CIRCLE_SHA1} | jq '.Credentials')"
+            echo "export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.AccessKeyId')" >> $BASH_ENV
+            echo "export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.SecretAccessKey')" >> $BASH_ENV
+            echo "export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.SessionToken')" >> $BASH_ENV
 
 jobs:
   unit-helm2:
@@ -248,15 +259,7 @@ jobs:
     steps:
       - checkout
 
-      - run:
-          name: assume-role aws creds
-          command: |
-            # assume role has duration of 2hrs
-            CREDENTIALS="$(aws sts assume-role --duration-seconds 7200 --role-arn ${AWS_ROLE_ARN} --role-session-name build-${CIRCLE_SHA1} | jq '.Credentials')"
-            echo "export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.AccessKeyId')" >> $BASH_ENV
-            echo "export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.SecretAccessKey')" >> $BASH_ENV
-            echo "export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.SessionToken')" >> $BASH_ENV
-
+      - aws-assume-role
       - run:
           name: terraform init & apply
           working_directory: test/terraform/eks
@@ -307,6 +310,7 @@ jobs:
       - store_artifacts:
           path: /tmp/test-results
 
+      - aws-assume-role
       - run:
           name: terraform destroy
           working_directory: test/terraform/eks
