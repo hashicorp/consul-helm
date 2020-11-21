@@ -251,8 +251,8 @@ jobs:
       - run:
           name: assume-role aws creds
           command: |
-            # assume role has duration of 2 hr
-            CREDENTIALS="$(aws sts assume-role --duration-seconds 7200 --role-arn ${ROLE_ARN} --role-session-name build-${CIRCLE_SHA1} | jq '.Credentials')"
+            # assume role has duration of 2hrs
+            CREDENTIALS="$(aws sts assume-role --duration-seconds 7200 --role-arn ${AWS_ROLE_ARN} --role-session-name build-${CIRCLE_SHA1} | jq '.Credentials')"
             echo "export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.AccessKeyId')" >> $BASH_ENV
             echo "export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.SecretAccessKey')" >> $BASH_ENV
             echo "export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.SessionToken')" >> $BASH_ENV
@@ -412,11 +412,11 @@ workflows:
             - go-fmt-and-vet
       - unit-helm2
       - unit-helm3
-#      - acceptance-eks-1-17:
-#          requires:
-##            - unit-helm2
-##            - unit-helm3
-#            - unit-acceptance-framework
+      - acceptance-eks-1-17:
+          requires:
+#            - unit-helm2
+#            - unit-helm3
+            - unit-acceptance-framework
   nightly-acceptance-tests:
     triggers:
       - schedule:
