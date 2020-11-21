@@ -13,8 +13,8 @@ commands:
       - run:
           name: assume-role aws creds
           command: |
-            # assume role has duration of 15 min (the minimum allowed)
-            CREDENTIALS="$(aws sts assume-role --duration-seconds 900 --role-arn ${AWS_ROLE_ARN} --role-session-name build-${CIRCLE_SHA1} | jq '.Credentials')"
+            # assume role has duration of 45 min
+            CREDENTIALS="$(aws sts assume-role --duration-seconds 2700 --role-arn ${AWS_ROLE_ARN} --role-session-name build-${CIRCLE_SHA1} | jq '.Credentials')"
             echo "export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.AccessKeyId')" >> $BASH_ENV
             echo "export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.SecretAccessKey')" >> $BASH_ENV
             echo "export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.SessionToken')" >> $BASH_ENV
