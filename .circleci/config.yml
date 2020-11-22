@@ -249,12 +249,23 @@ jobs:
       - checkout
 
       - run:
+          name: configure aws
+          command: |
+            aws configure --profile helm_user set aws_access_key_id "$AWS_ACCESS_KEY_ID"
+            aws configure --profile helm_user set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+            aws configure set role_arn "$AWS_ROLE_ARN"
+            aws configure set source_profile helm_user
+
+            echo "unset AWS_ACCESS_KEY_ID" >> $BASH_ENV
+            echo "unset AWS_SECRET_ACCESS_KEY" >> $BASH_ENV
+
+      - run:
           name: terraform init & apply
           working_directory: test/terraform/eks
           command: |
             terraform init
 
-            terraform apply -var role_arn="$AWS_ROLE_ARN" -var cluster_count=2 -auto-approve
+            terraform apply -var cluster_count=2 -auto-approve
 
       # Restore go module cache if there is one
       - restore_cache:
@@ -262,15 +273,6 @@ jobs:
             - consul-helm-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
 
       - run: mkdir -p $TEST_RESULTS
-
-      - run:
-          name: assume-role aws creds
-          command: |
-            # assume role has duration of 2hrs
-            CREDENTIALS="$(aws sts assume-role --duration-seconds 7200 --role-arn ${AWS_ROLE_ARN} --role-session-name build-${CIRCLE_SHA1} | jq '.Credentials')"
-            echo "export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.AccessKeyId')" >> $BASH_ENV
-            echo "export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.SecretAccessKey')" >> $BASH_ENV
-            echo "export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.SessionToken')" >> $BASH_ENV
 
       - run:
           name: Run acceptance tests
@@ -316,7 +318,7 @@ jobs:
           name: terraform destroy
           working_directory: test/terraform/eks
           command: |
-            terraform destroy -var role_arn="$AWS_ROLE_ARN" -auto-approve
+            terraform destroy -auto-approve
           when: always
 
 #      - slack/status:
