@@ -264,6 +264,15 @@ jobs:
       - run: mkdir -p $TEST_RESULTS
 
       - run:
+          name: assume-role aws creds
+          command: |
+            # assume role has duration of 2hrs
+            CREDENTIALS="$(aws sts assume-role --duration-seconds 7200 --role-arn ${AWS_ROLE_ARN} --role-session-name build-${CIRCLE_SHA1} | jq '.Credentials')"
+            echo "export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.AccessKeyId')" >> $BASH_ENV
+            echo "export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.SecretAccessKey')" >> $BASH_ENV
+            echo "export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.SessionToken')" >> $BASH_ENV
+
+      - run:
           name: Run acceptance tests
           working_directory: test/acceptance/tests
           no_output_timeout: 1h
@@ -307,7 +316,7 @@ jobs:
           name: terraform destroy
           working_directory: test/terraform/eks
           command: |
-            terraform destroy -auto-approve
+            terraform destroy -var role_arn="$AWS_ROLE_ARN" -auto-approve
           when: always
 
 #      - slack/status:
