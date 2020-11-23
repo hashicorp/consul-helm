@@ -40,7 +40,7 @@ func TestController(t *testing.T) {
 				"controller.enabled":    "true",
 				"connectInject.enabled": "true",
 				// todo: remove when 1.9.0 is released.
-				"global.image": "consul:1.9.0-rc1",
+				"global.image": "docker.mirror.hashicorp.services/hashicorpdev/consul:latest",
 
 				"global.tls.enabled":           strconv.FormatBool(c.secure),
 				"global.tls.enableAutoEncrypt": strconv.FormatBool(c.autoEncrypt),
