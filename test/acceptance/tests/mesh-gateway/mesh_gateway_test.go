@@ -230,19 +230,11 @@ func verifyFederation(t *testing.T, primaryClient, secondaryClient *api.Client, 
 
 	retrier := &retry.Timer{Timeout: 1 * time.Minute, Wait: 1 * time.Second}
 
+	consulMembersAliveConsistently(t, func() bool {
+		return consulWANMembersAlive(primaryClient, secondaryClient)
+	}, 3*time.Minute, 1*time.Minute, 1*time.Second)
+
 	retry.RunWith(retrier, t, func(r *retry.R) {
-		members, err := primaryClient.Agent().Members(true)
-		require.NoError(r, err)
-		require.Len(r, members, 2)
-		require.Equal(r, members[0].Status, consulMemberStatusAlive)
-		require.Equal(r, members[1].Status, consulMemberStatusAlive)
-
-		members, err = secondaryClient.Agent().Members(true)
-		require.NoError(r, err)
-		require.Len(r, members, 2)
-		require.Equal(r, members[0].Status, consulMemberStatusAlive)
-		require.Equal(r, members[1].Status, consulMemberStatusAlive)
-
 		if secure {
 			replicationStatus, _, err := secondaryClient.ACL().Replication(nil)
 			require.NoError(r, err)
@@ -250,4 +242,68 @@ func verifyFederation(t *testing.T, primaryClient, secondaryClient *api.Client, 
 			require.True(r, replicationStatus.Running)
 		}
 	})
+}
+
+// consulWANMembersAlive returns true if all Consul WAN members are alive.
+// Otherwise, it returns false.
+func consulWANMembersAlive(primaryClient, secondaryClient *api.Client) bool {
+	const consulMemberStatusAlive = 1
+
+	for _, client := range []*api.Client{primaryClient, secondaryClient} {
+		members, err := client.Agent().Members(true)
+		if err != nil {
+			return false
+		}
+
+		if len(members) != 2 {
+			return false
+		}
+
+		if members[0].Status != consulMemberStatusAlive || members[1].Status != consulMemberStatusAlive {
+			return false
+		}
+	}
+
+	return true
+}
+
+// consulMembersAliveConsistently calls consulWANMembersAlive every 'interval' seconds.
+// If successful for at least 'periodConditionSuccessful', the function returns.
+// If not, it resets until either consulWANMembersAlive has been successful for 'periodConditionSuccessful'
+// or the 'timeout' has been reached.
+func consulMembersAliveConsistently(t *testing.T, consulMembersAlive func() bool, timeout, periodConditionSuccessful, interval time.Duration) {
+	t.Helper()
+
+	timeoutTimer := time.NewTimer(timeout)
+	defer timeoutTimer.Stop()
+
+	successTimer := time.NewTimer(periodConditionSuccessful)
+	defer successTimer.Stop()
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	logger.Logf(t, "Checking Consul member status for %s.", timeout)
+	for {
+		select {
+		case <-ticker.C:
+			// Get current consulMembersAlive status
+			allMembersAlive := consulMembersAlive()
+
+			// If successful, do nothing.
+			// If unsuccessful, reset successTimer.
+			if !allMembersAlive {
+				logger.Log(t, "Some Consul members were not alive; resetting...")
+				successTimer.Stop()
+				successTimer.Reset(periodConditionSuccessful)
+			}
+		case <-successTimer.C:
+			// Return because consulMembersAlive has been successful for at least periodConditionSuccessful.
+			logger.Logf(t, "All Consul members have been alive for %s", periodConditionSuccessful)
+			return
+		case <-timeoutTimer.C:
+			t.Fatalf("Timed out waiting for Consul members to be alive.")
+			return
+		}
+	}
 }
