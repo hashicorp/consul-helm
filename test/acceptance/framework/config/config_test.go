@@ -76,6 +76,15 @@ func TestConfig_HelmValuesFromConfig(t *testing.T) {
 				"global.openshift.enabled": "true",
 			},
 		},
+		{
+			"sets enablePodSecurity policies when -enable-pod-security-policies is set",
+			TestConfig{
+				EnablePodSecurityPolicies: true,
+			},
+			map[string]string{
+				"global.enablePodSecurityPolicies": "true",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
