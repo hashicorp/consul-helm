@@ -90,7 +90,7 @@ func TestMeshGatewayDefault(t *testing.T) {
 
 	// Verify federation between servers
 	logger.Log(t, "verifying federation was successful")
-	verifyFederation(t, primaryClient, secondaryClient, false)
+	verifyFederation(t, primaryClient, secondaryClient, releaseName, false)
 
 	// Check that we can connect services over the mesh gateways
 	logger.Log(t, "creating static-server in dc2")
@@ -199,7 +199,7 @@ func TestMeshGatewaySecure(t *testing.T) {
 
 			// Verify federation between servers
 			logger.Log(t, "verifying federation was successful")
-			verifyFederation(t, primaryClient, secondaryClient, true)
+			verifyFederation(t, primaryClient, secondaryClient, releaseName, true)
 
 			// Check that we can connect services over the mesh gateways
 			logger.Log(t, "creating static-server in dc2")
@@ -225,16 +225,18 @@ func TestMeshGatewaySecure(t *testing.T) {
 // verifyFederation checks that the WAN federation between servers is successful
 // by first checking members are alive from the perspective of both servers.
 // If secure is true, it will also check that the ACL replication is running on the secondary server.
-func verifyFederation(t *testing.T, primaryClient, secondaryClient *api.Client, secure bool) {
-	const consulMemberStatusAlive = 1
-
-	retrier := &retry.Timer{Timeout: 1 * time.Minute, Wait: 1 * time.Second}
-
-	consulMembersAliveConsistently(t, func() bool {
-		return consulWANMembersAlive(primaryClient, secondaryClient)
-	}, 3*time.Minute, 1*time.Minute, 1*time.Second)
+func verifyFederation(t *testing.T, primaryClient, secondaryClient *api.Client, releaseName string, secure bool) {
+	retrier := &retry.Timer{Timeout: 2 * time.Minute, Wait: 1 * time.Second}
 
 	retry.RunWith(retrier, t, func(r *retry.R) {
+		secondaryServerHealth, _, err := primaryClient.Health().Node(fmt.Sprintf("%s-consul-server-0", releaseName), &api.QueryOptions{Datacenter: "dc2"})
+		require.NoError(r, err)
+		require.Equal(r, secondaryServerHealth.AggregatedStatus(), api.HealthPassing)
+
+		primaryServerHealth, _, err := secondaryClient.Health().Node(fmt.Sprintf("%s-consul-server-0", releaseName), &api.QueryOptions{Datacenter: "dc1"})
+		require.NoError(r, err)
+		require.Equal(r, primaryServerHealth.AggregatedStatus(), api.HealthPassing)
+
 		if secure {
 			replicationStatus, _, err := secondaryClient.ACL().Replication(nil)
 			require.NoError(r, err)
@@ -242,68 +244,4 @@ func verifyFederation(t *testing.T, primaryClient, secondaryClient *api.Client, 
 			require.True(r, replicationStatus.Running)
 		}
 	})
-}
-
-// consulWANMembersAlive returns true if all Consul WAN members are alive.
-// Otherwise, it returns false.
-func consulWANMembersAlive(primaryClient, secondaryClient *api.Client) bool {
-	const consulMemberStatusAlive = 1
-
-	for _, client := range []*api.Client{primaryClient, secondaryClient} {
-		members, err := client.Agent().Members(true)
-		if err != nil {
-			return false
-		}
-
-		if len(members) != 2 {
-			return false
-		}
-
-		if members[0].Status != consulMemberStatusAlive || members[1].Status != consulMemberStatusAlive {
-			return false
-		}
-	}
-
-	return true
-}
-
-// consulMembersAliveConsistently calls consulWANMembersAlive every 'interval' seconds.
-// If successful for at least 'periodConditionSuccessful', the function returns.
-// If not, it resets until either consulWANMembersAlive has been successful for 'periodConditionSuccessful'
-// or the 'timeout' has been reached.
-func consulMembersAliveConsistently(t *testing.T, consulMembersAlive func() bool, timeout, periodConditionSuccessful, interval time.Duration) {
-	t.Helper()
-
-	timeoutTimer := time.NewTimer(timeout)
-	defer timeoutTimer.Stop()
-
-	successTimer := time.NewTimer(periodConditionSuccessful)
-	defer successTimer.Stop()
-
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	logger.Logf(t, "Checking Consul member status for %s.", timeout)
-	for {
-		select {
-		case <-ticker.C:
-			// Get current consulMembersAlive status
-			allMembersAlive := consulMembersAlive()
-
-			// If successful, do nothing.
-			// If unsuccessful, reset successTimer.
-			if !allMembersAlive {
-				logger.Log(t, "Some Consul members were not alive; resetting...")
-				successTimer.Stop()
-				successTimer.Reset(periodConditionSuccessful)
-			}
-		case <-successTimer.C:
-			// Return because consulMembersAlive has been successful for at least periodConditionSuccessful.
-			logger.Logf(t, "All Consul members have been alive for %s", periodConditionSuccessful)
-			return
-		case <-timeoutTimer.C:
-			t.Fatalf("Timed out waiting for Consul members to be alive.")
-			return
-		}
-	}
 }
