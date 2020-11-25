@@ -40,8 +40,6 @@ func TestController(t *testing.T) {
 			helmValues := map[string]string{
 				"controller.enabled":    "true",
 				"connectInject.enabled": "true",
-				// todo: remove when 1.9.0 is released.
-				"global.image": "hashicorpdev/consul",
 
 				"global.tls.enabled":           strconv.FormatBool(c.secure),
 				"global.tls.enableAutoEncrypt": strconv.FormatBool(c.autoEncrypt),

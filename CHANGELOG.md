@@ -1,7 +1,12 @@
 ## Unreleased
 
+## 0.27.0 (Nov 24, 2020)
+
 IMPROVEMENTS:
 * Connect: support `connectInject.logLevel` setting. [[GH-699](https://github.com/hashicorp/consul-helm/pull/699)]
+* Connect: **(Consul Enterprise only)** error out if `connectInject.consulNamespaces.mirroringK8S: true` but `global.enableConsulNamespaces: false`. [[GH-695](https://github.com/hashicorp/consul-helm/pull/695)]
+* Updated the default Consul image to `consul:1.9.0`.
+* Updated the default consul-k8s image to `hashicorp/consul-k8s:0.20.1`.
 
 ## 0.26.0 (Nov 12, 2020)
 
