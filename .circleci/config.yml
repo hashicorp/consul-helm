@@ -145,7 +145,7 @@ jobs:
                     -kubeconfig="$primary_kubeconfig" \
                     -secondary-kubeconfig="$secondary_kubeconfig" \
                     -debug-directory="$TEST_RESULTS/debug" \
-                    -consul-k8s-image=hashicorpdev/consul-k8s:latest
+                    -consul-k8s-image=ghcr.io/lkysow/consul-k8s-dev:nov24
               then
                 echo "Tests in ${pkg} failed, aborting early"
                 exit_code=1
