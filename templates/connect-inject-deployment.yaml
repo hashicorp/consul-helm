@@ -84,6 +84,9 @@ spec:
                 -default-inject={{ .Values.connectInject.default }} \
                 -consul-image="{{ default .Values.global.image .Values.connectInject.imageConsul }}" \
                 -envoy-image="{{ .Values.global.imageEnvoy }}" \
+                {{- if .Values.global.envoyVersion }}
+                -envoy-version="{{ .Values.global.envoyVersion }}" \
+                {{- end }}
                 -consul-k8s-image="{{ default .Values.global.imageK8S .Values.connectInject.image }}" \
                 -listen=:8080 \
                 {{- if .Values.connectInject.logLevel }}

@@ -1482,3 +1482,17 @@ load _helpers
     yq 'any(contains("-log-level=debug"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# global.envoyVersion
+
+@test "connectInject/Deployment: can set global.envoyVersion" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      --set 'global.envoyVersion=1.16.0' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-envoy-version=\"1.16.0\""))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
