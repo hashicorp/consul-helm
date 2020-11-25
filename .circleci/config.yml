@@ -133,7 +133,9 @@ jobs:
             eval "$(echo export primary_kubeconfig=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .kubeconfigs.value[0]))"
             eval "$(echo export secondary_kubeconfig=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .kubeconfigs.value[1]))"
 
-            # create an enterprise license secret in the primary cluster
+            # Create an enterprise license secret in the primary cluster.
+            # This license is set as a CircleCI project env variable.
+            # The license expires 15-Oct-2025.
             KUBECONFIG=$primary_kubeconfig kubectl create secret generic ent-license --from-literal=key="${CONSUL_ENT_LICENSE}"
 
             # We have to run the tests for each package separately so that we can
