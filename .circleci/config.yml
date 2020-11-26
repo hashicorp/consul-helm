@@ -118,6 +118,9 @@ jobs:
           working_directory: test/acceptance/tests
           no_output_timeout: 1h
           command: |
+            # install gotestsum
+            go get gotest.tools/gotestsum
+
             # We have to run the tests for each package separately so that we can
             # exit early if any test fails (-failfast only works within a single
             # package).
