@@ -150,6 +150,7 @@ jobs:
               if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 30m -failfast \
                     -use-kind \
                     -enable-multi-cluster \
+                    -enable-enterprise \
                     -kubecontext="kind-dc1" \
                     -secondary-kubecontext="kind-dc2" \
                     -debug-directory="$TEST_RESULTS/debug" \
