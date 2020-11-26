@@ -92,16 +92,61 @@ jobs:
           path: /tmp/test-results
 
   acceptance-kind:
+    environment:
+      - TEST_RESULTS: /tmp/test-results
     machine:
       image: ubuntu-2004:202010-01
     steps:
+      - checkout
       - run:
-          name: Install kind
+          name: Install kind and kubectl
           command: |
             curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.9.0/kind-linux-amd64
             chmod +x ./kind
             sudo mv ./kind /usr/local/bin/kind
-            kind create cluster
+
+            curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x ./kubectl
+            sudo mv ./kubectl /usr/local/bin/kubectl
+      - run:
+          name: Create kind clusters
+          command: |
+            kind create cluster --name dc1
+      - restore_cache:
+          keys:
+            - consul-helm-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+      - run: mkdir -p $TEST_RESULTS
+      - run:
+          name: Run acceptance tests
+          working_directory: test/acceptance/tests
+          no_output_timeout: 1h
+          command: |
+            # We have to run the tests for each package separately so that we can
+            # exit early if any test fails (-failfast only works within a single
+            # package).
+            exit_code=0
+            for pkg in $(go list ./...)
+            do
+              if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 30m -failfast \
+#                    -enable-enterprise \
+#                    -enable-multi-cluster \
+                    -kubecontext="kind-dc1" \
+#                    -secondary-kubecontext="$secondary_kubeconfig" \
+                    -debug-directory="$TEST_RESULTS/debug" \
+                    -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              then
+                echo "Tests in ${pkg} failed, aborting early"
+                exit_code=1
+                break
+              fi
+            done
+            gotestsum --raw-command --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- cat jsonfile*
+            exit $exit_code
+
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
 
   acceptance:
     environment:
