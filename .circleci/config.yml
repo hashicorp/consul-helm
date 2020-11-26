@@ -120,7 +120,15 @@ jobs:
             kind create cluster --name dc1
       - restore_cache:
           keys:
-            - consul-helm-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+            - consul-helm-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
+      - run:
+          name: go mod download
+          working_directory: test/acceptance
+          command: go mod download
+      - save_cache:
+          key: consul-helm-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
+          paths:
+            - ~/.go_workspace/pkg/mod
       - run: mkdir -p $TEST_RESULTS
       - run:
           name: Run acceptance tests
@@ -483,10 +491,8 @@ workflows:
   version: 2
   test:
     jobs:
-      - go-fmt-and-vet
-      - acceptance-kind:
-          requires:
-            - go-fmt-and-vet
+      - acceptance-kind
+#      - go-fmt-and-vet
 #      - unit-acceptance-framework:
 #          requires:
 #            - go-fmt-and-vet
