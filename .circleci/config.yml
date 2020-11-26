@@ -128,10 +128,7 @@ jobs:
             for pkg in $(go list ./...)
             do
               if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 30m -failfast \
-#                    -enable-enterprise \
-#                    -enable-multi-cluster \
                     -kubecontext="kind-dc1" \
-#                    -secondary-kubecontext="$secondary_kubeconfig" \
                     -debug-directory="$TEST_RESULTS/debug" \
                     -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
               then
