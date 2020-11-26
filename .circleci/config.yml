@@ -112,9 +112,6 @@ jobs:
           name: Create kind clusters
           command: |
             kind create cluster --name dc1
-      - restore_cache:
-          keys:
-            - consul-helm-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
       - run: mkdir -p $TEST_RESULTS
       - run:
           name: Run acceptance tests
