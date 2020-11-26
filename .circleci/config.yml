@@ -91,12 +91,12 @@ jobs:
       - store_artifacts:
           path: /tmp/test-results
 
-  acceptance-kind:
+  acceptance:
     environment:
       - TEST_RESULTS: /tmp/test-results
     machine:
       image: ubuntu-2004:202010-01
-    parallelism: 4
+    parallelism: 6
     steps:
       - checkout
       - run:
@@ -120,8 +120,8 @@ jobs:
       - run:
           name: Create kind clusters
           command: |
-            kind create cluster --name dc1
-            kind create cluster --name dc2
+            kind create cluster --name dc1 --image kindest/node:v1.18.4
+            kind create cluster --name dc2 --image kindest/node:v1.18.4
       - restore_cache:
           keys:
             - consul-helm-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
@@ -169,7 +169,7 @@ jobs:
       - store_artifacts:
           path: /tmp/test-results
 
-  acceptance:
+  acceptance-gke-1-16:
     environment:
       - TEST_RESULTS: /tmp/test-results
     docker:
@@ -498,18 +498,17 @@ workflows:
   version: 2
   test:
     jobs:
-      - acceptance-kind
-#      - go-fmt-and-vet
-#      - unit-acceptance-framework:
-#          requires:
-#            - go-fmt-and-vet
-#      - unit-helm2
-#      - unit-helm3
-#      - acceptance:
-#          requires:
-#            - unit-helm2
-#            - unit-helm3
-#            - unit-acceptance-framework
+      - go-fmt-and-vet
+      - unit-acceptance-framework:
+          requires:
+            - go-fmt-and-vet
+      - unit-helm2
+      - unit-helm3
+      - acceptance:
+          requires:
+            - unit-helm2
+            - unit-helm3
+            - unit-acceptance-framework
   nightly-acceptance-tests:
     triggers:
       - schedule:
@@ -520,8 +519,9 @@ workflows:
                 - master
     jobs:
       - acceptance-openshift
-      - acceptance-aks-1-19
+      - acceptance-gke-1-16
       - acceptance-eks-1-17
+      - acceptance-aks-1-19
   update-helm-charts-index:
     jobs:
       - update-helm-charts-index:
