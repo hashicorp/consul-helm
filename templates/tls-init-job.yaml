@@ -62,24 +62,32 @@ spec:
             - "-ec"
             - |
               {{- if (not (and .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName)) }}
+              echo "==> Generating certificates"
               consul tls ca create \
                 -domain={{ .Values.global.domain }}
-              curl -s -X POST --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+
+              echo "==> Creating {{ template "consul.fullname" . }}-ca-cert secret"
+              curl -sS -X POST --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )" \
                 -H "Content-Type: application/json" \
                 -H "Accept: application/json" \
                 -d "{ \"kind\": \"Secret\", \"apiVersion\": \"v1\", \"metadata\": { \"name\": \"{{ template "consul.fullname" . }}-ca-cert\", \"namespace\": \"${NAMESPACE}\" }, \"type\": \"Opaque\", \"data\": { \"tls.crt\": \"$( cat {{ .Values.global.domain }}-agent-ca.pem | base64 | tr -d '\n' )\" }}" > /dev/null
-              curl -s -X POST --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+
+              echo "==> Creating {{ template "consul.fullname" . }}-ca-key secret"
+              curl -sS -X POST --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )" \
                 -H "Content-Type: application/json" \
                 -H "Accept: application/json" \
                 -d "{ \"kind\": \"Secret\", \"apiVersion\": \"v1\", \"metadata\": { \"name\": \"{{ template "consul.fullname" . }}-ca-key\", \"namespace\": \"${NAMESPACE}\" }, \"type\": \"Opaque\", \"data\": { \"tls.key\": \"$( cat {{ .Values.global.domain }}-agent-ca-key.pem | base64 | tr -d '\n' )\" }}" > /dev/null
               {{- end }}
+
               # Suppress globbing so we can interpolate the $NAMESPACE environment variable
               # and use * at the start of the dns name when setting -additional-dnsname.
               set -o noglob
+
+              echo "==> Generating server certificates"
               consul tls cert create -server \
                 -days=730 \
                 {{- if (and .Values.global.tls.caCert.secretName .Values.global.tls.caKey.secretName) }}
@@ -100,7 +108,9 @@ spec:
                 -dc={{ .Values.global.datacenter }} \
                 -domain={{ .Values.global.domain }}
               set +o noglob
-              curl -s -X POST --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+
+              echo "==> Creating {{ template "consul.fullname" . }}-server-cert secret"
+              curl -sS -X POST --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )" \
                 -H "Content-Type: application/json" \

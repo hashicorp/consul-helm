@@ -1,5 +1,8 @@
 ## Unreleased
 
+BUG FIXES:
+* TLS: log tls-init errors. [[GH-512](https://github.com/hashicorp/consul-helm/issues/512)]
+
 ## 0.27.0 (Nov 25, 2020)
 
 IMPROVEMENTS:
