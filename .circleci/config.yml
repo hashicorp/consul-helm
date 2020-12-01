@@ -378,7 +378,7 @@ jobs:
               -kubeconfig="$HOME/.kube/$OC_PRIMARY_NAME" \
               -secondary-kubeconfig="$HOME/.kube/$OC_SECONDARY_NAME" \
               -debug-directory="$TEST_RESULTS/debug" \
-              -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              -consul-k8s-image=docker-mirror.devhashi.app/hashicorpdev/consul-k8s:latest
 
       - store_test_results:
           path: /tmp/test-results
@@ -420,17 +420,17 @@ workflows:
   version: 2
   test:
     jobs:
-      - go-fmt-and-vet
-      - unit-acceptance-framework:
-          requires:
-            - go-fmt-and-vet
-      - unit-helm2
-      - unit-helm3
-      - acceptance:
-          requires:
-            - unit-helm2
-            - unit-helm3
-            - unit-acceptance-framework
+#      - go-fmt-and-vet
+#      - unit-acceptance-framework:
+#          requires:
+#            - go-fmt-and-vet
+#      - unit-helm2
+#      - unit-helm3
+      - acceptance-openshift
+#          requires:
+#            - unit-helm2
+#            - unit-helm3
+#            - unit-acceptance-framework
   nightly-acceptance-tests:
     triggers:
       - schedule:
