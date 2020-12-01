@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -88,7 +89,10 @@ func (t *TestConfig) entImage() (string, error) {
 		return "", err
 	}
 
-	appVersion := chartMap["appVersion"].(string)
+	appVersion, ok := chartMap["appVersion"].(string)
+	if !ok {
+		return "", errors.New("unable to cast chartMap.appVersion to string")
+	}
 	var preRelease string
 	// Handle versions like 1.9.0-rc1.
 	if strings.Contains(appVersion, "-") {
