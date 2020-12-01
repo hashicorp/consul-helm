@@ -392,6 +392,28 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# terminationGracePeriodSeconds
+
+@test "client/DaemonSet: default terminationGracePeriodSeconds is set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.terminationGracePeriodSeconds' | tee /dev/stderr)
+  [ "${actual}" = "10" ]
+}
+
+@test "client/DaemonSet: default terminationGracePeriodSeconds can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.terminationGracePeriodSeconds=30' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.terminationGracePeriodSeconds' | tee /dev/stderr)
+  [ "${actual}" = "30" ]
+}
+
+#--------------------------------------------------------------------
 # tolerations
 
 @test "client/DaemonSet: tolerations not set by default" {

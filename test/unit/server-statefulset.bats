@@ -423,6 +423,29 @@ load _helpers
   [ "${actual}" = 83df36fdaf1b4acb815f1764f9ff2782c520ca012511f282ba9c57a04401a239 ]
 }
 
+
+#--------------------------------------------------------------------
+# terminationGracePeriodSeconds
+
+@test "server/StatefulSet: default terminationGracePeriodSeconds is set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-statefulset.yaml   \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.terminationGracePeriodSeconds' | tee /dev/stderr)
+  [ "${actual}" = "30" ]
+}
+
+@test "server/StatefulSet: default terminationGracePeriodSeconds can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-statefulset.yaml   \
+      --set 'server.terminationGracePeriodSeconds=60' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.terminationGracePeriodSeconds' | tee /dev/stderr)
+  [ "${actual}" = "60" ]
+}
+
 #--------------------------------------------------------------------
 # tolerations
 

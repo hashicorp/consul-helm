@@ -297,6 +297,12 @@ server:
   extraConfig: |
     {}
 
+  # terminationGracePeriodSeconds is the number of seconds Kubernetes will wait
+  # before sending SIGKILL to kill the process during a pod shutdown. Increase this
+  # if you frequently find nodes that have left "uncleanly", resulting in the node
+  # being left in a "critical" state in the catalog
+  terminationGracePeriodSeconds: 30
+
   # extraVolumes is a list of extra volumes to mount. These will be exposed
   # to Consul in the path `/consul/userconfig/<name>/`. The value below is
   # an array of objects, examples are shown below.
@@ -457,6 +463,12 @@ client:
   # client. This should be JSON.
   extraConfig: |
     {}
+
+  # terminationGracePeriodSeconds is the number of seconds Kubernetes will wait
+  # before sending SIGKILL to kill the process during a pod shutdown. Increase this
+  # if you frequently find nodes that have left "uncleanly", resulting in the node
+  # being left in a "critical" state in the catalog
+  terminationGracePeriodSeconds: 10
 
   # extraVolumes is a list of extra volumes to mount. These will be exposed
   # to Consul in the path `/consul/userconfig/<name>/`. The value below is

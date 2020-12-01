@@ -45,7 +45,7 @@ spec:
       tolerations:
         {{ tpl .Values.client.tolerations . | nindent 8 | trim }}
     {{- end }}
-      terminationGracePeriodSeconds: 10
+      terminationGracePeriodSeconds: {{ .Values.client.terminationGracePeriodSeconds }}
       serviceAccountName: {{ template "consul.fullname" . }}-client
 
       {{- if .Values.client.priorityClassName }}
