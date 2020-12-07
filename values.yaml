@@ -572,6 +572,21 @@ client:
     #     ...
     caCert: null
 
+# Consul Prometheus-operator ServiceMonitor support
+serviceMonitor:
+  # You have to adjust prometheus retention time https://www.consul.io/docs/agent/options.html#telemetry-prometheus_retention_time
+  # client:
+  #    extraConfig: |
+  #      {"telemetry": {"prometheus_retention_time": "<your value>"}}
+  #  server:
+  #    extraConfig: |
+  #      {"telemetry": {"prometheus_retention_time": "<your value>"}}
+  enabled: false
+  labels: {}
+  annotations: {}
+  # interval: 30s
+  # scrapeTimeout: 30s
+
 # Configuration for DNS configuration within the Kubernetes cluster.
 # This creates a service that routes to all agents (client or server)
 # for serving DNS requests. This DOES NOT automatically configure kube-dns

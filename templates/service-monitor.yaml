@@ -1,0 +1,36 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ template "consul.fullname" . }}-service-monitor
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    component: service-monitor
+  {{- if .Values.serviceMonitor.labels }}
+    {{ toYaml .Values.serviceMonitor.labels | nindent 4 }}
+  {{- end }}
+  {{- if .Values.serviceMonitor.annotations }}
+  annotations: {{ toYaml .Values.serviceMonitor.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ template "consul.name" . }}
+      chart: {{ template "consul.chart" . }}
+      heritage: {{ .Release.Service }}
+      release: {{ .Release.Name }}
+  namespaceSelector:
+    any: true
+  endpoints:
+  - port: https
+    path: /v1/agent/metrics?format=prometheus
+    {{- if .Values.serviceMonitor.interval }}
+    interval: {{ .Values.serviceMonitor.interval }}
+    {{- end }}
+    {{- if .Values.serviceMonitor.scrapeTimeout }}
+    scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+    {{- end }}
+{{- end }}
