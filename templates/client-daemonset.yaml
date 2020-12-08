@@ -165,6 +165,9 @@ spec:
             - |
               CONSUL_FULLNAME="{{template "consul.fullname" . }}"
 
+              mkdir -p /consul/config && cp /consul/config-from-cm/* /consul/config
+              find /consul/config -type f -name "*.json" -exec sed -Ei "s|HOST_IP|${HOST_IP?}|g" {} \;
+
               exec /bin/consul agent \
                 -node="${NODE}" \
                 -advertise="${ADVERTISE_IP}" \
@@ -229,7 +232,7 @@ spec:
             - name: data
               mountPath: /consul/data
             - name: config
-              mountPath: /consul/config
+              mountPath: /consul/config-from-cm
             {{- if .Values.global.tls.enabled }}
             - name: consul-ca-cert
               mountPath: /consul/tls/ca
