@@ -499,16 +499,16 @@ workflows:
   test:
     jobs:
       - go-fmt-and-vet
-      - unit-acceptance-framework:
-          requires:
-            - go-fmt-and-vet
-      - unit-helm2
-      - unit-helm3
-      - acceptance:
-          requires:
-            - unit-helm2
-            - unit-helm3
-            - unit-acceptance-framework
+      # - unit-acceptance-framework:
+      #     requires:
+      #       - go-fmt-and-vet
+      # - unit-helm2
+      # - unit-helm3
+      - acceptance-eks-1-17
+          # requires:
+            # - unit-helm2
+            # - unit-helm3
+            # - unit-acceptance-framework
   nightly-acceptance-tests:
     triggers:
       - schedule:
