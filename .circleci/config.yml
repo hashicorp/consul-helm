@@ -378,12 +378,14 @@ jobs:
             exit_code=0
             for pkg in $(go list ./...)
             do
-              if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 40m -failfast \
+              if ! gotestsum --format standard-verbose --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 40m -failfast \
                     -enable-enterprise \
                     -enable-multi-cluster \
                     -kubeconfig="$primary_kubeconfig" \
                     -secondary-kubeconfig="$secondary_kubeconfig" \
                     -debug-directory="$TEST_RESULTS/debug" \
+                    -v \
+                    -run TestMeshGateway \
                     -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
               then
                 echo "Tests in ${pkg} failed, aborting early"
