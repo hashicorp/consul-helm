@@ -284,6 +284,5 @@ func verifyFederation(t *testing.T, primaryClient, secondaryClient *api.Client, 
 		}
 	})
 
-	timeToVerify := time.Since(start)
-	logger.Logf(t, "Took %+v to verify federation", timeToVerify)
+	logger.Logf(t, "Took %s to verify federation", time.Since(start))
 }

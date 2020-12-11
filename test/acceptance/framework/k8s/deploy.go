@@ -134,8 +134,7 @@ func CheckStaticServerConnectionMultipleFailureMessages(
 func CheckStaticServerConnectionSuccessful(t *testing.T, options *k8s.KubectlOptions, deploymentName string, curlArgs ...string) {
 	start := time.Now()
 	CheckStaticServerConnection(t, options, true, deploymentName, "", curlArgs...)
-	timeToVerify := time.Since(start)
-	logger.Logf(t, "Took %+v to check if static server connection was successful", timeToVerify)
+	logger.Logf(t, "Took %s to check if static server connection was successful", time.Since(start))
 }
 
 // CheckStaticServerConnectionSuccessful is just like CheckStaticServerConnection
