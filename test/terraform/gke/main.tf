@@ -1,5 +1,6 @@
 provider "google-beta" {
   project = var.project
+  version = "~> 3.49.0"
 }
 
 resource "random_id" "suffix" {
