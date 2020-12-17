@@ -77,7 +77,7 @@ func TestConfig_HelmValuesFromConfig(t *testing.T) {
 			},
 		},
 		{
-			"sets enablePodSecurity policies when -enable-pod-security-policies is set",
+			"sets enablePodSecurityPolicies helm value when -enable-pod-security-policies is set",
 			TestConfig{
 				EnablePodSecurityPolicies: true,
 			},
