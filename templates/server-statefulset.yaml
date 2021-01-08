@@ -255,6 +255,9 @@ spec:
               protocol: "UDP"
               name: serflan-udp
             - containerPort: 8302
+              {{- if .Values.server.exposeGossipAndRPCPorts }}
+              hostPort: 8302
+              {{- end }}
               name: serfwan
             - containerPort: 8300
               {{- if .Values.server.exposeGossipAndRPCPorts }}

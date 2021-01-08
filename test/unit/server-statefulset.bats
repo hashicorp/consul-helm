@@ -210,11 +210,15 @@ load _helpers
       yq -r '.spec.template.spec.containers[0].ports[] | select(.name == "server")' | yq -r '.hostPort' | tee /dev/stderr)
   [ "${actual}" = "8300" ]
 
+  # Test that hostPort is set for server serfwan port
+  local actual=$(echo "$object" |
+      yq -r '.spec.template.spec.containers[0].ports[] | select(.name == "serfwan")' | yq -r '.hostPort' | tee /dev/stderr)
+  [ "${actual}" = "8302" ]
+
   # Test that ADVERTISE_IP is being set to hostIP
   local actual=$(echo "$object" |
     yq -r -c '.spec.template.spec.containers[0].env | map(select(.name == "ADVERTISE_IP"))' | tee /dev/stderr)
   [ "${actual}" = '[{"name":"ADVERTISE_IP","valueFrom":{"fieldRef":{"fieldPath":"status.hostIP"}}}]' ]
-
 }
 
 #--------------------------------------------------------------------
