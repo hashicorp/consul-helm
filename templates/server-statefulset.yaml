@@ -157,6 +157,7 @@ spec:
                 -advertise="${ADVERTISE_IP}" \
                 -bind=0.0.0.0 \
                 -bootstrap-expect={{ if .Values.server.bootstrapExpect }}{{ .Values.server.bootstrapExpect }}{{ else }}{{ .Values.server.replicas }}{{ end }} \
+                -hcl='leave_on_terminate = true' \
                 {{- if .Values.global.tls.enabled }}
                 -hcl='ca_file = "/consul/tls/ca/tls.crt"' \
                 -hcl='cert_file = "/consul/tls/server/tls.crt"' \
@@ -226,13 +227,6 @@ spec:
               readOnly: true
               mountPath: /consul/userconfig/{{ .name }}
             {{- end }}
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                - /bin/sh
-                - -c
-                - consul leave
           ports:
             {{- if (or (not .Values.global.tls.enabled) (not .Values.global.tls.httpsOnly)) }}
             - containerPort: 8500
