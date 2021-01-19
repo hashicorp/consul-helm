@@ -169,7 +169,7 @@ jobs:
       - store_artifacts:
           path: /tmp/test-results
 
-  acceptance-gke-1-16:
+  acceptance-gke-1-19:
     environment:
       - TEST_RESULTS: /tmp/test-results
     docker:
@@ -577,35 +577,7 @@ workflows:
   version: 2
   test:
     jobs:
-      - go-fmt-and-vet-acceptance
-      - go-fmt-and-vet-helm-gen
-      - unit-acceptance-framework:
-          requires:
-            - go-fmt-and-vet-acceptance
-      - unit-helm-gen:
-          requires:
-            - go-fmt-and-vet-helm-gen
-      - test-helm-gen
-      - unit-helm2
-      - unit-helm3
-      - acceptance:
-          requires:
-            - unit-helm2
-            - unit-helm3
-            - unit-acceptance-framework
-  nightly-acceptance-tests:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - acceptance-openshift
-      - acceptance-gke-1-16
-      - acceptance-eks-1-17
-#      - acceptance-aks-1-19
+      - acceptance-gke-1-19
   update-helm-charts-index:
     jobs:
       - update-helm-charts-index:
