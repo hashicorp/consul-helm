@@ -575,8 +575,11 @@ externalServers:
   # @type: array<string>
   hosts: []
 
-  # The HTTPS port of the Consul servers.
+  # The HTTPS port of the Consul servers. Will be used if `tls.enabled` is true.
   httpsPort: 8501
+
+  # The HTTP port of the Consul servers. Will be used if `tls.enabled` is false.
+  httpPort: 8500
 
   # The server name to use as the SNI host header when connecting with HTTPS.
   # @type: string

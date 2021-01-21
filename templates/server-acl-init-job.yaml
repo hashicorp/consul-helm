@@ -106,7 +106,11 @@ spec:
                 {{- range .Values.externalServers.hosts }}
                 -server-address={{ quote . }} \
                 {{- end }}
+                {{- if .Values.global.tls.enabled }}
                 -server-port={{ .Values.externalServers.httpsPort }} \
+                {{- else }}
+                -server-port={{ .Values.externalServers.httpPort }} \
+                {{- end }}
                 {{- else }}
                 {{- range $index := until (.Values.server.replicas | int) }}
                 -server-address="${CONSUL_FULLNAME}-server-{{ $index }}.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc" \
