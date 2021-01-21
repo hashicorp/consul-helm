@@ -104,3 +104,13 @@ load _helpers
   actual=$(echo $spec | jq -r '.containers[0].command | join(" ") | contains("consul tls ca create")' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
+
+@test "tlsInit/Job: fails if tls.autoEncryptEnabled is true but tls.enabled is false" {
+  cd `chart_dir`
+  run helm template \
+      -s templates/tls-init-job.yaml  \
+      --set 'global.tls.enabled=false' \
+      --set 'global.tls.enableAutoEncrypt=true' .
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "if global.tls.enableAutoEncrypt is true, global.tls.enabled must also be true" ]]
+}
