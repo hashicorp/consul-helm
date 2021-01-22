@@ -1,0 +1,617 @@
+version: 2.1
+orbs:
+  slack: circleci/slack@3.4.2
+executors:
+  go:
+    docker:
+      - image: docker.mirror.hashicorp.services/circleci/golang:1.14
+    environment:
+      - TEST_RESULTS: /tmp/test-results
+
+jobs:
+  unit-helm2:
+    docker:
+      # This image is built from test/docker/Test.dockerfile
+      # helm2 must use 0.3.0 version of the image
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.3.0
+
+    steps:
+      - checkout
+      - run:
+          name: Run Unit Tests
+          command: bats ./test/unit
+  unit-helm3:
+    docker:
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.8.0
+
+    steps:
+      - checkout
+
+      - run:
+          name: Run Unit Tests
+          command: bats ./test/unit
+
+  go-fmt-and-vet-acceptance:
+    executor: go
+    steps:
+      - checkout
+
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+
+      - run:
+          name: go mod download
+          working_directory: test/acceptance
+          command: go mod download
+
+      # Save go module cache if the go.mod file has changed
+      - save_cache:
+          key: consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+          paths:
+            - "/go/pkg/mod"
+
+      # check go fmt output because it does not report non-zero when there are fmt changes
+      - run:
+          name: check go fmt
+          command: |
+            files=$(go fmt ./...)
+            if [ -n "$files" ]; then
+              echo "The following file(s) do not conform to go fmt:"
+              echo "$files"
+              exit 1
+            fi
+
+      - run:
+          name: go vet
+          working_directory: test/acceptance
+          command: go vet ./...
+
+  unit-acceptance-framework:
+    executor: go
+    steps:
+      - checkout
+
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+
+      - run: mkdir -p $TEST_RESULTS
+
+      - run:
+          name: Run tests
+          working_directory: test/acceptance/framework
+          command: |
+            gotestsum --junitfile $TEST_RESULTS/gotestsum-report.xml ./... -- -p 4
+
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+
+  acceptance:
+    environment:
+      - TEST_RESULTS: /tmp/test-results
+    machine:
+      image: ubuntu-2004:202010-01
+    parallelism: 6
+    steps:
+      - checkout
+      - run:
+          name: Install gotestsum, kind, kubectl, and helm
+          command: |
+            go get gotest.tools/gotestsum
+
+            curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.9.0/kind-linux-amd64
+            chmod +x ./kind
+            sudo mv ./kind /usr/local/bin/kind
+
+            curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x ./kubectl
+            sudo mv ./kubectl /usr/local/bin/kubectl
+
+            curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+            sudo apt-get install apt-transport-https --yes
+            echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+            sudo apt-get update
+            sudo apt-get install helm
+      - run:
+          name: Create kind clusters
+          command: |
+            kind create cluster --name dc1 --image kindest/node:v1.18.4
+            kind create cluster --name dc2 --image kindest/node:v1.18.4
+      - restore_cache:
+          keys:
+            - consul-helm-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
+      - run:
+          name: go mod download
+          working_directory: test/acceptance
+          command: go mod download
+      - save_cache:
+          key: consul-helm-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
+          paths:
+            - ~/.go_workspace/pkg/mod
+      - run: mkdir -p $TEST_RESULTS
+      - run:
+          name: Run acceptance tests
+          working_directory: test/acceptance/tests
+          no_output_timeout: 1h
+          command: |
+            # We have to run the tests for each package separately so that we can
+            # exit early if any test fails (-failfast only works within a single
+            # package).
+            exit_code=0
+            pkgs=$(go list ./... | circleci tests split)
+            echo "Running $pkgs"
+            for pkg in $pkgs
+            do
+              if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 30m -failfast \
+                    -use-kind \
+                    -enable-multi-cluster \
+                    -enable-enterprise \
+                    -kubecontext="kind-dc1" \
+                    -secondary-kubecontext="kind-dc2" \
+                    -debug-directory="$TEST_RESULTS/debug" \
+                    -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              then
+                echo "Tests in ${pkg} failed, aborting early"
+                exit_code=1
+                break
+              fi
+            done
+            gotestsum --raw-command --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- cat jsonfile*
+            exit $exit_code
+
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+
+  acceptance-gke-1-16:
+    environment:
+      - TEST_RESULTS: /tmp/test-results
+    docker:
+      # This image is build from test/docker/Test.dockerfile
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.8.0
+
+    steps:
+      - run:
+          name: Exit if forked PR
+          command: |
+            if [ -n "$CIRCLE_PR_NUMBER" ]; then
+                echo "Skipping acceptance tests for forked PRs; marking step successful."
+                circleci step halt
+            fi
+
+      - checkout
+
+      - run:
+          name: terraform init & apply
+          working_directory: test/terraform/gke
+          command: |
+            terraform init
+            echo "${GOOGLE_CREDENTIALS}" | gcloud auth activate-service-account --key-file=-
+
+            terraform apply -var project=${CLOUDSDK_CORE_PROJECT} -var init_cli=true -var cluster_count=2 -auto-approve
+
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+
+      - run: mkdir -p $TEST_RESULTS
+
+      - run:
+          name: Run acceptance tests
+          working_directory: test/acceptance/tests
+          no_output_timeout: 1h
+          command: |
+            eval "$(echo export primary_kubeconfig=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .kubeconfigs.value[0]))"
+            eval "$(echo export secondary_kubeconfig=$(terraform output -state ../../terraform/gke/terraform.tfstate -json | jq -r .kubeconfigs.value[1]))"
+
+            # Create an enterprise license secret in the primary cluster.
+            # This license is set as a CircleCI project env variable.
+            # The license expires 15-Oct-2025.
+            KUBECONFIG=$primary_kubeconfig kubectl create secret generic ent-license --from-literal=key="${CONSUL_ENT_LICENSE}"
+
+            # We have to run the tests for each package separately so that we can
+            # exit early if any test fails (-failfast only works within a single
+            # package).
+            exit_code=0
+            for pkg in $(go list ./...)
+            do
+              if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 30m -failfast \
+                    -enable-enterprise \
+                    -enterprise-license-secret-name=ent-license \
+                    -enterprise-license-secret-key=key \
+                    -enable-pod-security-policies \
+                    -enable-multi-cluster \
+                    -kubeconfig="$primary_kubeconfig" \
+                    -secondary-kubeconfig="$secondary_kubeconfig" \
+                    -debug-directory="$TEST_RESULTS/debug" \
+                    -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              then
+                echo "Tests in ${pkg} failed, aborting early"
+                exit_code=1
+                break
+              fi
+            done
+            gotestsum --raw-command --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- cat jsonfile*
+            exit $exit_code
+
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+
+      - run:
+          name: terraform destroy
+          working_directory: test/terraform/gke
+          command: |
+            terraform destroy -var project=${CLOUDSDK_CORE_PROJECT} -auto-approve
+          when: always
+
+  acceptance-aks-1-18:
+    environment:
+      - TEST_RESULTS: /tmp/test-results
+    docker:
+      # This image is build from test/docker/Test.dockerfile
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.8.0
+
+    steps:
+      - checkout
+
+      - run:
+          name: terraform init & apply
+          working_directory: test/terraform/aks
+          command: |
+            terraform init
+
+            terraform apply -var client_id="$ARM_CLIENT_ID" -var client_secret="$ARM_CLIENT_SECRET" -var cluster_count=2 -auto-approve
+
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+
+      - run: mkdir -p $TEST_RESULTS
+
+      - run:
+          name: Run acceptance tests
+          working_directory: test/acceptance/tests
+          no_output_timeout: 1h
+          command: |
+            export primary_kubeconfig=$(terraform output -state ../../terraform/aks/terraform.tfstate -json | jq -r .kubeconfigs.value[0])
+            export secondary_kubeconfig=$(terraform output -state ../../terraform/aks/terraform.tfstate -json | jq -r .kubeconfigs.value[1])
+
+            # We have to run the tests for each package separately so that we can
+            # exit early if any test fails (-failfast only works within a single
+            # package).
+            exit_code=0
+            for pkg in $(go list ./...)
+            do
+              if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 40m -failfast \
+                    -enable-enterprise \
+                    -enable-multi-cluster \
+                    -kubeconfig="$primary_kubeconfig" \
+                    -secondary-kubeconfig="$secondary_kubeconfig" \
+                    -debug-directory="$TEST_RESULTS/debug" \
+                    -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              then
+                echo "Tests in ${pkg} failed, aborting early"
+                exit_code=1
+                break
+              fi
+            done
+            gotestsum --raw-command --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- cat jsonfile*
+            exit $exit_code
+
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+
+      - run:
+          name: terraform destroy
+          working_directory: test/terraform/aks
+          command: |
+            terraform destroy -auto-approve
+          when: always
+
+      - slack/status:
+          fail_only: true
+          failure_message: "AKS acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
+
+  acceptance-eks-1-17:
+    environment:
+      - TEST_RESULTS: /tmp/test-results
+    docker:
+      # This image is build from test/docker/Test.dockerfile
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.8.0
+
+    steps:
+      - checkout
+
+      - run:
+          name: configure aws
+          command: |
+            aws configure --profile helm_user set aws_access_key_id "$AWS_ACCESS_KEY_ID"
+            aws configure --profile helm_user set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+            aws configure set role_arn "$AWS_ROLE_ARN"
+            aws configure set source_profile helm_user
+
+            echo "unset AWS_ACCESS_KEY_ID" >> $BASH_ENV
+            echo "unset AWS_SECRET_ACCESS_KEY" >> $BASH_ENV
+
+      - run:
+          name: terraform init & apply
+          working_directory: test/terraform/eks
+          command: |
+            terraform init
+
+            terraform apply -var cluster_count=2 -auto-approve
+
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+
+      - run: mkdir -p $TEST_RESULTS
+
+      - run:
+          name: Run acceptance tests
+          working_directory: test/acceptance/tests
+          no_output_timeout: 1h
+          command: |
+            export primary_kubeconfig=$(terraform output -state ../../terraform/eks/terraform.tfstate -json | jq -r .kubeconfigs.value[0])
+            export secondary_kubeconfig=$(terraform output -state ../../terraform/eks/terraform.tfstate -json | jq -r .kubeconfigs.value[1])
+
+            # Change file permissions of the kubecofig files to avoid warnings by helm.
+            # TODO: remove when https://github.com/terraform-aws-modules/terraform-aws-eks/pull/1114 is merged.
+            chmod 600 "$primary_kubeconfig"
+            chmod 600 "$secondary_kubeconfig"
+
+            # We have to run the tests for each package separately so that we can
+            # exit early if any test fails (-failfast only works within a single
+            # package).
+            exit_code=0
+            for pkg in $(go list ./...)
+            do
+              if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 40m -failfast \
+                    -enable-enterprise \
+                    -enable-multi-cluster \
+                    -kubeconfig="$primary_kubeconfig" \
+                    -secondary-kubeconfig="$secondary_kubeconfig" \
+                    -debug-directory="$TEST_RESULTS/debug" \
+                    -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              then
+                echo "Tests in ${pkg} failed, aborting early"
+                exit_code=1
+                break
+              fi
+            done
+            gotestsum --raw-command --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- cat jsonfile*
+            exit $exit_code
+
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+
+      - run:
+          name: terraform destroy
+          working_directory: test/terraform/eks
+          command: |
+            terraform destroy -auto-approve
+          when: always
+
+      - slack/status:
+          fail_only: true
+          failure_message: "EKS acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
+
+  acceptance-openshift:
+    environment:
+      - TEST_RESULTS: /tmp/test-results
+      # Primary and secondary Azure OpenShift clusters (created manually) that are used to run acceptance tests.
+      - OC_PRIMARY_NAME: consul-helm-test-2757871175
+      - OC_SECONDARY_NAME: consul-helm-test-3737660519
+    docker:
+      # This image is build from test/docker/Test.dockerfile
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.8.0
+
+    steps:
+      - checkout
+
+      - run:
+          name: openshift login
+          command: |
+            az login --service-principal -u "$ARM_CLIENT_ID" -p "$ARM_CLIENT_SECRET" --tenant "$ARM_TENANT_ID" > /dev/null
+
+            for cluster_name in "$OC_PRIMARY_NAME" "$OC_SECONDARY_NAME"; do
+              apiServer=$(az aro show -g "$cluster_name" -n "$cluster_name" --query apiserverProfile.url -o tsv)
+              kubeUser=$(az aro list-credentials -g "$cluster_name" -n "$cluster_name" | jq -r .kubeadminUsername)
+              kubePassword=$(az aro list-credentials -g "$cluster_name" -n "$cluster_name" | jq -r .kubeadminPassword)
+
+              KUBECONFIG="$HOME/.kube/$cluster_name" oc login "$apiServer" -u "$kubeUser" -p "$kubePassword"
+              KUBECONFIG="$HOME/.kube/$cluster_name" oc project consul
+            done
+
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+
+      - run: mkdir -p $TEST_RESULTS
+
+      - run:
+          name: Run acceptance tests
+          working_directory: test/acceptance/tests
+          no_output_timeout: 1h
+          command: |
+            gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 40m -failfast \
+              -enable-openshift \
+              -enable-enterprise \
+              -enable-multi-cluster \
+              -kubeconfig="$HOME/.kube/$OC_PRIMARY_NAME" \
+              -secondary-kubeconfig="$HOME/.kube/$OC_SECONDARY_NAME" \
+              -debug-directory="$TEST_RESULTS/debug" \
+              -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+      - slack/status:
+          fail_only: true
+          failure_message: "OpenShift acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
+
+  go-fmt-and-vet-helm-gen:
+    executor: go
+    steps:
+      - checkout
+
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-helm-gen-modcache-v1-{{ checksum "hack/helm-reference-gen/go.mod" }}
+
+      - run:
+          name: go mod download
+          working_directory: hack/helm-reference-gen
+          command: go mod download
+
+      # Save go module cache if the go.mod file has changed
+      - save_cache:
+          key: consul-helm-helm-gen-modcache-v1-{{ checksum "hack/helm-reference-gen/go.mod" }}
+          paths:
+            - "/go/pkg/mod"
+
+      # check go fmt output because it does not report non-zero when there are fmt changes
+      - run:
+          name: check go fmt
+          command: |
+            files=$(go fmt ./...)
+            if [ -n "$files" ]; then
+              echo "The following file(s) do not conform to go fmt:"
+              echo "$files"
+              exit 1
+            fi
+
+      - run:
+          name: go vet
+          working_directory: hack/helm-reference-gen
+          command: go vet ./...
+
+  unit-helm-gen:
+    executor: go
+    steps:
+      - checkout
+
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-helm-gen-modcache-v1-{{ checksum "hack/helm-reference-gen/go.mod" }}
+
+      - run: mkdir -p $TEST_RESULTS
+
+      - run:
+          name: Run tests
+          working_directory: hack/helm-reference-gen
+          command: |
+            gotestsum --junitfile $TEST_RESULTS/gotestsum-report.xml ./... -- -p 4
+
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+
+  test-helm-gen:
+    executor: go
+    steps:
+      - checkout
+
+      # Restore go module cache if there is one
+      - restore_cache:
+          keys:
+            - consul-helm-helm-gen-modcache-v1-{{ checksum "hack/helm-reference-gen/go.mod" }}
+
+      - run: mkdir -p $TEST_RESULTS
+
+      - run:
+          name: Run tests
+          working_directory: hack/helm-reference-gen
+          command: |
+            go run ./... -validate
+
+  update-helm-charts-index:
+    docker:
+      - image: docker.mirror.hashicorp.services/circleci/golang:latest
+    steps:
+      - checkout
+      - run:
+          name: verify Chart version matches tag version
+          command: |
+            GO111MODULE=on go get github.com/mikefarah/yq/v2
+            git_tag=$(echo "${CIRCLE_TAG#v}")
+            chart_tag=$(yq r Chart.yaml version)
+            if [ "${git_tag}" != "${chart_tag}" ]; then
+              echo "chart version (${chart_tag}) did not match git version (${git_tag})"
+              exit 1
+            fi
+      - run:
+          name: update helm-charts index
+          command: |
+            curl --show-error --silent --fail --user "${CIRCLE_TOKEN}:" \
+                -X POST \
+                -H 'Content-Type: application/json' \
+                -H 'Accept: application/json' \
+                -d "{\"branch\": \"master\",\"parameters\":{\"SOURCE_REPO\": \"${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}\",\"SOURCE_TAG\": \"${CIRCLE_TAG}\"}}" \
+                "${CIRCLE_ENDPOINT}/${CIRCLE_PROJECT}/pipeline"
+      - slack/status:
+          fail_only: true
+          failure_message: "Failed to trigger an update to the helm charts index. Check the logs at: ${CIRCLE_BUILD_URL}"
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - go-fmt-and-vet-acceptance
+      - go-fmt-and-vet-helm-gen
+      - unit-acceptance-framework:
+          requires:
+            - go-fmt-and-vet-acceptance
+      - unit-helm-gen:
+          requires:
+            - go-fmt-and-vet-helm-gen
+      - test-helm-gen
+      - unit-helm2
+      - unit-helm3
+      - acceptance:
+          requires:
+            - unit-helm2
+            - unit-helm3
+            - unit-acceptance-framework
+  nightly-acceptance-tests:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - acceptance-openshift
+      - acceptance-gke-1-16
+      - acceptance-eks-1-17
+      - acceptance-aks-1-18
+  update-helm-charts-index:
+    jobs:
+      - update-helm-charts-index:
+          context: helm-charts-trigger
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/

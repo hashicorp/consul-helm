@@ -1,5 +1,9 @@
-# The deployment for running the Connect sidecar injector
 {{- if (or (and (ne (.Values.connectInject.enabled | toString) "-") .Values.connectInject.enabled) (and (eq (.Values.connectInject.enabled | toString) "-") .Values.global.enabled)) }}
+{{- if not (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) }}{{ fail "clients must be enabled for connect injection" }}{{ end }}
+{{- if not .Values.client.grpc }}{{ fail "client.grpc must be true for connect injection" }}{{ end }}
+{{- if and .Values.connectInject.consulNamespaces.mirroringK8S (not .Values.global.enableConsulNamespaces) }}{{ fail "global.enableConsulNamespaces must be true if mirroringK8S=true" }}{{ end }}
+{{- if .Values.connectInject.imageEnvoy }}{{ fail "connectInject.imageEnvoy must be specified in global.imageEnvoy" }}{{ end }}
+# The deployment for running the Connect sidecar injector
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,6 +29,8 @@ spec:
         chart: {{ template "consul.chart" . }}
         release: {{ .Release.Name }}
         component: connect-injector
+      annotations:
+        "consul.hashicorp.com/connect-inject": "false"
     spec:
   {{- if not .Values.connectInject.certs.secretName }}
       serviceAccountName: {{ template "consul.fullname" . }}-connect-injector-webhook-svc-account
@@ -37,6 +43,37 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            {{- if .Values.global.tls.enabled }}
+            - name: CONSUL_CACERT
+              value: /consul/tls/ca/tls.crt
+            {{- end }}
+            {{- /* A Consul client and ACL token is necessary for the connect injector if namespaces are enabled
+              or if healthChecks enabled */}}
+            {{- if (or .Values.global.enableConsulNamespaces .Values.connectInject.healthChecks.enabled) }}
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            {{- if (and .Values.connectInject.aclInjectToken.secretName .Values.connectInject.aclInjectToken.secretKey) }}
+            - name: CONSUL_HTTP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.connectInject.aclInjectToken.secretName }}
+                  key: {{ .Values.connectInject.aclInjectToken.secretKey }}
+            {{- else if .Values.global.acls.manageSystemACLs }}
+            - name: CONSUL_HTTP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ template "consul.fullname" . }}-connect-inject-acl-token"
+                  key: "token"
+            {{- end }}
+            - name: CONSUL_HTTP_ADDR
+              {{- if .Values.global.tls.enabled }}
+              value: https://$(HOST_IP):8501
+              {{- else }}
+              value: http://$(HOST_IP):8500
+              {{- end }}
+            {{- end }}
           command:
             - "/bin/sh"
             - "-ec"
@@ -46,17 +83,104 @@ spec:
               consul-k8s inject-connect \
                 -default-inject={{ .Values.connectInject.default }} \
                 -consul-image="{{ default .Values.global.image .Values.connectInject.imageConsul }}" \
-                {{ if .Values.connectInject.imageEnvoy -}}
-                -envoy-image="{{ .Values.connectInject.imageEnvoy }}" \
-                {{ end -}}
+                -envoy-image="{{ .Values.global.imageEnvoy }}" \
+                -consul-k8s-image="{{ default .Values.global.imageK8S .Values.connectInject.image }}" \
                 -listen=:8080 \
-{{- if .Values.connectInject.certs.secretName }}
-                -tls-cert-file=/etc/connect-injector/certs/{{ .Values.connectInject.certs.certName }}
-                -tls-key-file=/etc/connect-injector/certs/{{ .Values.connectInject.certs.keyName }}
-{{- else }}
+                {{- if .Values.connectInject.logLevel }}
+                -log-level={{ .Values.connectInject.logLevel }} \
+                {{- end }}
+                {{- if .Values.connectInject.healthChecks.enabled }}
+                -enable-health-checks-controller=true \
+                -health-checks-reconcile-period={{ .Values.connectInject.healthChecks.reconcilePeriod }} \
+                {{- end }}
+                {{- if .Values.connectInject.envoyExtraArgs }}
+                -envoy-extra-args="{{ .Values.connectInject.envoyExtraArgs }}" \
+                {{- end }}
+                {{- if .Values.connectInject.overrideAuthMethodName }}
+                -acl-auth-method="{{ .Values.connectInject.overrideAuthMethodName }}" \
+                {{- else if .Values.global.acls.manageSystemACLs }}
+                -acl-auth-method="{{ template "consul.fullname" . }}-k8s-auth-method" \
+                {{- end }}
+                {{- if .Values.connectInject.centralConfig.enabled }}
+                -enable-central-config=true \
+                {{- end }}
+                {{- if (and .Values.connectInject.centralConfig.enabled .Values.connectInject.centralConfig.defaultProtocol) }}
+                -default-protocol="{{ .Values.connectInject.centralConfig.defaultProtocol }}" \
+                {{- end }}
+                {{- range $value := .Values.connectInject.k8sAllowNamespaces }}
+                -allow-k8s-namespace="{{ $value }}" \
+                {{- end }}
+                {{- range $value := .Values.connectInject.k8sDenyNamespaces }}
+                -deny-k8s-namespace="{{ $value }}" \
+                {{- end }}
+                {{- if .Values.global.enableConsulNamespaces }}
+                -enable-namespaces=true \
+                {{- if .Values.connectInject.consulNamespaces.consulDestinationNamespace }}
+                -consul-destination-namespace={{ .Values.connectInject.consulNamespaces.consulDestinationNamespace }} \
+                {{- end }}
+                {{- if .Values.connectInject.consulNamespaces.mirroringK8S }}
+                -enable-k8s-namespace-mirroring=true \
+                {{- if .Values.connectInject.consulNamespaces.mirroringK8SPrefix }}
+                -k8s-namespace-mirroring-prefix={{ .Values.connectInject.consulNamespaces.mirroringK8SPrefix }} \
+                {{- end }}
+                {{- end }}
+                {{- if .Values.global.acls.manageSystemACLs }}
+                -consul-cross-namespace-acl-policy=cross-namespace-policy \
+                {{- end }}
+                {{- end }}
+                {{- if .Values.connectInject.certs.secretName }}
+                -tls-cert-file=/etc/connect-injector/certs/{{ .Values.connectInject.certs.certName }} \
+                -tls-key-file=/etc/connect-injector/certs/{{ .Values.connectInject.certs.keyName }} \
+                {{- else }}
                 -tls-auto=${CONSUL_FULLNAME}-connect-injector-cfg \
-                -tls-auto-hosts=${CONSUL_FULLNAME}-connect-injector-svc,${CONSUL_FULLNAME}-connect-injector-svc.${NAMESPACE},${CONSUL_FULLNAME}-connect-injector-svc.${NAMESPACE}.svc
-{{- end }}
+                -tls-auto-hosts=${CONSUL_FULLNAME}-connect-injector-svc,${CONSUL_FULLNAME}-connect-injector-svc.${NAMESPACE},${CONSUL_FULLNAME}-connect-injector-svc.${NAMESPACE}.svc \
+                {{- end }}
+                {{- $resources := .Values.connectInject.sidecarProxy.resources }}
+                {{- /* kindIs is used here to differentiate between null and 0 */}}
+                {{- if not (kindIs "invalid" $resources.limits.memory) }}
+                -default-sidecar-proxy-memory-limit={{ $resources.limits.memory }} \
+                {{- end }}
+                {{- if not (kindIs "invalid" $resources.requests.memory) }}
+                -default-sidecar-proxy-memory-request={{ $resources.requests.memory }} \
+                {{- end }}
+                {{- if not (kindIs "invalid" $resources.limits.cpu) }}
+                -default-sidecar-proxy-cpu-limit={{ $resources.limits.cpu }} \
+                {{- end }}
+                {{- if not (kindIs "invalid" $resources.requests.cpu) }}
+                -default-sidecar-proxy-cpu-request={{ $resources.requests.cpu }} \
+                {{- end }}
+
+                {{- if .Values.connectInject.initContainer }}
+                {{- $initResources := .Values.connectInject.initContainer.resources }}
+                {{- if not (kindIs "invalid" $initResources.limits.memory) }}
+                -init-container-memory-limit={{ $initResources.limits.memory }} \
+                {{- end }}
+                {{- if not (kindIs "invalid" $initResources.requests.memory) }}
+                -init-container-memory-request={{ $initResources.requests.memory }} \
+                {{- end }}
+                {{- if not (kindIs "invalid" $initResources.limits.cpu) }}
+                -init-container-cpu-limit={{ $initResources.limits.cpu }} \
+                {{- end }}
+                {{- if not (kindIs "invalid" $initResources.requests.cpu) }}
+                -init-container-cpu-request={{ $initResources.requests.cpu }} \
+                {{- end }}
+                {{- end }}
+
+                {{- if .Values.global.lifecycleSidecarContainer }}
+                {{- $lifecycleResources := .Values.global.lifecycleSidecarContainer.resources }}
+                {{- if not (kindIs "invalid" $lifecycleResources.limits.memory) }}
+                -lifecycle-sidecar-memory-limit={{ $lifecycleResources.limits.memory }} \
+                {{- end }}
+                {{- if not (kindIs "invalid" $lifecycleResources.requests.memory) }}
+                -lifecycle-sidecar-memory-request={{ $lifecycleResources.requests.memory }} \
+                {{- end }}
+                {{- if not (kindIs "invalid" $lifecycleResources.limits.cpu) }}
+                -lifecycle-sidecar-cpu-limit={{ $lifecycleResources.limits.cpu }} \
+                {{- end }}
+                {{- if not (kindIs "invalid" $lifecycleResources.requests.cpu) }}
+                -lifecycle-sidecar-cpu-request={{ $lifecycleResources.requests.cpu }} \
+                {{- end }}
+                {{- end }}
           livenessProbe:
             httpGet:
               path: /health/ready
@@ -77,14 +201,91 @@ spec:
             periodSeconds: 2
             successThreshold: 1
             timeoutSeconds: 5
-{{- if .Values.connectInject.certs.secretName }}
+          {{- if (or .Values.connectInject.certs.secretName .Values.global.tls.enabled) }}
           volumeMounts:
+            {{- if .Values.connectInject.certs.secretName }}
             - name: certs
               mountPath: /etc/connect-injector/certs
               readOnly: true
+            {{- end }}
+            {{- if .Values.global.tls.enabled }}
+            {{- if .Values.global.tls.enableAutoEncrypt }}
+            - name: consul-auto-encrypt-ca-cert
+            {{- else }}
+            - name: consul-ca-cert
+            {{- end }}
+              mountPath: /consul/tls/ca
+              readOnly: true
+            {{- end }}
+            {{- end }}
+          {{- with .Values.connectInject.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- if (or .Values.connectInject.certs.secretName .Values.global.tls.enabled) }}
       volumes:
+        {{- if .Values.connectInject.certs.secretName }}
         - name: certs
           secret:
             secretName: {{ .Values.connectInject.certs.secretName }}
-{{- end }}
+        {{- end }}
+        {{- if .Values.global.tls.enabled }}
+        {{- if not (and .Values.externalServers.enabled .Values.externalServers.useSystemRoots) }}
+        - name: consul-ca-cert
+          secret:
+            {{- if .Values.global.tls.caCert.secretName }}
+            secretName: {{ .Values.global.tls.caCert.secretName }}
+            {{- else }}
+            secretName: {{ template "consul.fullname" . }}-ca-cert
+            {{- end }}
+            items:
+            - key: {{ default "tls.crt" .Values.global.tls.caCert.secretKey }}
+              path: tls.crt
+        {{- end }}
+        {{- if .Values.global.tls.enableAutoEncrypt }}
+        - name: consul-auto-encrypt-ca-cert
+          emptyDir:
+            medium: "Memory"
+        {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- if or (and .Values.global.acls.manageSystemACLs (or .Values.global.enableConsulNamespaces .Values.connectInject.healthChecks.enabled)) (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) }}
+      initContainers:
+      {{- if (and .Values.global.acls.manageSystemACLs (or .Values.global.enableConsulNamespaces .Values.connectInject.healthChecks.enabled)) }}
+      - name: injector-acl-init
+        image: {{ .Values.global.imageK8S }}
+        command:
+          - "/bin/sh"
+          - "-ec"
+          - |
+            consul-k8s acl-init \
+              -secret-name="{{ template "consul.fullname" . }}-connect-inject-acl-token" \
+              -k8s-namespace={{ .Release.Namespace }}
+        resources:
+          requests:
+            memory: "25Mi"
+            cpu: "50m"
+          limits:
+            memory: "25Mi"
+            cpu: "50m"
+      {{- end }}
+      {{- if (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) }}
+      {{- include "consul.getAutoEncryptClientCA" . | nindent 6 }}
+      {{- end }}
+      {{- end }}
+      {{- if .Values.connectInject.priorityClassName }}
+      priorityClassName: {{ .Values.connectInject.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.connectInject.nodeSelector }}
+      nodeSelector:
+        {{ tpl .Values.connectInject.nodeSelector . | indent 8 | trim }}
+      {{- end }}
+      {{- if .Values.connectInject.affinity }}
+      affinity:
+        {{ tpl .Values.connectInject.affinity . | indent 8 | trim }}
+      {{- end }}
+      {{- if .Values.connectInject.tolerations }}
+      tolerations:
+        {{ tpl .Values.connectInject.tolerations . | indent 8 | trim }}
+      {{- end }}
 {{- end }}
