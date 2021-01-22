@@ -153,15 +153,7 @@ spec:
             - |
               CONSUL_FULLNAME="{{template "consul.fullname" . }}"
 
-              # Generate a unique Node ID for each server.
-              # This Node ID is going to last for the whole lifetime of the consul servers
-              # and will persist across restarts.
-              # The Node ID is sha1 hash based on the Hostname and the datacenter.
-              nid_sha1=$(echo $HOSTNAME-{{.Values.global.datacenter}} | sha1sum)
-              nid=${nid_sha1:0:8}-${nid_sha1:8:4}-${nid_sha1:12:4}-${nid_sha1:16:4}-${nid_sha1:20:12}
-
               exec /bin/consul agent \
-                -node-id="${nid}" \
                 -advertise="${ADVERTISE_IP}" \
                 -bind=0.0.0.0 \
                 -bootstrap-expect={{ if .Values.server.bootstrapExpect }}{{ .Values.server.bootstrapExpect }}{{ else }}{{ .Values.server.replicas }}{{ end }} \

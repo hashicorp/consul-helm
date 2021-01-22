@@ -1,25 +1,9 @@
 ## Unreleased
 
-BREAKING CHANGES:
-* Consul servers start with a provided node ID and no longer call "consul leave" command when restarted or deleted. [[GH-764](https://github.com/hashicorp/consul-helm/pull/764)]
-  If you have an existing Consul cluster with ACLs enabled, please follow the steps below up upgrade.
-  Otherwise, no additional steps are necessary to upgrade.
-  1. Set `leave_on_terminate` on your existing installation, setting `leave_on_terminate` to `true` so that the new node ID can be registered:
-
-     ```bash
-     helm upgrade consul --set server.extraConfig='\"{"leave_on_terminate": true}\"' hashicorp/consul --version <your current version>
-     ```
-
-  2. Upgrade to this version of the Helm chart, removing the `leave_on_terminate` setting:
-
-     ```bash
-     helm repo update
-     helm upgrade consul hashicorp/consul
-     ```
-
 IMPROVEMENTS:
 * Use `consul-k8s` subcommand to perform `tls-init` job. This allows for server certificates to get rotated on subsequent runs.
   Consul servers have to be restarted in order for them to update their server certificates [[GH-749](https://github.com/hashicorp/consul-helm/pull/721)]
+* Consul servers no longer call `consul leave` command when restarted or deleted. [[GH-764](https://github.com/hashicorp/consul-helm/pull/764)]
 
 ## 0.28.0 (Dec 21, 2020)
 
