@@ -17,6 +17,14 @@ rules:
     - "list"
     - "watch"
     - "patch"
+- apiGroups: [""]
+  resources:
+    - services
+    - endpoints
+  verbs:
+    - get
+    - list
+    - watch
 {{- if .Values.connectInject.healthChecks.enabled }}
 - apiGroups: [""]
   resources: ["pods"]
