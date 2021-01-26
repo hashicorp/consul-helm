@@ -12,13 +12,13 @@ metadata:
 rules:
 - apiGroups: ["admissionregistration.k8s.io"]
   resources: ["mutatingwebhookconfigurations"]
-  verbs: 
+  verbs:
     - "get"
     - "list"
     - "watch"
     - "patch"
 - apiGroups: [""]
-  resources: ["pods", "nodes"]
+  resources: ["pods", "nodes", "services", "endpoints"]
   verbs:
     - "get"
     - "list"
@@ -27,9 +27,9 @@ rules:
 - apiGroups: ["policy"]
   resources: ["podsecuritypolicies"]
   resourceNames:
-  - {{ template "consul.fullname" . }}-connect-injector-webhook
+    - {{ template "consul.fullname" . }}-connect-injector-webhook
   verbs:
-  - use
+    - use
 {{- end }}
 {{- if .Values.global.acls.manageSystemACLs }}
 - apiGroups: [""]
