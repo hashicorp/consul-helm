@@ -787,12 +787,17 @@ client:
   # @type: string
   annotations: null
 
-  # Extra labels to attach to the client pods.
-  # This should be a regular YAML map.
+  # Extra labels to attach to the client pods. This should be a regular YAML map.
+  #
   # Example:
-  #   extraLabels:
-  #     labelKey: "label-value"
-  #     otherLabelKey: "another-label-value"
+  #
+  # ```yaml
+  # extraLabels:
+  #   labelKey: label-value
+  #   anotherLabelKey: another-label-value
+  # ```
+  #
+  # @type: map
   extraLabels: null
 
   # A list of extra environment variables to set within the stateful set.
