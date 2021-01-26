@@ -19,7 +19,7 @@ BREAKING CHANGES:
 
 BUG FIXES:
 * Use `rbac.authorization.k8s.io/v1` instead of `rbac.authorization.k8s.io/v1beta1` API version for the `roles` and `rolebindings` used by the `tls-init`
-  `tls-init-cleanup` jobs. [[GH-789](https://github.com/hashicorp/consul-helm/issues/789)]
+  and `tls-init-cleanup` jobs. [[GH-789](https://github.com/hashicorp/consul-helm/issues/789)]
 
 ## 0.29.0 (Jan 22, 2021)
 
