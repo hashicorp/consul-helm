@@ -137,7 +137,7 @@ load _helpers
       --set 'ui.ingress.hosts[0].host=foo.com' \
       --kube-version "1.18" \
       . | tee /dev/stderr |
-      yq -r '.spec.rules[0].http.paths[0].backend.servicePort' | tee /dev/stderr)
+      yq -r '.spec.rules[0].http.paths[1].backend.servicePort' | tee /dev/stderr)
   else
   local actual=$(helm template \
       -s templates/ui-ingress.yaml  \
