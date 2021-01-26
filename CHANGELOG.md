@@ -18,7 +18,7 @@ BREAKING CHANGES:
   for more information on how to upgrade.
 
 IMPROVEMENTS:
-* CRDs: add value `controller.aclToken` to support manually passing in an ACL token to the CRD controller if managing ACLs yourself. [[GH-783](https://github.com/hashicorp/consul-helm/pull/783)]
+* CRDs: add value `controller.aclToken` to support manually passing in an ACL token to the CRD controller if independently managing ACLs. [[GH-783](https://github.com/hashicorp/consul-helm/pull/783)]
 
 ## 0.29.0 (Jan 22, 2021)
 
