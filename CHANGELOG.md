@@ -17,6 +17,9 @@ BREAKING CHANGES:
   See [Upgrade to CRDs](https://www.consul.io/docs/k8s/crds/upgrade-to-crds)
   for more information on how to upgrade.
 
+IMPROVEMENTS:
+* Add ability to set extra labels on Consul client pods. [[GH-612](https://github.com/hashicorp/consul-helm/pull/612)]
+
 BUG FIXES:
 * Use `rbac.authorization.k8s.io/v1` instead of `rbac.authorization.k8s.io/v1beta1` API version for the `roles` and `rolebindings` used by the `tls-init`
   and `tls-init-cleanup` jobs. [[GH-789](https://github.com/hashicorp/consul-helm/issues/789)]
