@@ -1,3 +1,4 @@
+{{- if .Values.grafana.enabled }}
 ---
 # Source: grafana/templates/serviceaccount.yaml
 apiVersion: v1
@@ -10,14 +11,14 @@ metadata:
     app.kubernetes.io/version: "7.2.1"
     app.kubernetes.io/managed-by: Helm
   name: grafana
-  namespace: replace-me-namespace
+  namespace: {{ .Release.Namespace }}
 ---
 # Source: grafana/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana
-  namespace: replace-me-namespace
+  namespace: {{ .Release.Namespace }}
   labels:
     helm.sh/chart: grafana-5.8.10
     app.kubernetes.io/name: grafana
@@ -73,7 +74,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: grafana
-  namespace: replace-me-namespace
+  namespace: {{ .Release.Namespace }}
   labels:
     helm.sh/chart: grafana-5.8.10
     app.kubernetes.io/name: grafana
@@ -97,7 +98,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: grafana
-  namespace: replace-me-namespace
+  namespace: {{ .Release.Namespace }}
   labels:
     helm.sh/chart: grafana-5.8.10
     app.kubernetes.io/name: grafana
@@ -207,4 +208,5 @@ kind: ConfigMap
 metadata:
   creationTimestamp: null
   name: consul-grafana-dashboards
-  namespace: replace-me-namespace
+  namespace: {{ .Release.Namespace }}
+{{- end }}

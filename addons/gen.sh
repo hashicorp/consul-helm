@@ -34,6 +34,14 @@ helm template prometheus prometheus \
   -f "${WD}/values-prometheus.yaml" \
   > "${TEMPLATES}/prometheus.yaml"
 
+sed -i'.orig' 's/replace-me-namespace/{{ .Release.Namespace }}/g' "${TEMPLATES}/prometheus.yaml"
+sed -i'.orig' '1i\
+{{- if .Values.prometheus.enabled }}
+' "${TEMPLATES}/prometheus.yaml"
+sed -i'.orig' -e '$a\
+{{- end }}' "${TEMPLATES}/prometheus.yaml"
+rm "${TEMPLATES}/prometheus.yaml.orig"
+
 function compressDashboard() {
   < "${DASHBOARDS}/$1" jq -c  > "${TMP}/$1"
 }
@@ -54,3 +62,11 @@ function compressDashboard() {
     --from-file=consul-server-monitoring.json="${TMP}/consul-server-monitoring.json"
 
 } > "${TEMPLATES}/grafana.yaml"
+
+sed -i'.orig' 's/replace-me-namespace/{{ .Release.Namespace }}/g' "${TEMPLATES}/grafana.yaml"
+sed -i'.orig' '1i\
+{{- if .Values.grafana.enabled }}
+' "${TEMPLATES}/grafana.yaml"
+sed -i'.orig' -e '$a\
+{{- end }}' "${TEMPLATES}/grafana.yaml"
+rm "${TEMPLATES}/grafana.yaml.orig"

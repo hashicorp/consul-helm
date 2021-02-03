@@ -1,3 +1,4 @@
+{{- if .Values.prometheus.enabled }}
 ---
 # Source: prometheus/templates/server/serviceaccount.yaml
 apiVersion: v1
@@ -10,7 +11,7 @@ metadata:
     chart: prometheus-11.16.2
     heritage: Helm
   name: prometheus
-  namespace: replace-me-namespace
+  namespace: {{ .Release.Namespace }}
   annotations:
     {}
 ---
@@ -25,7 +26,7 @@ metadata:
     chart: prometheus-11.16.2
     heritage: Helm
   name: prometheus
-  namespace: replace-me-namespace
+  namespace: {{ .Release.Namespace }}
 data:
   alerting_rules.yml: |
     {}
@@ -345,7 +346,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: prometheus
-    namespace: replace-me-namespace
+    namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -362,7 +363,7 @@ metadata:
     chart: prometheus-11.16.2
     heritage: Helm
   name: prometheus
-  namespace: replace-me-namespace
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
     - name: http
@@ -387,7 +388,7 @@ metadata:
     chart: prometheus-11.16.2
     heritage: Helm
   name: prometheus
-  namespace: replace-me-namespace
+  namespace: {{ .Release.Namespace }}
 spec:
   selector:
     matchLabels:
@@ -473,3 +474,4 @@ spec:
         - name: storage-volume
           emptyDir:
             {}
+{{- end }}
