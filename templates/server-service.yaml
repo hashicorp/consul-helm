@@ -56,8 +56,8 @@ spec:
       port: 8302
       targetPort: 8302
     - name: server
-      port: 8300
-      targetPort: 8300
+      port: {{ .Values.server.ports.gossipAndRPC.port }}
+      targetPort: {{ .Values.server.ports.gossipAndRPC.port }}
     - name: dns-tcp
       protocol: "TCP"
       port: 8600

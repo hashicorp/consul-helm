@@ -173,7 +173,6 @@ global:
 
   # Configure ACLs.
   acls:
-
     # If true, the Helm chart will automatically manage ACL tokens and policies
     # for all Consul and consul-k8s components.
     # This requires Consul >= 1.4 and consul-k8s >= 0.14.0.
@@ -259,7 +258,6 @@ global:
 # be disabled if you plan on connecting to a Consul cluster external to
 # the Kube cluster.
 server:
-
   # If true, the chart will install all the resources necessary for a
   # Consul server cluster. If you're running Consul externally and want agents
   # within Kubernetes to join that cluster, this should probably be false.
@@ -321,6 +319,9 @@ server:
     # the consul server Pods.
     serflan:
       port: 8301
+
+    gossipAndRPC:
+      port: 8300
 
   # This defines the disk size for configuring the
   # servers' StatefulSet storage. For dynamically provisioned storage classes, this is the
@@ -881,6 +882,16 @@ client:
     # ```
     # @type: string
     caCert: null
+
+  ports:
+    http:
+      port: 8500
+    https:
+      port: 8501
+    gossip:
+      port: 8301
+    grpc:
+      port: 8302
 
 # Configuration for DNS configuration within the Kubernetes cluster.
 # This creates a service that routes to all agents (client or server)

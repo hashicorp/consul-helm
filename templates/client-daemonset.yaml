@@ -157,7 +157,7 @@ spec:
             {{- end }}
             {{- if .Values.global.tls.enabled }}
             - name: CONSUL_HTTP_ADDR
-              value: https://localhost:8501
+              value: https://localhost:{{ .Values.client.ports.https.port }}
             {{- if .Values.global.tls.enableAutoEncrypt }}
             - name: CONSUL_HTTP_SSL_VERIFY
               value: "false"
@@ -181,6 +181,7 @@ spec:
                 -node-meta=pod-name:${HOSTNAME} \
                 -hcl='leave_on_terminate = true' \
                 -disable-host-node-id=false \
+                -hcl='ports { http = {{ .Values.client.ports.http.port }} }' \
                 {{- if .Values.global.tls.enabled }}
                 -hcl='ca_file = "/consul/tls/ca/tls.crt"' \
                 {{- if .Values.global.tls.enableAutoEncrypt }}
@@ -197,13 +198,13 @@ spec:
                 -hcl='verify_server_hostname = true' \
                 {{- end }}
                 {{- end }}
-                -hcl='ports { https = 8501 }' \
+                -hcl='ports { https = {{ .Values.client.ports.https.port }} }' \
                 {{- if .Values.global.tls.httpsOnly }}
                 -hcl='ports { http = -1 }' \
                 {{- end }}
                 {{- end }}
                 {{- if .Values.client.grpc }}
-                -hcl='ports { grpc = 8502 }' \
+                -hcl='ports { grpc = {{ .Values.client.ports.grpc.port }} }' \
                 {{- end }}
                 -config-dir=/consul/config \
                 {{- if .Values.global.acls.manageSystemACLs }}
@@ -261,27 +262,29 @@ spec:
             {{- end }}
           ports:
             {{- if (or (not .Values.global.tls.enabled) (not .Values.global.tls.httpsOnly)) }}
-            - containerPort: 8500
-              hostPort: 8500
+            - containerPort: {{ .Values.client.ports.http.port }}
+              hostPort: {{ .Values.client.ports.http.port }}
               name: http
             {{- end }}
             {{- if .Values.global.tls.enabled }}
-            - containerPort: 8501
-              hostPort: 8501
+            - containerPort: {{ .Values.client.ports.https.port }}
+              hostPort: {{ .Values.client.ports.https.port }}
               name: https
             {{- end }}
-            - containerPort: 8502
-              hostPort: 8502
+            {{- if .Values.client.grpc }}
+            - containerPort: {{ .Values.client.ports.grpc.port }}
+              hostPort: {{ .Values.client.ports.grpc.port }}
               name: grpc
-            - containerPort: 8301
+            {{- end }}
+            - containerPort: {{ .Values.client.ports.gossip.port }}
               {{- if .Values.client.exposeGossipPorts }}
-              hostPort: 8301
+              hostPort: {{ .Values.client.ports.gossip.port }}
               {{- end }}
               protocol: "TCP"
               name: serflan-tcp
-            - containerPort: 8301
+            - containerPort: {{ .Values.client.ports.gossip.port }}
               {{- if .Values.client.exposeGossipPorts }}
-              hostPort: 8301
+              hostPort: {{ .Values.client.ports.gossip.port }}
               {{- end }}
               protocol: "UDP"
               name: serflan-udp
@@ -302,9 +305,9 @@ spec:
                   {{- if .Values.global.tls.enabled }}
                   curl \
                     -k \
-                    https://127.0.0.1:8501/v1/status/leader \
+                    https://127.0.0.1:{{ .Values.client.ports.https.port }}/v1/status/leader \
                   {{- else }}
-                  curl http://127.0.0.1:8500/v1/status/leader \
+                  curl http://127.0.0.1:{{ .Values.client.ports.http.port }}/v1/status/leader \
                   {{- end }}
                   2>/dev/null | grep -E '".+"'
           {{- if .Values.client.resources }}

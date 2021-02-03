@@ -207,7 +207,8 @@ spec:
                 -retry-join="${CONSUL_FULLNAME}-server-{{ $index }}.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc:{{ $serverSerfLANPort }}" \
                 {{- end }}
                 -serf-lan-port={{ .Values.server.ports.serflan.port }} \
-                -server
+                -server \
+                -server-port={{ .Values.server.ports.gossipAndRPC.port }}
           volumeMounts:
             - name: data-{{ .Release.Namespace }}
               mountPath: /consul/data
@@ -249,9 +250,9 @@ spec:
               name: serflan-udp
             - containerPort: 8302
               name: serfwan
-            - containerPort: 8300
+            - containerPort: {{ .Values.server.ports.gossipAndRPC.port }}
               {{- if .Values.server.exposeGossipAndRPCPorts }}
-              hostPort: 8300
+              hostPort: {{ .Values.server.ports.gossipAndRPC.port }}
               {{- end }}
               name: server
             - containerPort: 8600
