@@ -1,14 +1,15 @@
 {{- if .Values.grafana.enabled }}
+# This file is auto-generated, see addons/gen.sh
 ---
 # Source: grafana/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    helm.sh/chart: grafana-5.8.10
+    helm.sh/chart: grafana-6.2.1
     app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana
-    app.kubernetes.io/version: "7.2.1"
+    app.kubernetes.io/version: "7.3.5"
     app.kubernetes.io/managed-by: Helm
   name: grafana
   namespace: {{ .Release.Namespace }}
@@ -20,10 +21,10 @@ metadata:
   name: grafana
   namespace: {{ .Release.Namespace }}
   labels:
-    helm.sh/chart: grafana-5.8.10
+    helm.sh/chart: grafana-6.2.1
     app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana
-    app.kubernetes.io/version: "7.2.1"
+    app.kubernetes.io/version: "7.3.5"
     app.kubernetes.io/managed-by: Helm
 data:
   grafana.ini: |
@@ -61,13 +62,6 @@ data:
         path: /var/lib/grafana/dashboards/consul
       orgId: 1
       type: file
-    - disableDeletion: false
-      folder: consul
-      name: consul-services
-      options:
-        path: /var/lib/grafana/dashboards/consul-services
-      orgId: 1
-      type: file
 ---
 # Source: grafana/templates/service.yaml
 apiVersion: v1
@@ -76,10 +70,10 @@ metadata:
   name: grafana
   namespace: {{ .Release.Namespace }}
   labels:
-    helm.sh/chart: grafana-5.8.10
+    helm.sh/chart: grafana-6.2.1
     app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana
-    app.kubernetes.io/version: "7.2.1"
+    app.kubernetes.io/version: "7.3.5"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -100,10 +94,10 @@ metadata:
   name: grafana
   namespace: {{ .Release.Namespace }}
   labels:
-    helm.sh/chart: grafana-5.8.10
+    helm.sh/chart: grafana-6.2.1
     app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana
-    app.kubernetes.io/version: "7.2.1"
+    app.kubernetes.io/version: "7.3.5"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -121,7 +115,7 @@ spec:
         app.kubernetes.io/instance: grafana
         app: grafana
       annotations:
-        checksum/config: f94cfc359ed19fc2e2df25630c4aeba71061bc524ad440c0e20e05d2d08eec0b
+        checksum/config: bf2554f939bb70b6d56f2e913eeefc09fc89ae4a0500b075991d50fab5f6aa33
         checksum/dashboards-json-config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
         checksum/sc-dashboard-provider-config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
         consul.hashicorp.com/connect-inject: "false"
@@ -134,7 +128,7 @@ spec:
         runAsUser: 472
       containers:
         - name: grafana
-          image: "grafana/grafana:7.2.1"
+          image: "grafana/grafana:7.3.5"
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: config
@@ -144,8 +138,6 @@ spec:
               mountPath: "/var/lib/grafana"
             - name: dashboards-consul
               mountPath: "/var/lib/grafana/dashboards/consul"
-            - name: dashboards-consul-services
-              mountPath: "/var/lib/grafana/dashboards/consul-services"
             - name: config
               mountPath: "/etc/grafana/provisioning/datasources/datasources.yaml"
               subPath: datasources.yaml
@@ -192,9 +184,6 @@ spec:
         - name: dashboards-consul
           configMap:
             name: consul-grafana-dashboards
-        - name: dashboards-consul-services
-          configMap:
-            name: consul-services-grafana-dashboards
         - name: storage
           emptyDir: {}
 

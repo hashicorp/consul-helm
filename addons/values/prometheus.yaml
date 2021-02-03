@@ -1,4 +1,4 @@
-# To simplify the deployment, disable non-essential components
+# Disable non-essential components
 alertmanager:
   enabled: false
 pushgateway:
@@ -12,15 +12,10 @@ server:
     "consul.hashicorp.com/connect-inject": "false"
   persistentVolume:
     enabled: false
-  # Use port 9090 to match Consul documentation (TBD)
   service:
     servicePort: 9090
   readinessProbeInitialDelay: 0
   # Speed up scraping a bit from the default
   global:
     scrape_interval: 15s
-
-  # Match legacy addon deployment
   fullnameOverride: prometheus
-image:
-  tag: v2.19.2

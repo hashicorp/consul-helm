@@ -1,61 +1,48 @@
 #!/usr/bin/env bash
 
-# Copyright consul Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 WD=$(dirname "$0")
 WD=$(cd "$WD"; pwd)
 
 set -eux
 
-# This script sets up the plain text rendered deployments for addons
-# See samples/addons/README.md for more information
-
 TEMPLATES="${WD}/../templates"
 DASHBOARDS="${WD}/dashboards"
 TMP=$(mktemp -d)
 
-# Set up prometheus
+# create Prometheus template
 helm template prometheus prometheus \
-  --namespace "replace-me-namespace" \
-  --version 11.16.2 \
   --repo https://prometheus-community.github.io/helm-charts \
-  -f "${WD}/values-prometheus.yaml" \
+  --namespace "replace-me-namespace" \
+  --version 13.2.1 \
+  -f "${WD}/values/prometheus.yaml" \
   > "${TEMPLATES}/prometheus.yaml"
 
+# Find and replace `replace-me-namespace` with `{{ .Release.Namespace }}` in Prometheus template.
 sed -i'.orig' 's/replace-me-namespace/{{ .Release.Namespace }}/g' "${TEMPLATES}/prometheus.yaml"
+# Add a comment to the top of the template file mentioning that the file is auto-generated.
+sed -i'.orig' '1i\
+# This file is auto-generated, see addons/gen.sh
+' "${TEMPLATES}/prometheus.yaml"
+# Add `{{- if .Values.prometheus.enabled }} to the top of the Prometheus template to ensure it is only templated when enabled.
 sed -i'.orig' '1i\
 {{- if .Values.prometheus.enabled }}
 ' "${TEMPLATES}/prometheus.yaml"
+# Add `{{- end }} to the bottom of the Prometheus template to ensure it is only templated when enabled (closes the `if` statement).
 sed -i'.orig' -e '$a\
 {{- end }}' "${TEMPLATES}/prometheus.yaml"
+# Remove the `prometheus.yaml.orig` file that is created as a side-effect of the `sed` command on OS X.
 rm "${TEMPLATES}/prometheus.yaml.orig"
 
-function compressDashboard() {
-  < "${DASHBOARDS}/$1" jq -c  > "${TMP}/$1"
-}
-
-# Set up grafana
+# create Grafana template
 {
   helm template grafana grafana \
-    --namespace "replace-me-namespace" \
-    --version 5.8.10 \
     --repo https://grafana.github.io/helm-charts \
-    -f "${WD}/values-grafana.yaml"
+    --namespace "replace-me-namespace" \
+    --version 6.2.1 \
+    -f "${WD}/values/grafana.yaml"
 
-  # Set up grafana dashboards. Compress to single line json to avoid Kubernetes size limits
-  compressDashboard "consul-server-monitoring.json"
+  # Set up grafana dashboards and reduce to a single line json to avoid Kubernetes size limits of 1MiB.
+  < "${DASHBOARDS}/consul-server-monitoring.json" jq -c  > "${TMP}/consul-server-monitoring.json"
   echo -e "\n---\n"
   kubectl create configmap -n "replace-me-namespace" consul-grafana-dashboards \
     --dry-run=client -oyaml \
@@ -63,10 +50,18 @@ function compressDashboard() {
 
 } > "${TEMPLATES}/grafana.yaml"
 
+# Find and replace `replace-me-namespace` with `{{ .Release.Namespace }}` in Grafana template.
 sed -i'.orig' 's/replace-me-namespace/{{ .Release.Namespace }}/g' "${TEMPLATES}/grafana.yaml"
+# Add a comment to the top of the template file mentioning that the file is auto-generated.
+sed -i'.orig' '1i\
+# This file is auto-generated, see addons/gen.sh
+' "${TEMPLATES}/grafana.yaml"
+# Add `{{- if .Values.grafana.enabled }} to the top of the Grafana template to ensure it is only templated when enabled.
 sed -i'.orig' '1i\
 {{- if .Values.grafana.enabled }}
 ' "${TEMPLATES}/grafana.yaml"
+# Add `{{- end }} to the bottom of the Grafana template to ensure it is only templated when enabled (closes the `if` statement).
 sed -i'.orig' -e '$a\
 {{- end }}' "${TEMPLATES}/grafana.yaml"
+# Remove the `grafana.yaml.orig` file that is created as a side-effect of the `sed` command on OS X.
 rm "${TEMPLATES}/grafana.yaml.orig"

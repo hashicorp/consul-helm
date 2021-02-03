@@ -1,4 +1,3 @@
-# Avoid creating a bunch of RBAC rules for features we are not enabling
 rbac:
   create: false
   pspEnabled: false
@@ -13,7 +12,7 @@ podLabels:
 podAnnotations:
   "consul.hashicorp.com/connect-inject": "false"
 
-# Demo only, so we will have no authentication
+# Disable authentication
 admin:
   existingSecret: true
 ldap:
@@ -25,11 +24,10 @@ env:
   GF_AUTH_ANONYMOUS_ENABLED: "true"
   GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
 
-# Expose on port 3000 to match the Consul docs (TBD)
 service:
   port: 3000
 
-# Set up out dashboards
+# Setup dashboards
 dashboardProviders:
   dashboardproviders.yaml:
     apiVersion: 1
@@ -41,19 +39,11 @@ dashboardProviders:
         disableDeletion: false
         options:
           path: /var/lib/grafana/dashboards/consul
-      - name: 'consul-services'
-        orgId: 1
-        folder: 'consul'
-        type: file
-        disableDeletion: false
-        options:
-          path: /var/lib/grafana/dashboards/consul-services
 
 dashboardsConfigMaps:
   consul: "consul-grafana-dashboards"
-  consul-services: "consul-services-grafana-dashboards"
 
-# Configure the prometheus data source. We expect prometheus:9090 in the same namespace
+# Configure the prometheus data source. We expect prometheus:9090 in the same namespace.
 datasources:
   datasources.yaml:
     apiVersion: 1
