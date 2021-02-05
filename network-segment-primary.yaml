@@ -1,0 +1,17 @@
+global:
+  image: "hashicorp/consul-enterprise:1.9.2-ent"
+server:
+  enabled: true
+  exposeGossipAndRPCPorts: true
+  segments:
+  - name: "alpha"
+    port: 8303
+  - name: "beta"
+    port: 8304
+client:
+  segment: alpha
+  # I dont like the way the primary cluster has to join <hmph>
+  join:
+  - "${CONSUL_FULLNAME}-server-0.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc:8303"
+  - "${CONSUL_FULLNAME}-server-1.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc:8303"
+  - "${CONSUL_FULLNAME}-server-2.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc:8303"

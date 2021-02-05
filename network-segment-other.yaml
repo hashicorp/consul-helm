@@ -1,0 +1,12 @@
+global:
+  image: "hashicorp/consul-enterprise:1.9.2-ent"
+server:
+  enabled: false
+client:
+  enabled: true
+  exposeGossipPorts: true
+  segment: beta
+  join:
+  - "*.*.*.*:8304"
+  - "*.*.*.*:8304"
+  - "*.*.*.*:8304"

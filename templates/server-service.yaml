@@ -39,14 +39,26 @@ spec:
       port: 8501
       targetPort: 8501
     {{- end }}
-    - name: serflan-tcp
+    {{- if .Values.server.segments }}
+    {{- range $segment := .Values.server.segments }}
+    - targetPort: {{ $segment.port }}
+      port: {{ $segment.port }}
       protocol: "TCP"
-      port: 8301
-      targetPort: 8301
-    - name: serflan-udp
+      name: {{ $segment.name }}-tcp
+    - targetPort: {{ $segment.port }}
+      port: {{ $segment.port }}
       protocol: "UDP"
+      name: {{ $segment.name }}-udp
+    {{- end }}
+    {{- end }}
+    - targetPort: 8301
       port: 8301
-      targetPort: 8301
+      protocol: "TCP"
+      name: serflan-tcp
+    - targetPort: 8301
+      port: 8301
+      protocol: "UDP"
+      name: serflan-udp
     - name: serfwan-tcp
       protocol: "TCP"
       port: 8302
