@@ -320,6 +320,9 @@ server:
     serflan:
       port: 8301
 
+    serfwan:
+      port: 8302
+
     gossipAndRPC:
       port: 8300
 

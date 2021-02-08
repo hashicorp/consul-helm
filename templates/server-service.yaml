@@ -41,20 +41,20 @@ spec:
     {{- end }}
     - name: serflan-tcp
       protocol: "TCP"
-      port: 8301
-      targetPort: 8301
+      port: {{ .Values.server.ports.serflan.port }}
+      targetPort: {{ .Values.server.ports.serflan.port }}
     - name: serflan-udp
       protocol: "UDP"
-      port: 8301
-      targetPort: 8301
+      port: {{ .Values.server.ports.serflan.port }}
+      targetPort: {{ .Values.server.ports.serflan.port }}
     - name: serfwan-tcp
       protocol: "TCP"
-      port: 8302
-      targetPort: 8302
+      port: {{ .Values.server.ports.serfwan.port }}
+      targetPort: {{ .Values.server.ports.serfwan.port }}
     - name: serfwan-udp
       protocol: "UDP"
-      port: 8302
-      targetPort: 8302
+      port: {{ .Values.server.ports.serfwan.port }}
+      targetPort: {{ .Values.server.ports.serfwan.port }}
     - name: server
       port: {{ .Values.server.ports.gossipAndRPC.port }}
       targetPort: {{ .Values.server.ports.gossipAndRPC.port }}
