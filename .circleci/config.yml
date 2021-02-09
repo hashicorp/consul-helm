@@ -529,9 +529,9 @@ jobs:
           path: /tmp/test-results
       - store_artifacts:
           path: /tmp/test-results
-      - slack/status:
-          fail_only: true
-          failure_message: "Acceptance tests against Kind with Kubernetes v1.20 failed. Check the logs at: ${CIRCLE_BUILD_URL}"
+#      - slack/status:
+#          fail_only: true
+#          failure_message: "Acceptance tests against Kind with Kubernetes v1.20 failed. Check the logs at: ${CIRCLE_BUILD_URL}"
 
   go-fmt-and-vet-helm-gen:
     executor: go
@@ -643,22 +643,23 @@ workflows:
   version: 2
   test:
     jobs:
-      - go-fmt-and-vet-acceptance
-      - go-fmt-and-vet-helm-gen
-      - unit-acceptance-framework:
-          requires:
-            - go-fmt-and-vet-acceptance
-      - unit-helm-gen:
-          requires:
-            - go-fmt-and-vet-helm-gen
-      - test-helm-gen
-      - unit-helm2
-      - unit-helm3
-      - acceptance:
-          requires:
-            - unit-helm2
-            - unit-helm3
-            - unit-acceptance-framework
+      - acceptance-kind-1-20
+#      - go-fmt-and-vet-acceptance
+#      - go-fmt-and-vet-helm-gen
+#      - unit-acceptance-framework:
+#          requires:
+#            - go-fmt-and-vet-acceptance
+#      - unit-helm-gen:
+#          requires:
+#            - go-fmt-and-vet-helm-gen
+#      - test-helm-gen
+#      - unit-helm2
+#      - unit-helm3
+#      - acceptance:
+#          requires:
+#            - unit-helm2
+#            - unit-helm3
+#            - unit-acceptance-framework
   nightly-acceptance-tests:
     triggers:
       - schedule:

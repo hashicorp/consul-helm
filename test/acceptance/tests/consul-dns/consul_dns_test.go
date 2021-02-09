@@ -3,6 +3,7 @@ package consuldns
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/consul-helm/test/acceptance/framework/consul"
@@ -57,8 +58,10 @@ func TestConsulDNS(t *testing.T) {
 
 			serverIPs := make([]string, len(consulServerList.Items))
 			for _, serverPod := range consulServerList.Items {
+				t.Logf("is ready: %t, ip=%s", helpers.IsReady(serverPod), serverPod.Status.PodIP)
 				serverIPs = append(serverIPs, serverPod.Status.PodIP)
 			}
+			t.Logf("server IPs: %q", strings.Join(serverIPs, ", "))
 
 			dnsTestPodArgs := []string{
 				"run", "-i", podName, "--restart", "Never", "--image", "anubhavmishra/tiny-tools", "--", "dig", fmt.Sprintf("@%s-consul-dns", releaseName), "consul.service.consul",
