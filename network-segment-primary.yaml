@@ -1,5 +1,7 @@
 global:
   image: "hashicorp/consul-enterprise:1.9.2-ent"
+  acls:
+    manageSystemACLs: true
 server:
   enabled: true
   exposeGossipAndRPCPorts: true
