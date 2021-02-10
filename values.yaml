@@ -1022,6 +1022,21 @@ ui:
     # @type: string
     annotations: null
 
+  # Configurations for displaying metrics in the UI.
+  metrics:
+    # Enable displaying metrics in the UI. The default value of "-"
+    # will inherit from global.metrics.enabled value. This value is only
+    # used if ui.enabled is set to true.
+    enabled: "-"
+    # Provider for metrics. See
+    # https://www.consul.io/docs/agent/options#ui_config_metrics_provider
+    # This value is only used if ui.enabled is set to true.
+    provider: "prometheus"
+
+    # baseURL is the URL of the prometheus server, usually the service URL.
+    # This value is only used if ui.enabled is set to true.
+    baseURL: http://prometheus-server
+
 # Configure the catalog sync process to sync K8S with Consul
 # services. This can run bidirectional (default) or unidirectionally (Consul
 # to K8S or K8S to Consul only).
