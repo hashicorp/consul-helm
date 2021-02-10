@@ -21,9 +21,12 @@ webhooks:
       namespace: {{ .Release.Namespace }}
       path: /mutate-v1alpha1-proxydefaults
   failurePolicy: Fail
+{{- if .Capabilities.APIVersions.Has "admissionregistration.k8s.io/v1" }}
+  sideEffects: None
   admissionReviewVersions:
     - "v1beta1"
     - "v1"
+{{- end }}
   name: mutate-proxydefaults.consul.hashicorp.com
   rules:
     - apiGroups:
@@ -35,7 +38,6 @@ webhooks:
       - UPDATE
       resources:
       - proxydefaults
-  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
@@ -43,9 +45,12 @@ webhooks:
       namespace: {{ .Release.Namespace }}
       path: /mutate-v1alpha1-servicedefaults
   failurePolicy: Fail
+{{- if .Capabilities.APIVersions.Has "admissionregistration.k8s.io/v1" }}
+  sideEffects: None
   admissionReviewVersions:
     - "v1beta1"
     - "v1"
+{{- end }}
   name: mutate-servicedefaults.consul.hashicorp.com
   rules:
     - apiGroups:
@@ -57,7 +62,6 @@ webhooks:
       - UPDATE
       resources:
       - servicedefaults
-  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
@@ -65,9 +69,12 @@ webhooks:
       namespace: {{ .Release.Namespace }}
       path: /mutate-v1alpha1-serviceresolver
   failurePolicy: Fail
+{{- if .Capabilities.APIVersions.Has "admissionregistration.k8s.io/v1" }}
+  sideEffects: None
   admissionReviewVersions:
     - "v1beta1"
     - "v1"
+{{- end }}
   name: mutate-serviceresolver.consul.hashicorp.com
   rules:
     - apiGroups:
@@ -79,7 +86,6 @@ webhooks:
       - UPDATE
       resources:
       - serviceresolvers
-  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
@@ -87,9 +93,12 @@ webhooks:
       namespace: {{ .Release.Namespace }}
       path: /mutate-v1alpha1-servicerouter
   failurePolicy: Fail
+{{- if .Capabilities.APIVersions.Has "admissionregistration.k8s.io/v1" }}
+  sideEffects: None
   admissionReviewVersions:
     - "v1beta1"
     - "v1"
+{{- end }}
   name: mutate-servicerouter.consul.hashicorp.com
   rules:
     - apiGroups:
@@ -101,7 +110,6 @@ webhooks:
       - UPDATE
       resources:
       - servicerouters
-  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
@@ -109,9 +117,12 @@ webhooks:
       namespace: {{ .Release.Namespace }}
       path: /mutate-v1alpha1-servicesplitter
   failurePolicy: Fail
+{{- if .Capabilities.APIVersions.Has "admissionregistration.k8s.io/v1" }}
+  sideEffects: None
   admissionReviewVersions:
     - "v1beta1"
     - "v1"
+{{- end }}
   name: mutate-servicesplitter.consul.hashicorp.com
   rules:
     - apiGroups:
@@ -123,7 +134,6 @@ webhooks:
       - UPDATE
       resources:
       - servicesplitters
-  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
@@ -131,9 +141,12 @@ webhooks:
       namespace: {{ .Release.Namespace }}
       path: /mutate-v1alpha1-serviceintentions
   failurePolicy: Fail
+{{- if .Capabilities.APIVersions.Has "admissionregistration.k8s.io/v1" }}
+  sideEffects: None
   admissionReviewVersions:
     - "v1beta1"
     - "v1"
+{{- end }}
   name: mutate-serviceintentions.consul.hashicorp.com
   rules:
     - apiGroups:
@@ -145,7 +158,6 @@ webhooks:
       - UPDATE
       resources:
       - serviceintentions
-  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
@@ -153,9 +165,12 @@ webhooks:
       namespace: {{ .Release.Namespace }}
       path: /mutate-v1alpha1-ingressgateway
   failurePolicy: Fail
+{{- if .Capabilities.APIVersions.Has "admissionregistration.k8s.io/v1" }}
+  sideEffects: None
   admissionReviewVersions:
     - "v1beta1"
     - "v1"
+{{- end }}
   name: mutate-ingressgateway.consul.hashicorp.com
   rules:
     - apiGroups:
@@ -167,7 +182,6 @@ webhooks:
         - UPDATE
       resources:
         - ingressgateways
-  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
@@ -175,9 +189,12 @@ webhooks:
       namespace: {{ .Release.Namespace }}
       path: /mutate-v1alpha1-terminatinggateway
   failurePolicy: Fail
+{{- if .Capabilities.APIVersions.Has "admissionregistration.k8s.io/v1" }}
+  sideEffects: None
   admissionReviewVersions:
     - "v1beta1"
     - "v1"
+{{- end }}
   name: mutate-terminatinggateway.consul.hashicorp.com
   rules:
     - apiGroups:
@@ -189,5 +206,4 @@ webhooks:
         - UPDATE
       resources:
         - terminatinggateways
-  sideEffects: None
 {{- end }}

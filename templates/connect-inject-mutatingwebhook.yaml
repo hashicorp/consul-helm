@@ -17,10 +17,12 @@ metadata:
 webhooks:
   - name: {{ template "consul.fullname" . }}-connect-injector.consul.hashicorp.com
     failurePolicy: Ignore
+{{- if .Capabilities.APIVersions.Has "admissionregistration.k8s.io/v1" }}
     sideEffects: None
     admissionReviewVersions:
       - "v1beta1"
       - "v1"
+{{- end }}
     clientConfig:
       service:
         name: {{ template "consul.fullname" . }}-connect-injector-svc
