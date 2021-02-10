@@ -259,6 +259,62 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# metrics
+
+@test "terminatingGateways/Deployment: when global.metrics.enableGatewayMetrics=true, adds prometheus scrape=true annotations" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/terminating-gateways-deployment.yaml  \
+      --set 'terminatingGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.metrics.enabled=true'  \
+      --set 'global.metrics.enableGatewayMetrics=true'  \
+      . | tee /dev/stderr |
+       yq -s -r '.[0].spec.template.metadata.annotations."prometheus.io/scrape"' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "terminatingGateways/Deployment: when global.metrics.enableGatewayMetrics=true, adds prometheus port=20200 annotation" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/terminating-gateways-deployment.yaml  \
+      --set 'terminatingGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.metrics.enabled=true'  \
+      --set 'global.metrics.enableGatewayMetrics=true'  \
+      . | tee /dev/stderr |
+       yq -s -r '.[0].spec.template.metadata.annotations."prometheus.io/port"' | tee /dev/stderr)
+  [ "${actual}" = "20200" ]
+}
+
+@test "terminatingGateways/Deployment: when global.metrics.enableGatewayMetrics=true, adds prometheus path=/metrics annotation" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/terminating-gateways-deployment.yaml  \
+      --set 'terminatingGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.metrics.enabled=true'  \
+      --set 'global.metrics.enableGatewayMetrics=true'  \
+      . | tee /dev/stderr |
+       yq -s -r '.[0].spec.template.metadata.annotations."prometheus.io/path"' | tee /dev/stderr)
+  [ "${actual}" = "/metrics" ]
+}
+
+@test "terminatingGateways/Deployment: when global.metrics.enableGatewayMetrics=true, sets proxy setting" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/terminating-gateways-deployment.yaml  \
+      --set 'terminatingGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.metrics.enabled=true'  \
+      --set 'global.metrics.enableGatewayMetrics=true'  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.initContainers[1].command | join(" ") | contains("envoy_prometheus_bind_addr = \"${POD_IP}:20200\"")' | tee /dev/stderr)
+
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
 # replicas
 
 @test "terminatingGateways/Deployment: replicas defaults to 2" {
