@@ -64,7 +64,7 @@ load _helpers
 #--------------------------------------------------------------------
 # global.metrics.enabled & ui.enabled
 
-@test "server/ConfigMap: creates ui config with .global.metrics.enabled enabled & ui enabled" {
+@test "server/ConfigMap: creates ui config with .ui.enabled=true and .global.metrics.enabled=true" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/server-config-configmap.yaml  \
@@ -75,7 +75,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "server/ConfigMap: creates ui config with .ui.metrics.enabled enabled & ui enabled" {
+@test "server/ConfigMap: creates ui config with .ui.enabled=true and .ui.metrics.enabled=true" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/server-config-configmap.yaml  \
@@ -86,7 +86,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "server/ConfigMap: creates ui config with .ui.metrics.enabled disabled & ui enabled" {
+@test "server/ConfigMap: does not create ui config when .ui.enabled=true and .ui.metrics.enabled=false" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/server-config-configmap.yaml  \
@@ -97,7 +97,7 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "server/ConfigMap: updates ui config with .ui.metrics.provider " {
+@test "server/ConfigMap: updates ui config with .ui.metrics.provider" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/server-config-configmap.yaml  \
