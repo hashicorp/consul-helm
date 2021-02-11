@@ -188,6 +188,7 @@ func TestConnectInjectNamespaces(t *testing.T) {
 // because in the case of namespaces there isn't a significant distinction in code between auto-encrypt
 // and non-auto-encrypt secure installations, so testing just one is enough.
 func TestConnectInjectNamespaces_CleanupController(t *testing.T) {
+	consulDestNS := "consul-dest"
 	cases := []struct {
 		name                 string
 		destinationNamespace string
@@ -196,25 +197,25 @@ func TestConnectInjectNamespaces_CleanupController(t *testing.T) {
 	}{
 		{
 			"single destination namespace",
-			staticClientNamespace,
+			consulDestNS,
 			false,
 			false,
 		},
 		{
 			"single destination namespace; secure",
-			staticClientNamespace,
+			consulDestNS,
 			false,
 			true,
 		},
 		{
 			"mirror k8s namespaces",
-			staticClientNamespace,
+			consulDestNS,
 			true,
 			false,
 		},
 		{
 			"mirror k8s namespaces; secure",
-			staticClientNamespace,
+			consulDestNS,
 			true,
 			true,
 		},
