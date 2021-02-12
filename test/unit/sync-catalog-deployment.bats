@@ -342,7 +342,7 @@ load _helpers
 @test "syncCatalog/Deployment: affinity not set by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/sync-catalog-deployment.yaml  \
+      -s templates/sync-catalog-deployment.yaml  \
       --set 'syncCatalog.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.affinity == null' | tee /dev/stderr)
@@ -352,7 +352,7 @@ load _helpers
 @test "syncCatalog/Deployment: affinity can be set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/sync-catalog-deployment.yaml  \
+      -s templates/sync-catalog-deployment.yaml  \
       --set 'syncCatalog.enabled=true' \
       --set 'syncCatalog.affinity=foobar' \
       . | tee /dev/stderr |
@@ -400,7 +400,7 @@ load _helpers
 @test "syncCatalog/Deployment: tolerations not set by default" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/sync-catalog-deployment.yaml  \
+      -s templates/sync-catalog-deployment.yaml  \
       --set 'syncCatalog.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.tolerations == null' | tee /dev/stderr)
@@ -410,7 +410,7 @@ load _helpers
 @test "syncCatalog/Deployment: tolerations can be set" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/sync-catalog-deployment.yaml  \
+      -s templates/sync-catalog-deployment.yaml  \
       --set 'syncCatalog.enabled=true' \
       --set 'syncCatalog.tolerations=foobar' \
       . | tee /dev/stderr |
@@ -777,7 +777,7 @@ load _helpers
 @test "syncCatalog/Deployment: default resources" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/sync-catalog-deployment.yaml  \
+      -s templates/sync-catalog-deployment.yaml  \
       --set 'syncCatalog.enabled=true' \
       . | tee /dev/stderr |
       yq -rc '.spec.template.spec.containers[0].resources' | tee /dev/stderr)
@@ -787,7 +787,7 @@ load _helpers
 @test "syncCatalog/Deployment: can set resources" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/sync-catalog-deployment.yaml  \
+      -s templates/sync-catalog-deployment.yaml  \
       --set 'syncCatalog.enabled=true' \
       --set 'syncCatalog.resources.requests.memory=100Mi' \
       --set 'syncCatalog.resources.requests.cpu=100m' \

@@ -91,7 +91,7 @@ load _helpers
 @test "server/StatefulSet: resources can be overridden" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-statefulset.yaml  \
+      -s templates/server-statefulset.yaml  \
       --set 'server.resources.foo=bar' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].resources.foo' | tee /dev/stderr)
@@ -102,7 +102,7 @@ load _helpers
 @test "server/StatefulSet: resources can be overridden with string" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/server-statefulset.yaml  \
+      -s templates/server-statefulset.yaml  \
       --set 'server.resources=foo: bar' \
       . | tee /dev/stderr |
       yq -r '.spec.template.spec.containers[0].resources.foo' | tee /dev/stderr)
