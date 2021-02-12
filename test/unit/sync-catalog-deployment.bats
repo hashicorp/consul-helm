@@ -845,7 +845,7 @@ load _helpers
 
   local actual
   actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
-  [ "${actual}" = 'http://release-name-consul-server:8500' ]
+  [ "${actual}" = 'http://RELEASE-NAME-consul-server:8500' ]
 }
 
 @test "syncCatalog/Deployment: consul service is used when client.enabled=false and global.tls.enabled=true" {
@@ -860,7 +860,7 @@ load _helpers
 
   local actual
   actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
-  [ "${actual}" = 'https://release-name-consul-server:8501' ]
+  [ "${actual}" = 'https://RELEASE-NAME-consul-server:8501' ]
 
   actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
     [ "${actual}" = "/consul/tls/ca/tls.crt" ]
