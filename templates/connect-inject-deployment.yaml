@@ -90,6 +90,11 @@ spec:
                 -envoy-image="{{ .Values.global.imageEnvoy }}" \
                 -consul-k8s-image="{{ default .Values.global.imageK8S .Values.connectInject.image }}" \
                 -listen=:8080 \
+                -default-enable-metrics=true \
+                -default-enable-metrics-merging=true \
+                -default-merged-metrics-port=20100 \
+                -default-prometheus-scrape-port=20200 \
+                -default-prometheus-scrape-path="/metrics" \
                 {{- if .Values.connectInject.logLevel }}
                 -log-level={{ .Values.connectInject.logLevel }} \
                 {{- end }}
