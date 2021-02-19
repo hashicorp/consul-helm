@@ -9,6 +9,8 @@ IMPROVEMENTS:
 BUG FIXES:
 * Increase Consul client daemonset's memory from `25Mi` to `50Mi` for its `client-tls-init`
   init container that runs when TLS is enabled and auto-encrypt is disabled. [[GH-832](https://github.com/hashicorp/consul-helm/pull/832)]
+* Increase mesh gateway's memory limit from `25Mi` to `150Mi` for its `service-init`
+  init container. [[GH-837](https://github.com/hashicorp/consul-helm/pull/837)]
 
 ## 0.30.0 (Feb 16, 2021)
 
