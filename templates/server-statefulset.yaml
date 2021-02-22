@@ -249,9 +249,15 @@ spec:
               protocol: "UDP"
             - name: serfwan-tcp
               containerPort: 8302
+              {{- if .Values.server.exposeGossipAndRPCPorts }}
+              hostPort: 8302
+              {{- end }}
               protocol: "TCP"
             - name: serfwan-udp
               containerPort: 8302
+              {{- if .Values.server.exposeGossipAndRPCPorts }}
+              hostPort: 8302
+              {{- end }}
               protocol: "UDP"
             - name: server
               containerPort: 8300
