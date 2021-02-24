@@ -140,10 +140,6 @@ jobs:
               if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 30m -failfast \
                     -use-kind \
                     -run TestConnectInject \
-                    -enable-multi-cluster \
-                    -enable-enterprise \
-                    -kubecontext="kind-dc1" \
-                    -secondary-kubecontext="kind-dc2" \
                     -debug-directory="$TEST_RESULTS/debug" \
                     -consul-k8s-image=docker.mirror.hashicorp.services/ishustava/consul-k8s-dev:02-23-2021-6fa5212
               then
