@@ -34,11 +34,13 @@ func TestMetrics(t *testing.T) {
 		"meshGateway.enabled":  "true",
 		"meshGateway.replicas": "1",
 
-		"ingressGateways.enabled":  "true",
-		"ingressGateways.replicas": "1",
+		"ingressGateways.enabled":              "true",
+		"ingressGateways.gateways[0].name":     "ingress-gateway",
+		"ingressGateways.gateways[0].replicas": "1",
 
-		"terminatingGateways.enabled":  "true",
-		"terminatingGateways.replicas": "1",
+		"terminatingGateways.enabled":              "true",
+		"terminatingGateways.gateways[0].name":     "terminating-gateway",
+		"terminatingGateways.gateways[0].replicas": "1",
 	}
 
 	if cfg.UseKind {
