@@ -141,7 +141,7 @@ jobs:
                     -use-kind \
                     -run TestConnectInject \
                     -debug-directory="$TEST_RESULTS/debug" \
-                    -consul-k8s-image=docker.mirror.hashicorp.services/ishustava/consul-k8s-dev:02-23-2021-6fa5212
+                    -consul-k8s-image=ishustava/consul-k8s-dev:02-23-2021-6fa5212
               then
                 echo "Tests in ${pkg} failed, aborting early"
                 exit_code=1
