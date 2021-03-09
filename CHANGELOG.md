@@ -1,5 +1,23 @@
 ## Unreleased
 
+BREAKING CHANGES:
+
+FEATURES:
+
+IMPROVEMENTS:
+* CRDs: add field Last Synced Time to CRD status and add printer column on CRD to display time since when the
+  resource was last successfully synced with Consul. [[GH-849](https://github.com/hashicorp/consul-helm/pull/849)]
+
+BUG FIXES:
+* Increase Consul client daemonset's memory from `25Mi` to `50Mi` for its `client-tls-init`
+  init container that runs when TLS is enabled and auto-encrypt is disabled. [[GH-832](https://github.com/hashicorp/consul-helm/pull/832)]
+* Add UDP port specification for server's serf WAN. Previously there was only one
+  port specification that defaulted to TCP. However in some cases (like when exposing as a host port)
+  UDP traffic would not be routed properly.
+
+  In addition, if `server.exposeGossipAndRPCPorts` is true, expose the WAN port
+  (`8302`) as a host port. [[GH-839](https://github.com/hashicorp/consul-helm/pull/839)]
+
 ## 0.30.0 (Feb 16, 2021)
 
 BREAKING CHANGES:

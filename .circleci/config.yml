@@ -144,7 +144,7 @@ jobs:
                     -kubecontext="kind-dc1" \
                     -secondary-kubecontext="kind-dc2" \
                     -debug-directory="$TEST_RESULTS/debug" \
-                    -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+                    -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:4adf933
               then
                 echo "Tests in ${pkg} failed, aborting early"
                 exit_code=1
@@ -655,7 +655,7 @@ workflows:
               only:
                 - master
     jobs:
-      - acceptance-openshift
+    # - acceptance-openshift >> disabled because OpenShift 4.4 was too flaky. Can possibly re-enable when latest OpenShift version is released.
       - acceptance-gke-1-16
       - acceptance-eks-1-17
       - acceptance-aks-1-18
