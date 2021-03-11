@@ -97,9 +97,9 @@ func TestAppMetrics(t *testing.T) {
 		// Note we need to set ent license to empty explicitly so that if tests have ent license
 		// globally provided this test won't try to apply it because this image is not an enterprise image.
 		// TODO: Remove this setting and ent license settings once Consul alpha is released.
-		"global.image": "docker.mirror.hashicorp.services/hashicorpdev/consul:latest",
+		"global.image":                        "docker.mirror.hashicorp.services/hashicorpdev/consul:latest",
 		"server.enterpriseLicense.secretName": "",
-		"server.enterpriseLicense.secretKey": "",
+		"server.enterpriseLicense.secretKey":  "",
 
 		"connectInject.enabled":                      "true",
 		"connectInject.metrics.defaultEnableMerging": "true",
