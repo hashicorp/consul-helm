@@ -213,7 +213,7 @@ jobs:
             # The license expires 15-Oct-2025.
             KUBECONFIG=$primary_kubeconfig kubectl create secret generic ent-license --from-literal=key="${CONSUL_ENT_LICENSE}"
 
-            gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 40m -failfast \ \
+            gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 40m -failfast \
                   -enable-enterprise \
                   -enterprise-license-secret-name=ent-license \
                   -enterprise-license-secret-key=key \
