@@ -214,15 +214,15 @@ jobs:
             KUBECONFIG=$primary_kubeconfig kubectl create secret generic ent-license --from-literal=key="${CONSUL_ENT_LICENSE}"
 
             gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 40m -failfast \
-                  -enable-enterprise \
-                  -enterprise-license-secret-name=ent-license \
-                  -enterprise-license-secret-key=key \
-                  -enable-pod-security-policies \
-                  -enable-multi-cluster \
-                  -kubeconfig="$primary_kubeconfig" \
-                  -secondary-kubeconfig="$secondary_kubeconfig" \
-                  -debug-directory="$TEST_RESULTS/debug" \
-                  -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              -enable-enterprise \
+              -enterprise-license-secret-name=ent-license \
+              -enterprise-license-secret-key=key \
+              -enable-pod-security-policies \
+              -enable-multi-cluster \
+              -kubeconfig="$primary_kubeconfig" \
+              -secondary-kubeconfig="$secondary_kubeconfig" \
+              -debug-directory="$TEST_RESULTS/debug" \
+              -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
 
       - store_test_results:
           path: /tmp/test-results
@@ -279,12 +279,12 @@ jobs:
             export secondary_kubeconfig=$(terraform output -state ../../terraform/aks/terraform.tfstate -json | jq -r .kubeconfigs.value[1])
 
             gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 40m -failfast \
-                -enable-enterprise \
-                -enable-multi-cluster \
-                -kubeconfig="$primary_kubeconfig" \
-                -secondary-kubeconfig="$secondary_kubeconfig" \
-                -debug-directory="$TEST_RESULTS/debug" \
-                -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              -enable-enterprise \
+              -enable-multi-cluster \
+              -kubeconfig="$primary_kubeconfig" \
+              -secondary-kubeconfig="$secondary_kubeconfig" \
+              -debug-directory="$TEST_RESULTS/debug" \
+              -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
 
       - store_test_results:
           path: /tmp/test-results
@@ -352,12 +352,12 @@ jobs:
             chmod 600 "$secondary_kubeconfig"
 
             gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 40m -failfast \
-                -enable-enterprise \
-                -enable-multi-cluster \
-                -kubeconfig="$primary_kubeconfig" \
-                -secondary-kubeconfig="$secondary_kubeconfig" \
-                -debug-directory="$TEST_RESULTS/debug" \
-                -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              -enable-enterprise \
+              -enable-multi-cluster \
+              -kubeconfig="$primary_kubeconfig" \
+              -secondary-kubeconfig="$secondary_kubeconfig" \
+              -debug-directory="$TEST_RESULTS/debug" \
+              -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
 
       - store_test_results:
           path: /tmp/test-results
