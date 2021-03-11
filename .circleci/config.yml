@@ -184,11 +184,13 @@ jobs:
             terraform init
             echo "${GOOGLE_CREDENTIALS}" | gcloud auth activate-service-account --key-file=-
 
+            # On GKE, we're setting the build number instead of build URL because label values
+            # cannot contain dashes.
             terraform apply \
               -var project=${CLOUDSDK_CORE_PROJECT} \
               -var init_cli=true \
               -var cluster_count=2 \
-              -var labels="{\"build_url\": \"$CIRCLE_BUILD_URL\"}" \
+              -var labels="{\"build_number\": \"CIRCLE_BUILD_NUM\"}" \
               -auto-approve
 
       # Restore go module cache if there is one
