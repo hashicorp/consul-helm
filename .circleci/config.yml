@@ -185,7 +185,7 @@ jobs:
             echo "${GOOGLE_CREDENTIALS}" | gcloud auth activate-service-account --key-file=-
 
             # On GKE, we're setting the build number instead of build URL because label values
-            # cannot contain dashes.
+            # cannot contain '/'.
             terraform apply \
               -var project=${CLOUDSDK_CORE_PROJECT} \
               -var init_cli=true \
