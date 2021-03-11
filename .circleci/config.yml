@@ -345,7 +345,7 @@ jobs:
           command: |
             terraform init
 
-            terraform apply -var cluster_count=2 -var tags={"build_url": "$CIRCLE_BUILD_URL"} -auto-approve
+            terraform apply -var cluster_count=2 -var tags="{\"build_url\": \"$CIRCLE_BUILD_URL\"}" -auto-approve
 
       # Restore go module cache if there is one
       - restore_cache:
