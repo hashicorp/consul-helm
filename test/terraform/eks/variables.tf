@@ -14,7 +14,7 @@ variable "role_arn" {
 }
 
 variable "tags" {
-  type = map()
+  type = map
   default = {}
   description = "Tags to attach to AWS resources created here."
 }
