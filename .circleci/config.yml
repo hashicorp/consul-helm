@@ -190,7 +190,7 @@ jobs:
               -var project=${CLOUDSDK_CORE_PROJECT} \
               -var init_cli=true \
               -var cluster_count=2 \
-              -var labels="{\"build_number\": \"CIRCLE_BUILD_NUM\"}" \
+              -var labels="{\"build_number\": \"$CIRCLE_BUILD_NUM\"}" \
               -auto-approve
 
       # Restore go module cache if there is one
