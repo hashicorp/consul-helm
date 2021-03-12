@@ -168,7 +168,7 @@ global:
   # like to make use of configuration beyond registering everything into
   # the `default` Consul namespace. Requires consul-k8s v0.12+. Additional configuration
   # options are found in the `consulNamespaces` section of both the catalog sync
-  # and connect injector.
+  # and service mesh (connectInject).
   enableConsulNamespaces: false
 
   # Configure ACLs.
@@ -256,7 +256,7 @@ global:
 
   # The consul sidecar ensures the Consul services
   # are always registered with their local Consul clients and is used by the
-  # ingress/terminating/mesh gateways as well as with every Connect-injected service.
+  # ingress/terminating/mesh gateways as well as with every service mesh injected service.
   # @recurse: false
   # @type: map
   consulSidecarContainer:
@@ -269,7 +269,7 @@ global:
         cpu: "20m"
 
   # The name (and tag) of the Envoy Docker image used for the
-  # connect-injected sidecar proxies and mesh, terminating, and ingress gateways.
+  # service mesh injected sidecar proxies and mesh, terminating, and ingress gateways.
   # See https://www.consul.io/docs/connect/proxies/envoy for full compatibility matrix between Consul and Envoy.
   # @default: envoyproxy/envoy-alpine:<latest supported version>
   imageEnvoy: "envoyproxy/envoy-alpine:v1.16.0"
@@ -364,10 +364,10 @@ server:
   # @type: string
   storageClass: null
 
-  # This will enable/disable Connect (https://consul.io/docs/connect). Setting this to true
+  # This will enable/disable service mesh (https://consul.io/docs/connect). Setting this to true
   # _will not_ automatically secure pod communication, this
   # setting will only enable usage of the feature. Consul will automatically initialize
-  # a new CA and set of certificates. Additional Connect settings can be configured
+  # a new CA and set of certificates. Additional service mesh settings can be configured
   # by setting the `server.extraConfig` value.
   connect: true
 
@@ -669,7 +669,7 @@ client:
 
   # If true, agents will enable their GRPC listener on
   # port 8502 and expose it to the host. This will use slightly more resources, but is
-  # required for Connect.
+  # required for service mesh.
   grpc: true
 
   # If true, the Helm chart will expose the clients' gossip ports as hostPorts.
@@ -1242,9 +1242,9 @@ syncCatalog:
   # @type: string
   consulWriteInterval: null
 
-# Configures the automatic Connect sidecar injector.
+# Configures the automatic service mesh sidecar injector.
 connectInject:
-  # True if you want to enable connect injection. Set to "-" to inherit from
+  # True if you want to enable service mesh sidecar injection. Set to "-" to inherit from
   # global.enabled.
   enabled: false
 
@@ -1253,9 +1253,9 @@ connectInject:
   image: null
 
   # If true, the injector will inject the
-  # Connect sidecar into all pods by default. Otherwise, pods must specify the
+  # service mesh sidecar into all pods by default. Otherwise, pods must specify the
   # injection annotation (https://consul.io/docs/k8s/connect#consul-hashicorp-com-connect-inject)
-  # to opt-in to Connect injection. If this is true, pods can use the same annotation
+  # to opt-in to service mesh sidecar injection. If this is true, pods can use the same annotation
   # to explicitly opt-out of injection.
   default: false
 
@@ -1271,7 +1271,7 @@ connectInject:
     # reconcile is done after the initial reconcile at startup is completed.
     reconcilePeriod: "1m"
 
-  # Configures metrics for Consul Connect services. All values are overridable
+  # Configures metrics for Consul service mesh services. All values are overridable
   # via annotations on a per-pod basis.
   metrics:
     # If true, the connect-injector will automatically
@@ -1280,14 +1280,14 @@ connectInject:
     # metrics will depend on whether metrics merging is enabled:
     #   - If metrics merging is enabled:
     #     the Consul sidecar will run a merged metrics server
-    #     combining Envoy sidecar and Connect service metrics,
+    #     combining Envoy sidecar and Application service metrics,
     #     i.e. if your service exposes its own Prometheus metrics.
     #   - If metrics merging is disabled:
     #     the listener will just expose Envoy sidecar metrics.
     # This will inherit from `global.metrics.enabled`.
     defaultEnabled: "-"
     # Configures the Consul sidecar to run a merged metrics server
-    # to combine and serve both Envoy and Connect service metrics.
+    # to combine and serve both Envoy and Application service metrics.
     defaultEnableMerging: false
     # Configures the port at which the Consul sidecar will listen on to return
     # combined metrics. This port only needs to be changed if it conflicts with
@@ -1328,7 +1328,7 @@ connectInject:
   # Optional priorityClassName.
   priorityClassName: ""
 
-  # The Docker image for Consul to use when performing Connect injection.
+  # The Docker image for Consul to use when performing service mesh sidecar injection.
   # Defaults to global.image.
   # @type: string
   imageConsul: null
@@ -1336,7 +1336,7 @@ connectInject:
   # Log verbosity level. One of "debug", "info", "warn", or "error".
   logLevel: info
 
-  # Resource settings for connect inject pods.
+  # Resource settings for service mesh injected pods.
   # @recurse: false
   # @type: map
   resources:
@@ -1362,13 +1362,13 @@ connectInject:
   # @type: string
   namespaceSelector: null
 
-  # List of k8s namespaces to allow Connect sidecar
+  # List of k8s namespaces to allow service mesh sidecar
   # injection in. If a k8s namespace is not included or is listed in `k8sDenyNamespaces`,
   # pods in that k8s namespace will not be injected even if they are explicitly
   # annotated. Use `["*"]` to automatically allow all k8s namespaces.
   #
   # For example, `["namespace1", "namespace2"]` will only allow pods in the k8s
-  # namespaces `namespace1` and `namespace2` to have Connect sidecars injected
+  # namespaces `namespace1` and `namespace2` to have service mesh sidecars injected
   # and registered with Consul. All other k8s namespaces will be ignored.
   #
   # To deny all namespaces, set this to `[]`.
@@ -1380,7 +1380,7 @@ connectInject:
   # @type: array<string>
   k8sAllowNamespaces: ["*"]
 
-  # List of k8s namespaces that should not allow Connect
+  # List of k8s namespaces that should not allow service mesh
   # sidecar injection. This list takes precedence over `k8sAllowNamespaces`.
   # `*` is not supported because then nothing would be allowed to be injected.
   #
@@ -1394,7 +1394,7 @@ connectInject:
   # @type: array<string>
   k8sDenyNamespaces: []
 
-  # [Enterprise Only] These settings manage the connect injector's interaction with
+  # [Enterprise Only] These settings manage the service mesh injector's interaction with
   # Consul namespaces (requires consul-ent v1.7+ and consul-k8s v0.12+).
   # Also, `global.enableConsulNamespaces` must be true.
   consulNamespaces:
@@ -1466,7 +1466,7 @@ connectInject:
   tolerations: null
 
   # Query that defines which Service Accounts
-  # can authenticate to Consul and receive an ACL token during Connect injection.
+  # can authenticate to Consul and receive an ACL token during service mesh sidecar injection.
   # The default setting, i.e. serviceaccount.name!=default, prevents the
   # 'default' Service Account from logging in.
   # If set to an empty string all service accounts can log in.
@@ -1478,12 +1478,12 @@ connectInject:
   # Requires Consul >= v1.5 and consul-k8s >= v0.8.0.
   aclBindingRuleSelector: "serviceaccount.name!=default"
 
-  # If you are not using global.acls.manageSystemACLs and instead manually setting up an
-  # auth method for Connect inject, set this to the name of your auth method.
+  # If you are not using global.acls.manageSystemACLs, and are instead manually setting up an
+  # auth method for service mesh sidecar injection, set this to the name of your auth method.
   overrideAuthMethodName: ""
 
   # Refers to a Kubernetes secret that you have created that contains
-  # an ACL token for your Consul cluster which allows the Connect injector the correct
+  # an ACL token for your Consul cluster which allows the service mesh sidecar injector the correct
   # permissions. This is only needed if Consul namespaces [Enterprise Only] and ACLs
   # are enabled on the Consul cluster and you are not setting
   # `global.acls.manageSystemACLs` to `true`.
@@ -1523,7 +1523,7 @@ connectInject:
         # @type: string
         cpu: null
 
-  # Resource settings for the Connect injected init container.
+  # Resource settings for the service mesh injected init container.
   # @recurse: false
   # @type: map
   initContainer:
@@ -1597,10 +1597,10 @@ controller:
     # @type: string
     secretKey: null
 
-# Mesh Gateways enable Consul Connect to work across Consul datacenters.
+# Mesh Gateways enable Consul service mesh to work across Consul datacenters.
 meshGateway:
   # If mesh gateways are enabled, a Deployment will be created that runs
-  # gateways and Consul Connect will be configured to use gateways.
+  # gateways and Consul service mesh will be configured to use gateways.
   # See https://www.consul.io/docs/connect/mesh_gateway.html
   # Requirements: consul 1.6.0+ and consul-k8s 0.15.0+ if using
   # global.acls.manageSystemACLs.
