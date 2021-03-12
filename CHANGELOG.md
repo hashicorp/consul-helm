@@ -1,6 +1,10 @@
 ## Unreleased
 
 BREAKING CHANGES:
+* If you have these Prometheus annotations on your Connect-inject Pods and enable Connect-Inject metrics (via `connectInject.metrics.defaultEnabled` or `consul.hashicorp.com/enable-metrics`), they will be overridden:
+  * `prometheus.io/scrape`
+	* `prometheus.io/port`
+	* `prometheus.io/path`
 
 FEATURES:
 * Metrics: add support for metrics in Consul. This enables support for Consul Agent metrics,
