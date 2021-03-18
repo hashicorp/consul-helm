@@ -1482,6 +1482,14 @@ connectInject:
   # auth method for Connect inject, set this to the name of your auth method.
   overrideAuthMethodName: ""
 
+  # Override regular ACL requirements and allow any pod with this service account
+  # name in any Kubernetes namespace to register as any service.
+  # If Consul namespaces and mirroring are enabled, the pod will be restricted
+  # to registering within the mirrored Consul namespace.
+  # Security Warning: this allows an attacker with remote code execution inside
+  # a meshed pod to masquerade as any service.
+  rootServiceAccountName: ""
+
   # Refers to a Kubernetes secret that you have created that contains
   # an ACL token for your Consul cluster which allows the Connect injector the correct
   # permissions. This is only needed if Consul namespaces [Enterprise Only] and ACLs

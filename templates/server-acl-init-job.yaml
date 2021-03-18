@@ -241,6 +241,10 @@ spec:
                 {{- end }}
                 {{- end }}
 
+                {{- if .Values.connectInject.rootServiceAccountName }}
+                -root-service-account-name={{ .Values.connectInject.rootServiceAccountName }} \
+                {{- end }}
+
                 {{- end }}
           resources:
             requests:

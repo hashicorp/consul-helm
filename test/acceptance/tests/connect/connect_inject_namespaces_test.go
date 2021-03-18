@@ -2,6 +2,7 @@ package connect
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -302,6 +303,103 @@ func TestConnectInjectNamespaces_CleanupController(t *testing.T) {
 					}
 				}
 			})
+		})
+	}
+}
+
+// Test root service accounts functionality.
+// These tests currently only test non-secure and secure without auto-encrypt installations
+// because in the case of namespaces there isn't a significant distinction in code between auto-encrypt
+// and non-auto-encrypt secure installations, so testing just one is enough.
+func TestConnectInjectNamespaces_RootServiceAccounts(t *testing.T) {
+	cfg := suite.Config()
+	if !cfg.EnableEnterprise {
+		t.Skipf("skipping this test because -enable-enterprise is not set")
+	}
+
+	cases := []struct {
+		name                 string
+		mirrorK8S            bool
+		secure               bool
+	}{
+		{
+			"mirror k8s namespaces",
+			true,
+			false,
+		},
+		{
+			"mirror k8s namespaces; secure",
+			true,
+			true,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			cfg := suite.Config()
+			ctx := suite.Environment().DefaultContext(t)
+
+			helmValues := map[string]string{
+				"global.enableConsulNamespaces": "true",
+
+				"connectInject.enabled":                "true",
+				"connectInject.rootServiceAccountName": "default",
+
+				"connectInject.consulNamespaces.mirroringK8S":               strconv.FormatBool(c.mirrorK8S),
+
+				"global.tls.enabled":           strconv.FormatBool(c.secure),
+				"global.acls.manageSystemACLs": strconv.FormatBool(c.secure),
+			}
+
+			releaseName := helpers.RandomName()
+			consulCluster := consul.NewHelmCluster(t, helmValues, ctx, cfg, releaseName)
+
+			consulCluster.Create(t)
+
+			logger.Logf(t, "creating namespaces %s and %s", staticServerNamespace, staticClientNamespace)
+			k8s.RunKubectl(t, ctx.KubectlOptions(t), "create", "ns", staticServerNamespace)
+			helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
+				k8s.RunKubectl(t, ctx.KubectlOptions(t), "delete", "ns", staticServerNamespace)
+			})
+			k8s.RunKubectl(t, ctx.KubectlOptions(t), "create", "ns", staticClientNamespace)
+			helpers.Cleanup(t, cfg.NoCleanupOnFailure, func() {
+				k8s.RunKubectl(t, ctx.KubectlOptions(t), "delete", "ns", staticClientNamespace)
+			})
+
+			logger.Log(t, "creating static-server and static-client deployments")
+			staticClientOpts := &terratestk8s.KubectlOptions{
+				ContextName: ctx.KubectlOptions(t).ContextName,
+				ConfigPath:  ctx.KubectlOptions(t).ConfigPath,
+				Namespace:   staticClientNamespace,
+			}
+			staticServerOpts := &terratestk8s.KubectlOptions{
+				ContextName: ctx.KubectlOptions(t).ContextName,
+				ConfigPath:  ctx.KubectlOptions(t).ConfigPath,
+				Namespace:   staticServerNamespace,
+			}
+			k8s.DeployKustomize(t, staticClientOpts, cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-default-svc-account")
+			k8s.DeployKustomize(t, staticServerOpts, cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-server-inject")
+
+			// Test that the service is successfully registered with Consul.
+			// We don't test any connect functionality to save time and because
+			// if the service is registered then we know the service account
+			// worked (in the case of ACLs) because otherwise the consul login
+			// would fail and the service wouldn't be registered.
+			logger.Log(t, "checking for static-client and static-server to be registered with Consul")
+			clientQueryOpts := &api.QueryOptions{Namespace: staticClientNamespace}
+			serverQueryOpts := &api.QueryOptions{Namespace: staticServerNamespace}
+
+			consulClient := consulCluster.SetupConsulClient(t, c.secure)
+			for _, svcName := range []string{staticClientName, fmt.Sprintf("%s-sidecar-proxy", staticClientName)} {
+				services, _, err := consulClient.Catalog().Service(svcName, "", clientQueryOpts)
+				require.NoError(t, err)
+				require.Len(t, services, 1)
+			}
+			for _, svcName := range []string{staticServerName, fmt.Sprintf("%s-sidecar-proxy", staticServerName)} {
+				services, _, err := consulClient.Catalog().Service(svcName, "", serverQueryOpts)
+				require.NoError(t, err)
+				require.Len(t, services, 1)
+			}
 		})
 	}
 }

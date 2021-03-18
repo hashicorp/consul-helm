@@ -185,13 +185,19 @@ spec:
                 -consul-sidecar-cpu-request={{ $consulSidecarResources.requests.cpu }} \
                 {{- end }}
                 {{- end }}
+
+                {{- if .Values.connectInject.rootServiceAccountName }}
+                -root-service-account-name={{ .Values.connectInject.rootServiceAccountName }} \
+                -datacenter={{ .Values.global.datacenter }} \
+                -resource-prefix={{ template "consul.fullname" . }} \
+                {{- end }}
           livenessProbe:
             httpGet:
               path: /health/ready
               port: 8080
               scheme: HTTPS
             failureThreshold: 2
-            initialDelaySeconds: 1
+            initialDelaySeconds: 30
             periodSeconds: 2
             successThreshold: 1
             timeoutSeconds: 5
@@ -201,7 +207,7 @@ spec:
               port: 8080
               scheme: HTTPS
             failureThreshold: 2
-            initialDelaySeconds: 2
+            initialDelaySeconds: 30
             periodSeconds: 2
             successThreshold: 1
             timeoutSeconds: 5
