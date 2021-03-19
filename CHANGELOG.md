@@ -1,5 +1,9 @@
 ## Unreleased
 
+BREAKING CHANGES 
+
+* Specify kubeVersion in Chart.yaml to denote that this chart is tested with Kubernetes 1.13+ [[GH-877](https://github.com/hashicorp/consul-helm/pull/877]
+
 ## 0.31.1 (Mar 19, 2021)
 
 BUG FIXES:
