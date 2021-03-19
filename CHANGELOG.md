@@ -1,7 +1,5 @@
 ## Unreleased
 
-## 0.30.0 (March 18, 2021)
-
 BREAKING CHANGES:
 * Helm 2 is no longer supported as of the previous release, 0.30.0. the `apiVersion` for the `Chart.yaml` is now correctly set to `v2` to properly indicate that the chart is now only supported for Helm 3 [[GH-868](https://github.com/hashicorp/consul-helm/pull/868)]
 
