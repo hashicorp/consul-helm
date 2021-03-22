@@ -1,6 +1,6 @@
 ## Unreleased
 
-BREAKING CHANGES 
+IMPROVEMENTS: 
 
 * Specify `kubeVersion` in `Chart.yaml` to denote that this chart is compatible with Kubernetes 1.13+. [[GH-877](https://github.com/hashicorp/consul-helm/pull/877]
 
