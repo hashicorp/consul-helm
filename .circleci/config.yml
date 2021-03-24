@@ -278,7 +278,7 @@ jobs:
             export primary_kubeconfig=$(terraform output -state ../../terraform/aks/terraform.tfstate -json | jq -r .kubeconfigs.value[0])
             export secondary_kubeconfig=$(terraform output -state ../../terraform/aks/terraform.tfstate -json | jq -r .kubeconfigs.value[1])
 
-            gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 40m -failfast \
+            gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 45m -failfast \
               -enable-enterprise \
               -enable-multi-cluster \
               -kubeconfig="$primary_kubeconfig" \
