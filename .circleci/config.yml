@@ -144,7 +144,7 @@ jobs:
                     -kubecontext="kind-dc1" \
                     -secondary-kubecontext="kind-dc2" \
                     -debug-directory="$TEST_RESULTS/debug" \
-                    -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+                    -consul-k8s-image=ashwinvenkatesh/consul-k8s@sha256:2ff882e3f8225e2fddd662b6913f202df47f365268b754f04ca6ea8a1b0146eb
               then
                 echo "Tests in ${pkg} failed, aborting early"
                 exit_code=1
