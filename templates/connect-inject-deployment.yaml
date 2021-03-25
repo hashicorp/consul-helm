@@ -191,7 +191,7 @@ spec:
               port: 8080
               scheme: HTTPS
             failureThreshold: 2
-            initialDelaySeconds: 30
+            initialDelaySeconds: 1
             periodSeconds: 2
             successThreshold: 1
             timeoutSeconds: 5
@@ -201,9 +201,17 @@ spec:
               port: 8080
               scheme: HTTPS
             failureThreshold: 2
-            initialDelaySeconds: 30
+            initialDelaySeconds: 2
             periodSeconds: 2
             successThreshold: 1
+            timeoutSeconds: 5
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+              scheme: HTTPS
+            failureThreshold: 15
+            periodSeconds: 2
             timeoutSeconds: 5
           {{- if (or .Values.connectInject.certs.secretName .Values.global.tls.enabled) }}
           volumeMounts:
