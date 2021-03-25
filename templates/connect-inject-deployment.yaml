@@ -191,7 +191,7 @@ spec:
               port: 8080
               scheme: HTTPS
             failureThreshold: 2
-            initialDelaySeconds: 1
+            initialDelaySeconds: 30
             periodSeconds: 2
             successThreshold: 1
             timeoutSeconds: 5
@@ -201,7 +201,7 @@ spec:
               port: 8080
               scheme: HTTPS
             failureThreshold: 2
-            initialDelaySeconds: 2
+            initialDelaySeconds: 30
             periodSeconds: 2
             successThreshold: 1
             timeoutSeconds: 5
