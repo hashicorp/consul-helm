@@ -278,7 +278,7 @@ jobs:
             export primary_kubeconfig=$(terraform output -state ../../terraform/aks/terraform.tfstate -json | jq -r .kubeconfigs.value[0])
             export secondary_kubeconfig=$(terraform output -state ../../terraform/aks/terraform.tfstate -json | jq -r .kubeconfigs.value[1])
 
-            gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 45m -failfast \
+            gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 2h -failfast \
               -enable-enterprise \
               -enable-multi-cluster \
               -kubeconfig="$primary_kubeconfig" \
@@ -616,7 +616,7 @@ workflows:
             - go-fmt-and-vet-helm-gen
       - test-helm-gen
       - unit-helm
-      - acceptance-eks-1-17:
+      - acceptance-aks-1-18:
           requires:
             - unit-helm
             - unit-acceptance-framework
