@@ -86,7 +86,7 @@ jobs:
     machine:
       image: ubuntu-2004:202010-01
     resource_class: xlarge
-    parallelism: 6
+    parallelism: 5
     steps:
       - checkout
       - run:
@@ -615,10 +615,10 @@ workflows:
             - go-fmt-and-vet-helm-gen
       - test-helm-gen
       - unit-helm
-      - acceptance:
-          requires:
-            - unit-helm
-            - unit-acceptance-framework
+      - acceptance
+#          requires:
+#            - unit-helm
+#            - unit-acceptance-framework
   nightly-acceptance-tests:
     triggers:
       - schedule:
