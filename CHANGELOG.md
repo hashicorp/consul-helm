@@ -8,6 +8,11 @@ IMPROVEMENTS:
 BREAKING CHANGES:
 * Minimum Kubernetes versions supported is 1.16+. [[GH-883](https://github.com/hashicorp/consul-helm/pull/883)]
 
+BUG FIXES:
+* Increase initial delay seconds for connect-inject deployment to 30 to give time for certificates to be available.
+  Previously, the deployment could be killed by Kubernetes and crash loop because certificates would take a couple
+  of seconds. [[GH-885](https://github.com/hashicorp/consul-helm/pull/885)]
+
 ## 0.31.1 (Mar 19, 2021)
 
 BUG FIXES:
