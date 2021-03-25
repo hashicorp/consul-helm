@@ -273,7 +273,7 @@ jobs:
       - run:
           name: Run acceptance tests
           working_directory: test/acceptance/tests
-          no_output_timeout: 130m
+          no_output_timeout: 10m
           command: |
             export primary_kubeconfig=$(terraform output -state ../../terraform/aks/terraform.tfstate -json | jq -r .kubeconfigs.value[0])
             export secondary_kubeconfig=$(terraform output -state ../../terraform/aks/terraform.tfstate -json | jq -r .kubeconfigs.value[1])
