@@ -616,9 +616,9 @@ workflows:
       - test-helm-gen
       - unit-helm
       - acceptance
-#          requires:
-#            - unit-helm
-#            - unit-acceptance-framework
+          requires:
+            - unit-helm
+            - unit-acceptance-framework
   nightly-acceptance-tests:
     triggers:
       - schedule:
