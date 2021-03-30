@@ -616,7 +616,7 @@ workflows:
             - go-fmt-and-vet-helm-gen
       - test-helm-gen
       - unit-helm
-      - acceptance-aks-1-18:
+      - acceptance:
           requires:
             - unit-helm
             - unit-acceptance-framework
