@@ -1,4 +1,4 @@
-{{ $clientEnabled := ternary true false (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) }}
+{{- $clientEnabled := (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) }}
 {{- if (or (and (ne (.Values.syncCatalog.enabled | toString) "-") .Values.syncCatalog.enabled) (and (eq (.Values.syncCatalog.enabled | toString) "-") .Values.global.enabled)) }}
 # The deployment for running the sync-catalog pod
 apiVersion: apps/v1
@@ -194,7 +194,7 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- if or .Values.global.acls.manageSystemACLs (and (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) $clientEnabled) }}
+      {{- if or .Values.global.acls.manageSystemACLs (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt $clientEnabled) }}
       initContainers:
       {{- if .Values.global.acls.manageSystemACLs }}
       - name: sync-acl-init
@@ -214,7 +214,7 @@ spec:
             memory: "25Mi"
             cpu: "50m"
       {{- end }}
-      {{- if (and (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) $clientEnabled) }}
+      {{- if (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt $clientEnabled) }}
       {{- include "consul.getAutoEncryptClientCA" . | nindent 6 }}
       {{- end }}
       {{- end }}
