@@ -517,19 +517,6 @@ load _helpers
   [ "${actual}" = "key" ]
 }
 
-@test "syncCatalog/Deployment: consul-ca-cert volume is used when TLS with auto-encrypt is enabled and client.enabled=false" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -s templates/sync-catalog-deployment.yaml  \
-      --set 'syncCatalog.enabled=true' \
-      --set 'global.tls.enabled=true' \
-      --set 'global.tls.enableAutoEncrypt=true' \
-      --set 'client.enabled=false' \
-      . | tee /dev/stderr |
-      yq '.spec.template.spec.volumes[] | select(.name == "consul-ca-cert") | length > 0' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-}
-
 @test "syncCatalog/Deployment: consul-auto-encrypt-ca-cert volume is not added with auto-encrypt and client.enabled=false" {
   cd `chart_dir`
   local actual=$(helm template \
@@ -871,20 +858,6 @@ load _helpers
 
   actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
     [ "${actual}" = "/consul/tls/ca/tls.crt" ]
-}
-
-@test "syncCatalog/Deployment: consul service is used when client.enabled=false" {
-  cd `chart_dir`
-  local env=$(helm template \
-      -s templates/sync-catalog-deployment.yaml  \
-      --set 'syncCatalog.enabled=true' \
-      --set 'client.enabled=false' \
-      . | tee /dev/stderr |
-      yq -r '.spec.template.spec.containers[0].env[]' | tee /dev/stderr)
-
-  local actual
-  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
-  [ "${actual}" = 'http://RELEASE-NAME-consul-server:8500' ]
 }
 
 @test "syncCatalog/Deployment: consul service is used when client.enabled=false and global.tls.enabled=true and autoencrypt on" {
