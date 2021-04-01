@@ -2,7 +2,6 @@
 
 IMPROVEMENTS: 
 
-* Use consul-ca-cert for sync-catalog when using autoencrypt and client is disabled. [[GH-891](https://github.com/hashicorp/consul-helm/pull/891)]
 * Specify `kubeVersion` in `Chart.yaml` to denote that this chart is compatible with Kubernetes 1.16+. [[GH-883](https://github.com/hashicorp/consul-helm/pull/883)]
 * CRDs: update the CRD versions from v1beta1 to v1. [[GH-883](https://github.com/hashicorp/consul-helm/pull/883)]
 
@@ -12,6 +11,7 @@ BREAKING CHANGES:
 ## 0.31.1 (Mar 19, 2021)
 
 BUG FIXES:
+* Sync Catalog: fix issue running with clients disabled and auto encrypt enabled. [[GH-891](https://github.com/hashicorp/consul-helm/pull/891)]
 * Remove `kubeVersion` in `Chart.yaml` since it was causing installs to fail on EKS and GKE. [[GH-873](https://github.com/hashicorp/consul-helm/pull/873)]
 
 ## 0.31.0 (Mar 18, 2021)
