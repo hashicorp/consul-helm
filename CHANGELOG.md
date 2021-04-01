@@ -2,6 +2,7 @@
 
 IMPROVEMENTS: 
 
+* Use consul-ca-cert for sync-catalog when using autoencrypt and client is disabled. [[GH-891](https://github.com/hashicorp/consul-helm/pull/891)]
 * Specify `kubeVersion` in `Chart.yaml` to denote that this chart is compatible with Kubernetes 1.16+. [[GH-883](https://github.com/hashicorp/consul-helm/pull/883)]
 * CRDs: update the CRD versions from v1beta1 to v1. [[GH-883](https://github.com/hashicorp/consul-helm/pull/883)]
 
