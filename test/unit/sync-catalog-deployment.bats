@@ -517,7 +517,7 @@ load _helpers
   [ "${actual}" = "key" ]
 }
 
-@test "syncCatalog/DeploymentABC: consul-ca-cert volume is used when TLS with auto-encrypt is enabled and client.enabled=false" {
+@test "syncCatalog/Deployment: consul-ca-cert volume is used when TLS with auto-encrypt is enabled and client.enabled=false" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/sync-catalog-deployment.yaml  \
@@ -530,7 +530,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "syncCatalog/DeploymentABC: consul-auto-encrypt-ca-cert volume is not added with auto-encrypt and client.enabled=false" {
+@test "syncCatalog/Deployment: consul-auto-encrypt-ca-cert volume is not added with auto-encrypt and client.enabled=false" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/sync-catalog-deployment.yaml  \
@@ -567,7 +567,7 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "syncCatalog/DeploymentABC: consul-ca-cert volumeMount is added when TLS with auto-encrypt is enabled and client disabled" {
+@test "syncCatalog/Deployment: consul-ca-cert volumeMount is added when TLS with auto-encrypt is enabled and client disabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/sync-catalog-deployment.yaml  \
@@ -887,7 +887,7 @@ load _helpers
   [ "${actual}" = 'http://RELEASE-NAME-consul-server:8500' ]
 }
 
-@test "syncCatalog/DeploymentABC: consul service is used when client.enabled=false and global.tls.enabled=true and autoencrypt on" {
+@test "syncCatalog/Deployment: consul service is used when client.enabled=false and global.tls.enabled=true and autoencrypt on" {
   cd `chart_dir`
   local env=$(helm template \
       -s templates/sync-catalog-deployment.yaml  \
