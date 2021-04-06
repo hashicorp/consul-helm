@@ -87,7 +87,7 @@ spec:
                 -consul-image="{{ default .Values.global.image .Values.connectInject.imageConsul }}" \
                 -envoy-image="{{ .Values.global.imageEnvoy }}" \
                 -consul-k8s-image="{{ default .Values.global.imageK8S .Values.connectInject.image }}" \
-                -release-name="{{ .Release.Name }}" \
+                -release-name="$CONSUL_FULLNAME" \
                 -release-namespace="{{ .Release.Namespace }}" \
                 -listen=:8080 \
                 {{- if .Values.connectInject.logLevel }}
