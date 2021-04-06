@@ -23,14 +23,14 @@ func TestIngressGateway(t *testing.T) {
 			false,
 			false,
 		},
-		//{
-		//	true,
-		//	false,
-		//},
-		//{
-		//	true,
-		//	true,
-		//},
+		{
+			true,
+			false,
+		},
+		{
+			true,
+			true,
+		},
 	}
 	for _, c := range cases {
 		name := fmt.Sprintf("secure: %t; auto-encrypt: %t", c.secure, c.autoEncrypt)
