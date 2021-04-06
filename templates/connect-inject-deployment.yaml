@@ -183,26 +183,6 @@ spec:
                 -consul-sidecar-cpu-request={{ $consulSidecarResources.requests.cpu }} \
                 {{- end }}
                 {{- end }}
-{{/*          livenessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /health/ready*/}}
-{{/*              port: 8080*/}}
-{{/*              scheme: HTTPS*/}}
-{{/*            failureThreshold: 2*/}}
-{{/*            initialDelaySeconds: 1*/}}
-{{/*            periodSeconds: 2*/}}
-{{/*            successThreshold: 1*/}}
-{{/*            timeoutSeconds: 5*/}}
-{{/*          readinessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /health/ready*/}}
-{{/*              port: 8080*/}}
-{{/*              scheme: HTTPS*/}}
-{{/*            failureThreshold: 2*/}}
-{{/*            initialDelaySeconds: 2*/}}
-{{/*            periodSeconds: 2*/}}
-{{/*            successThreshold: 1*/}}
-{{/*            timeoutSeconds: 5*/}}
           volumeMounts:
           - name: certs
             mountPath: /etc/connect-injector/certs
