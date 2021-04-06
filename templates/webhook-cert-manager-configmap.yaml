@@ -24,8 +24,8 @@ data:
         ],
         "secretName": "{{ template "consul.fullname" . }}-connect-inject-webhook-cert",
         "secretNamespace": "{{ .Release.Namespace }}"
-      },
-    {{- end }}
+      }{{- if and .Values.controller.enabled }},{{- end }}{{- end }}
+    {{- if and .Values.controller.enabled }}
       {
         "name": "{{ template "consul.fullname" . }}-controller-mutating-webhook-configuration",
         "tlsAutoHosts": [
@@ -37,6 +37,6 @@ data:
         "secretName": "{{ template "consul.fullname" . }}-controller-webhook-cert",
         "secretNamespace": "{{ .Release.Namespace }}"
       }
+    {{- end }}
     ]
-
-{{- end }}
+  {{- end }}
