@@ -28,14 +28,14 @@ func TestTerminatingGateway(t *testing.T) {
 			false,
 			false,
 		},
-		//{
-		//	true,
-		//	true,
-		//},
-		//{
-		//	true,
-		//	true,
-		//},
+		{
+			true,
+			true,
+		},
+		{
+			true,
+			true,
+		},
 	}
 	for _, c := range cases {
 		name := fmt.Sprintf("secure: %t, auto-encrypt: %t", c.secure, c.autoEncrypt)

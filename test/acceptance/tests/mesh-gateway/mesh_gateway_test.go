@@ -131,8 +131,6 @@ func TestMeshGatewayDefault(t *testing.T) {
 // Test that Connect and wan federation over mesh gateways work in a secure installation,
 // with ACLs and TLS with and without auto-encrypt enabled.
 func TestMeshGatewaySecure(t *testing.T) {
-	// Skip until the endpoints controller supports TLS and ACLs.
-	t.Skip()
 	cases := []struct {
 		name              string
 		enableAutoEncrypt string

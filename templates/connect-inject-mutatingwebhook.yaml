@@ -26,7 +26,6 @@ webhooks:
         name: {{ template "consul.fullname" . }}-connect-injector-svc
         namespace: {{ .Release.Namespace }}
         path: "/mutate"
-      caBundle: Cg==
     rules:
       - operations: [ "CREATE" ]
         apiGroups: [""]

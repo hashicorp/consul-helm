@@ -23,8 +23,8 @@ func TestController(t *testing.T) {
 		autoEncrypt bool
 	}{
 		{false, false},
-		//{true, false},
-		//{true, true},
+		{true, false},
+		{true, true},
 	}
 
 	// The name of a service intention in consul is
