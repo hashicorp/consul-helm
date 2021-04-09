@@ -38,6 +38,7 @@ func TestConnectInject(t *testing.T) {
 			ctx := suite.Environment().DefaultContext(t)
 
 			helmValues := map[string]string{
+				"global.imageK8S":              "kschoche/consul-k8s-dev2",
 				"connectInject.enabled":        "true",
 				"global.tls.enabled":           strconv.FormatBool(c.secure),
 				"global.tls.enableAutoEncrypt": strconv.FormatBool(c.autoEncrypt),
@@ -93,8 +94,8 @@ func TestConnectInject(t *testing.T) {
 	}
 }
 
-// Test the cleanup controller that cleans up force-killed pods.
-func TestConnectInject_CleanupController(t *testing.T) {
+// Test the endpoints controller cleans up force-killed pods.
+func TestConnectInject_CleanupKilledPods(t *testing.T) {
 	cases := []struct {
 		secure      bool
 		autoEncrypt bool
@@ -111,6 +112,7 @@ func TestConnectInject_CleanupController(t *testing.T) {
 			ctx := suite.Environment().DefaultContext(t)
 
 			helmValues := map[string]string{
+				"global.imageK8S":              "kschoche/consul-k8s-dev2",
 				"connectInject.enabled":        "true",
 				"global.tls.enabled":           strconv.FormatBool(c.secure),
 				"global.tls.enableAutoEncrypt": strconv.FormatBool(c.autoEncrypt),
