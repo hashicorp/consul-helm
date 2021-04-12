@@ -133,7 +133,7 @@ jobs:
             # exit early if any test fails (-failfast only works within a single
             # package).
             exit_code=0
-            pkgs=$(go list ./... | grep -v -E 'metrics'| circleci tests split)
+            pkgs=$(go list ./... | circleci tests split)
             echo "Running $pkgs"
             for pkg in $pkgs
             do
