@@ -15,9 +15,7 @@ BREAKING CHANGES:
 * Connect: Kubernetes Services are now required for all connect injected applications.
   The Kubernetes service name will be used as the service name to register with Consul unless the annotation `consul.hashicorp.com/connect-service` is provided to the deployment/pod to override this. If using ACLs the ServiceAccountName must match the service name used with Consul.
 
-Note: if you're already using a Kubernetes service, no changes are required.
-
-Example Service:
+  Example Service:
 ```yaml
 ---
 apiVersion: v1
@@ -55,6 +53,7 @@ spec:
          ports:
          - containerPort: 9090
 ```
+  **Note: if you're already using a Kubernetes service, no changes are required.**
 
 BUG FIXES:
 * Add startup probe to connect-inject deployment to give time for certificates to be available.
