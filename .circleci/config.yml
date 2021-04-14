@@ -223,7 +223,8 @@ jobs:
               -kubeconfig="$primary_kubeconfig" \
               -secondary-kubeconfig="$secondary_kubeconfig" \
               -debug-directory="$TEST_RESULTS/debug" \
-              -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              -consul-image="ishustava/consul-enterprise:tproxy-test" \
+              -consul-k8s-image="kschoche/consul-k8s-dev2:2021-4-14" # TODO: change once feature-tproxy consul-k8s branch is merged
 
       - store_test_results:
           path: /tmp/test-results
@@ -285,7 +286,8 @@ jobs:
               -kubeconfig="$primary_kubeconfig" \
               -secondary-kubeconfig="$secondary_kubeconfig" \
               -debug-directory="$TEST_RESULTS/debug" \
-              -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              -consul-image="ishustava/consul-enterprise:tproxy-test" \
+              -consul-k8s-image="kschoche/consul-k8s-dev2:2021-4-14" # TODO: change once feature-tproxy consul-k8s branch is merged
 
       - store_test_results:
           path: /tmp/test-results
@@ -358,7 +360,8 @@ jobs:
               -kubeconfig="$primary_kubeconfig" \
               -secondary-kubeconfig="$secondary_kubeconfig" \
               -debug-directory="$TEST_RESULTS/debug" \
-              -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              -consul-image="ishustava/consul-enterprise:tproxy-test" \
+              -consul-k8s-image="kschoche/consul-k8s-dev2:2021-4-14" # TODO: change once feature-tproxy consul-k8s branch is merged
 
       - store_test_results:
           path: /tmp/test-results
@@ -422,6 +425,7 @@ jobs:
               -kubeconfig="$HOME/.kube/$OC_PRIMARY_NAME" \
               -secondary-kubeconfig="$HOME/.kube/$OC_SECONDARY_NAME" \
               -debug-directory="$TEST_RESULTS/debug" \
+              -consul-image="ishustava/consul-enterprise:tproxy-test" \
               -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
 
       - store_test_results:
@@ -487,7 +491,8 @@ jobs:
               -kubecontext="kind-dc1" \
               -secondary-kubecontext="kind-dc2" \
               -debug-directory="$TEST_RESULTS/debug" \
-              -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              -consul-image="ishustava/consul-enterprise:tproxy-test" \
+              -consul-k8s-image="kschoche/consul-k8s-dev2:2021-4-14" # TODO: change once feature-tproxy consul-k8s branch is merged
 
       - store_test_results:
           path: /tmp/test-results
