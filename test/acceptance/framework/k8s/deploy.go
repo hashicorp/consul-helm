@@ -147,7 +147,11 @@ func CheckStaticServerConnectionFailing(t *testing.T, options *k8s.KubectlOption
 		options,
 		false,
 		deploymentName,
-		[]string{"curl: (52) Empty reply from server", "curl: (7) Failed to connect to static-server port 80: Connection refused"},
+		[]string{
+			"curl: (52) Empty reply from server",
+			"curl: (7) Failed to connect to static-server port 80: Connection refused",
+			"curl: (7) Failed to connect to static-server.ns1 port 80: Connection refused",
+		},
 		curlArgs...)
 }
 

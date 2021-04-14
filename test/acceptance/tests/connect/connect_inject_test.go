@@ -40,11 +40,7 @@ func TestConnectInject(t *testing.T) {
 				cfg := suite.Config()
 				ctx := suite.Environment().DefaultContext(t)
 
-				// todo: set images globally rather than per test
 				helmValues := map[string]string{
-					"global.image":    "ishustava/consul-dev:tproxy-test",
-					"global.imageK8S": "ishustava/consul-k8s-dev:04-13-2021-65883b7",
-
 					"connectInject.enabled":                         "true",
 					"connectInject.transparentProxy.defaultEnabled": strconv.FormatBool(tproxyEnabled),
 
@@ -59,7 +55,6 @@ func TestConnectInject(t *testing.T) {
 				consulCluster.Create(t)
 
 				logger.Log(t, "creating static-server and static-client deployments")
-				// todo: check that injection is successful
 				k8s.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-server-inject")
 				if tproxyEnabled {
 					k8s.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-tproxy")
@@ -67,10 +62,19 @@ func TestConnectInject(t *testing.T) {
 					k8s.DeployKustomize(t, ctx.KubectlOptions(t), cfg.NoCleanupOnFailure, cfg.DebugDirectory, "../fixtures/cases/static-client-inject")
 				}
 
+				// Check that both static-server and static-client have been injected and now have 2 containers.
+				for _, labelSelector := range []string{"app=static-server", "app=static-client"} {
+					podList, err := ctx.KubernetesClient(t).CoreV1().Pods(ctx.KubectlOptions(t).Namespace).List(context.Background(), metav1.ListOptions{
+						LabelSelector: labelSelector,
+					})
+					require.NoError(t, err)
+					require.Len(t, podList.Items, 1)
+					require.Len(t, podList.Items[0].Spec.Containers, 2)
+				}
+
 				if c.secure {
 					logger.Log(t, "checking that the connection is not successful because there's no intention")
 					if tproxyEnabled {
-						// todo: check that traffic is going through the proxy
 						k8s.CheckStaticServerConnectionFailing(t, ctx.KubectlOptions(t), staticClientName, "http://static-server")
 					} else {
 						k8s.CheckStaticServerConnectionFailing(t, ctx.KubectlOptions(t), staticClientName, "http://localhost:1234")
@@ -89,6 +93,7 @@ func TestConnectInject(t *testing.T) {
 
 				logger.Log(t, "checking that connection is successful")
 				if tproxyEnabled {
+					// todo: add an assertion that the traffic is going through the proxy
 					k8s.CheckStaticServerConnectionSuccessful(t, ctx.KubectlOptions(t), staticClientName, "http://static-server")
 				} else {
 					k8s.CheckStaticServerConnectionSuccessful(t, ctx.KubectlOptions(t), staticClientName, "http://localhost:1234")
@@ -111,7 +116,7 @@ func TestConnectInject(t *testing.T) {
 						ctx.KubectlOptions(t),
 						false,
 						staticClientName,
-						[]string{"curl: (56) Recv failure: Connection reset by peer", "curl: (52) Empty reply from server"},
+						[]string{"curl: (56) Recv failure: Connection reset by peer", "curl: (52) Empty reply from server", "curl: (7) Failed to connect to static-server port 80: Connection refused"},
 						"http://static-server")
 				} else {
 					k8s.CheckStaticServerConnectionMultipleFailureMessages(
@@ -146,7 +151,6 @@ func TestConnectInject_CleanupKilledPods(t *testing.T) {
 			ctx := suite.Environment().DefaultContext(t)
 
 			helmValues := map[string]string{
-				"global.imageK8S":              "kschoche/consul-k8s-dev2",
 				"connectInject.enabled":        "true",
 				"global.tls.enabled":           strconv.FormatBool(c.secure),
 				"global.tls.enableAutoEncrypt": strconv.FormatBool(c.autoEncrypt),
