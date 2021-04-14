@@ -1206,3 +1206,26 @@ rollingUpdate:
   local actual=$(echo $security_context | jq -r .privileged)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# client.disableHostNodeID
+
+@test "client/DaemonSet: disableHostNodeID defaults to false" {
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml \
+      . | tee /dev/stderr | \
+      yq '.spec.template.spec.containers[0].command | any(contains("disable-host-node-id=false"))' \
+      | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: disableHostNodeID can be set to true" {
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml \
+      --set 'client.disableHostNodeID=true' \
+      . | tee /dev/stderr | \
+      yq '.spec.template.spec.containers[0].command | any(contains("disable-host-node-id=true"))' \
+      | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
