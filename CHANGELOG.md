@@ -10,7 +10,7 @@ IMPROVEMENTS:
 
 BREAKING CHANGES:
 * Minimum Kubernetes versions supported is 1.16+. [[GH-883](https://github.com/hashicorp/consul-helm/pull/883)]
-* Connect: The helm values for healthchecks and cleanup controllers have been removed: `global.connectInject.healthChecks` and `global.connectInject.cleanupController`, as these controllers have been replaced by the endpoints controller. [[GH-899](https://github.com/hashicorp/consul-helm/pull/899)]
+* Connect: The Helm values for health checks and cleanup controller have been removed: `connectInject.healthChecks` and `connectInject.cleanupController`, as these controllers have been replaced by the endpoints controller. [[GH-899](https://github.com/hashicorp/consul-helm/pull/899)]
 * Connect: connect webhook deployment now uses `webhook-cert-manager` to bootstrap the webhook certificates instead of generating them inside of the webhook. [[GH-861](https://github.com/hashicorp/consul-helm/pull/861)]
 * Connect: Kubernetes Services are now required for all connect injected applications.
   The Kubernetes service name will be used as the service name to register with Consul unless the annotation `consul.hashicorp.com/connect-service` is provided to the deployment/pod to override this. If using ACLs the ServiceAccountName must match the service name used with Consul.
@@ -51,7 +51,7 @@ spec:
      spec:
        containers:
        - name: sample-app
-         image: ishustava/fake-service:0.7.0
+         image: sample-app:0.1.0
          ports:
          - containerPort: 9090
 ```
