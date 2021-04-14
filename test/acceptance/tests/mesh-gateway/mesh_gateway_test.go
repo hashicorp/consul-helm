@@ -35,8 +35,9 @@ func TestMeshGatewayDefault(t *testing.T) {
 		"global.federation.enabled":                "true",
 		"global.federation.createFederationSecret": "true",
 
-		"connectInject.enabled": "true",
-		"controller.enabled":    "true",
+		"connectInject.enabled":                         "true",
+		"connectInject.transparentProxy.defaultEnabled": "true",
+		"controller.enabled":                            "true",
 
 		"meshGateway.enabled":  "true",
 		"meshGateway.replicas": "1",
@@ -86,7 +87,8 @@ func TestMeshGatewayDefault(t *testing.T) {
 		"server.enterpriseLicense.secretName": "",
 		"server.enterpriseLicense.secretKey":  "",
 
-		"connectInject.enabled": "true",
+		"connectInject.enabled":                         "true",
+		"connectInject.transparentProxy.defaultEnabled": "true",
 
 		"meshGateway.enabled":  "true",
 		"meshGateway.replicas": "1",
