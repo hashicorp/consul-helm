@@ -137,7 +137,7 @@ jobs:
             echo "Running $pkgs"
             for pkg in $pkgs
             do
-              if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 50m -failfast \
+              if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 2h -failfast \
                     -use-kind \
                     -enable-enterprise \
                     -enable-multi-cluster \
@@ -617,6 +617,10 @@ workflows:
             - go-fmt-and-vet-helm-gen
       - test-helm-gen
       - unit-helm
+      - acceptance-gke-1-16
+      - acceptance-eks-1-17
+      - acceptance-aks-1-18
+      - acceptance-kind-1-20
       - acceptance:
           requires:
             - unit-helm
