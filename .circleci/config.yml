@@ -139,12 +139,11 @@ jobs:
             do
               if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 2h -failfast \
                     -use-kind \
-                    -enable-enterprise \
                     -enable-multi-cluster \
                     -kubecontext="kind-dc1" \
                     -secondary-kubecontext="kind-dc2" \
                     -debug-directory="$TEST_RESULTS/debug" \
-                    -consul-image="ishustava/consul-enterprise:tproxy-test" \
+                    -consul-image="ishustava/consul-dev:tproxy-9f7190a4f" \
                     -consul-k8s-image="kschoche/consul-k8s-dev2:2021-4-14" # TODO: change once feature-tproxy consul-k8s branch is merged
               then
                 echo "Tests in ${pkg} failed, aborting early"
@@ -215,15 +214,12 @@ jobs:
             KUBECONFIG=$primary_kubeconfig kubectl create secret generic ent-license --from-literal=key="${CONSUL_ENT_LICENSE}"
 
             gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 50m -failfast \
-              -enable-enterprise \
-              -enterprise-license-secret-name=ent-license \
-              -enterprise-license-secret-key=key \
               -enable-pod-security-policies \
               -enable-multi-cluster \
               -kubeconfig="$primary_kubeconfig" \
               -secondary-kubeconfig="$secondary_kubeconfig" \
               -debug-directory="$TEST_RESULTS/debug" \
-              -consul-image="ishustava/consul-enterprise:tproxy-test" \
+              -consul-image="ishustava/consul-dev:tproxy-9f7190a4f" \
               -consul-k8s-image="kschoche/consul-k8s-dev2:2021-4-14" # TODO: change once feature-tproxy consul-k8s branch is merged
 
       - store_test_results:
@@ -281,12 +277,11 @@ jobs:
             export secondary_kubeconfig=$(terraform output -state ../../terraform/aks/terraform.tfstate -json | jq -r .kubeconfigs.value[1])
 
             gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 2h -failfast \
-              -enable-enterprise \
               -enable-multi-cluster \
               -kubeconfig="$primary_kubeconfig" \
               -secondary-kubeconfig="$secondary_kubeconfig" \
               -debug-directory="$TEST_RESULTS/debug" \
-              -consul-image="ishustava/consul-enterprise:tproxy-test" \
+              -consul-image="ishustava/consul-dev:tproxy-9f7190a4f" \
               -consul-k8s-image="kschoche/consul-k8s-dev2:2021-4-14" # TODO: change once feature-tproxy consul-k8s branch is merged
 
       - store_test_results:
@@ -355,12 +350,11 @@ jobs:
             chmod 600 "$secondary_kubeconfig"
 
             gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 50m -failfast \
-              -enable-enterprise \
               -enable-multi-cluster \
               -kubeconfig="$primary_kubeconfig" \
               -secondary-kubeconfig="$secondary_kubeconfig" \
               -debug-directory="$TEST_RESULTS/debug" \
-              -consul-image="ishustava/consul-enterprise:tproxy-test" \
+              -consul-image="ishustava/consul-dev:tproxy-9f7190a4f" \
               -consul-k8s-image="kschoche/consul-k8s-dev2:2021-4-14" # TODO: change once feature-tproxy consul-k8s branch is merged
 
       - store_test_results:
@@ -420,13 +414,12 @@ jobs:
           command: |
             gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 40m -failfast \
               -enable-openshift \
-              -enable-enterprise \
               -enable-multi-cluster \
               -kubeconfig="$HOME/.kube/$OC_PRIMARY_NAME" \
               -secondary-kubeconfig="$HOME/.kube/$OC_SECONDARY_NAME" \
               -debug-directory="$TEST_RESULTS/debug" \
-              -consul-image="ishustava/consul-enterprise:tproxy-test" \
-              -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              -consul-image="ishustava/consul-dev:tproxy-9f7190a4f" \
+              -consul-k8s-image="kschoche/consul-k8s-dev2:2021-4-14" # TODO: change once feature-tproxy consul-k8s branch is merged
 
       - store_test_results:
           path: /tmp/test-results
@@ -487,11 +480,10 @@ jobs:
             gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- ./... -p 1 -timeout 30m -failfast \
               -use-kind \
               -enable-multi-cluster \
-              -enable-enterprise \
               -kubecontext="kind-dc1" \
               -secondary-kubecontext="kind-dc2" \
               -debug-directory="$TEST_RESULTS/debug" \
-              -consul-image="ishustava/consul-enterprise:tproxy-test" \
+              -consul-image="ishustava/consul-dev:tproxy-9f7190a4f" \
               -consul-k8s-image="kschoche/consul-k8s-dev2:2021-4-14" # TODO: change once feature-tproxy consul-k8s branch is merged
 
       - store_test_results:
