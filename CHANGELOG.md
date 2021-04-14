@@ -6,7 +6,7 @@ IMPROVEMENTS:
 * CRDs: update the CRD versions from v1beta1 to v1. [[GH-883](https://github.com/hashicorp/consul-helm/pull/883)]
 * Enterprise: support applying Consul Enterprise license when security context defaults to non-root users. [[GH-880](https://github.com/hashicorp/consul-helm/pull/880)]
 * Sync Catalog: add new `syncCatalog.extraLabels` Helm value for configuring labels on sync catalog pods. [[GH-892](https://github.com/hashicorp/consul-helm/pull/892)]
-* Connect: Support leader election for connect webhook deployment. [[GH-903](https://github.com/hashicorp/consul-helm/pull/903)]
+* Connect: Support high availability of the connect-inject deployment. [[GH-903](https://github.com/hashicorp/consul-helm/pull/903)]
 
 BREAKING CHANGES:
 * Minimum Kubernetes versions supported is 1.16+. [[GH-883](https://github.com/hashicorp/consul-helm/pull/883)]
@@ -15,7 +15,7 @@ BREAKING CHANGES:
   The associated helm values have also been removed: `global.connectInject.healthChecks` and `global.connectInject.cleanupController`. [[GH-899](https://github.com/hashicorp/consul-helm/pull/899)]
 * Connect: `-release-name` and `-release-namespace` flags have been added to connect-inject deployment since they are required for endpoints controller to detect consul client pod restart events.
   [[GH-886](https://github.com/hashicorp/consul-helm/pull/886)]
-* Connect: connect webhook deployment now uses `webhook-cert-manager` to bootstrap the webhook and controller certificates instead of generating them inside of the webhook. [[GH-861](https://github.com/hashicorp/consul-helm/pull/861)]
+* Connect: connect webhook deployment now uses `webhook-cert-manager` to bootstrap the webhook certificates instead of generating them inside of the webhook. [[GH-861](https://github.com/hashicorp/consul-helm/pull/861)]
 
 BUG FIXES:
 * Add startup probe to connect-inject deployment to give time for certificates to be available.
