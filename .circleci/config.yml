@@ -135,7 +135,7 @@ jobs:
             exit_code=0
             pkgs=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
             echo "Running $(echo $pkgs | wc -w) packages:"
-            echo $pkg
+            echo $pkgs
             for pkg in $pkgs
             do
               if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 2h -failfast \
