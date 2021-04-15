@@ -65,7 +65,7 @@ func DeployKustomize(t *testing.T, options *k8s.KubectlOptions, noCleanupOnFailu
 		KubectlDeleteK(t, options, kustomizeDir)
 	})
 
-	// The timeout is 3min to allow for connect-init to wait for services to be registered by the endpoints controller.
+	// The timeout to allow for connect-init to wait for services to be registered by the endpoints controller.
 	RunKubectl(t, options, "wait", "--for=condition=available", "--timeout=5m", fmt.Sprintf("deploy/%s", deployment.Name))
 }
 
