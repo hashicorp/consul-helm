@@ -1,6 +1,6 @@
+{{- if (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) }}
 # ConfigMap with extra configuration specified directly to the chart
 # for client agents only.
-{{- if (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -14,10 +14,17 @@ metadata:
 data:
   extra-from-values.json: |-
 {{ tpl .Values.client.extraConfig . | trimAll "\"" | indent 4 }}
-  {{- if (and .Values.connectInject.enabled .Values.connectInject.centralConfig.enabled) }}
   central-config.json: |-
     {
       "enable_central_service_config": true
+    }
+
+  {{- if .Values.connectInject.enabled }}
+  {{/* We set check_update_interval to 0s so that check output is immediately viewable
+       in the UI. */}}
+  config.json: |-
+    {
+      "check_update_interval": "0s"
     }
   {{- end }}
 {{- end }}

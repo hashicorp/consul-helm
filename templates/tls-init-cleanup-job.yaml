@@ -1,6 +1,6 @@
-# tls-init-cleanup job deletes Kubernetes secrets created by tls-init
 {{- if (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) }}
 {{- if .Values.global.tls.enabled }}
+# tls-init-cleanup job deletes Kubernetes secrets created by tls-init
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -54,10 +54,10 @@ spec:
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )"
           resources:
             requests:
-              memory: "25Mi"
+              memory: "50Mi"
               cpu: "50m"
             limits:
-              memory: "25Mi"
+              memory: "50Mi"
               cpu: "50m"
 {{- end }}
 {{- end }}

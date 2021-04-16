@@ -11,8 +11,8 @@ use Consul with Kubernetes, please see the
 [Consul and Kubernetes documentation](https://www.consul.io/docs/platform/k8s/index.html).
 
 ## Prerequisites
-  * **Helm 2.10+ or Helm 3.0+**
-  * **Kubernetes 1.9+** - This is the earliest version of Kubernetes tested.
+  * **Helm 3.0+** (Helm 2 is not supported)
+  * **Kubernetes 1.16+** - This is the earliest version of Kubernetes tested.
     It is possible that this chart works with earlier versions but it is
     untested.
 
@@ -20,22 +20,27 @@ use Consul with Kubernetes, please see the
 
 Detailed installation instructions for Consul on Kubernetes are found [here](https://www.consul.io/docs/k8s/installation/overview). 
 
-Add the HashiCorp Helm Repository:
+1. Add the HashiCorp Helm Repository:
+    
+        $ helm repo add hashicorp https://helm.releases.hashicorp.com
+        "hashicorp" has been added to your repositories
+    
+2. Ensure you have access to the consul chart: 
 
-    $ helm repo add hashicorp https://helm.releases.hashicorp.com
-    hashicorp" has been added to your repositories
+        $ helm search repo hashicorp/consul
+        NAME                CHART VERSION   APP VERSION DESCRIPTION
+        hashicorp/consul    0.20.1          1.7.2       Official HashiCorp Consul Chart
 
-Ensure you have access to the consul chart: 
+3. Now you're ready to install Consul! To install Consul with the default configuration using Helm 3 run:
 
-    $ helm search repo hashicorp/consul
-    NAME                CHART VERSION   APP VERSION DESCRIPTION
-    hashicorp/consul    0.20.1          1.7.2       Official HashiCorp Consul Chart
-
-Now you're ready to install Consul! To install Consul with the default configuration using Helm 3 run:
-
-    $ helm install consul hashicorp/consul --set global.name=consul
-    NAME: consul
+        $ helm install consul hashicorp/consul --set global.name=consul
+        NAME: consul
 
 Please see the many options supported in the `values.yaml`
 file. These are also fully documented directly on the
 [Consul website](https://www.consul.io/docs/platform/k8s/helm.html).
+
+## Tutorials
+
+You can find examples and complete tutorials on how to deploy Consul on 
+Kubernetes using Helm on the [HashiCorp Learn website](https://learn.hashicorp.com/consul).

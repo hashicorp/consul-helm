@@ -8,19 +8,19 @@ load _helpers
 # These tests use test-runner.yaml to test the consul.fullname helper
 # since we need an existing template that calls the consul.fullname helper.
 
-@test "helper/consul.fullname: defaults to release-name-consul" {
+@test "helper/consul.fullname: defaults to RELEASE-NAME-consul" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/tests/test-runner.yaml \
+      -s templates/tests/test-runner.yaml \
       . | tee /dev/stderr |
       yq -r '.metadata.name' | tee /dev/stderr)
-  [ "${actual}" = "release-name-consul-test" ]
+  [ "${actual}" = "RELEASE-NAME-consul-test" ]
 }
 
 @test "helper/consul.fullname: fullnameOverride overrides the name" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/tests/test-runner.yaml \
+      -s templates/tests/test-runner.yaml \
       --set fullnameOverride=override \
       . | tee /dev/stderr |
       yq -r '.metadata.name' | tee /dev/stderr)
@@ -30,7 +30,7 @@ load _helpers
 @test "helper/consul.fullname: fullnameOverride is truncated to 63 chars" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/tests/test-runner.yaml \
+      -s templates/tests/test-runner.yaml \
       --set fullnameOverride=abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz \
       . | tee /dev/stderr |
       yq -r '.metadata.name' | tee /dev/stderr)
@@ -40,7 +40,7 @@ load _helpers
 @test "helper/consul.fullname: fullnameOverride has trailing '-' trimmed" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/tests/test-runner.yaml \
+      -s templates/tests/test-runner.yaml \
       --set fullnameOverride=override- \
       . | tee /dev/stderr |
       yq -r '.metadata.name' | tee /dev/stderr)
@@ -50,7 +50,7 @@ load _helpers
 @test "helper/consul.fullname: global.name overrides the name" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/tests/test-runner.yaml \
+      -s templates/tests/test-runner.yaml \
       --set global.name=override \
       . | tee /dev/stderr |
       yq -r '.metadata.name' | tee /dev/stderr)
@@ -60,7 +60,7 @@ load _helpers
 @test "helper/consul.fullname: global.name is truncated to 63 chars" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/tests/test-runner.yaml \
+      -s templates/tests/test-runner.yaml \
       --set global.name=abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz \
       . | tee /dev/stderr |
       yq -r '.metadata.name' | tee /dev/stderr)
@@ -70,7 +70,7 @@ load _helpers
 @test "helper/consul.fullname: global.name has trailing '-' trimmed" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/tests/test-runner.yaml \
+      -s templates/tests/test-runner.yaml \
       --set global.name=override- \
       . | tee /dev/stderr |
       yq -r '.metadata.name' | tee /dev/stderr)
@@ -80,11 +80,11 @@ load _helpers
 @test "helper/consul.fullname: nameOverride is supported" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/tests/test-runner.yaml \
+      -s templates/tests/test-runner.yaml \
       --set nameOverride=override \
       . | tee /dev/stderr |
       yq -r '.metadata.name' | tee /dev/stderr)
-  [ "${actual}" = "release-name-override-test" ]
+  [ "${actual}" = "RELEASE-NAME-override-test" ]
 }
 
 #--------------------------------------------------------------------
@@ -100,7 +100,7 @@ load _helpers
 @test "helper/consul.fullname: used everywhere" {
   cd `chart_dir`
   # Grep for uses of .Release.Name that aren't using it as a label.
-  local actual=$(grep -r '{{ .Release.Name }}' templates/*.yaml | grep -v 'release: ' | tee /dev/stderr )
+  local actual=$(grep -r '{{ .Release.Name }}' templates/*.yaml | grep -v -E 'release: |-release-name=' | tee /dev/stderr )
   [ "${actual}" = '' ]
 }
 
@@ -113,14 +113,14 @@ load _helpers
 @test "helper/consul.getAutoEncryptClientCA: get-auto-encrypt-client-ca uses server's stateful set address by default" {
   cd `chart_dir`
   local command=$(helm template \
-      -x templates/tests/test-runner.yaml  \
+      -s templates/tests/test-runner.yaml  \
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
       . | tee /dev/stderr |
       yq '.spec.initContainers[] | select(.name == "get-auto-encrypt-client-ca").command | join(" ")' | tee /dev/stderr)
 
   # check server address
-  actual=$(echo $command | jq ' . | contains("-server-addr=release-name-consul-server")')
+  actual=$(echo $command | jq ' . | contains("-server-addr=RELEASE-NAME-consul-server")')
   [ "${actual}" = "true" ]
 
   # check server port
@@ -135,7 +135,7 @@ load _helpers
 @test "helper/consul.getAutoEncryptClientCA: can set the provided server hosts if externalServers.enabled is true" {
   cd `chart_dir`
   local command=$(helm template \
-      -x templates/tests/test-runner.yaml  \
+      -s templates/tests/test-runner.yaml  \
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
       --set 'server.enabled=false' \
@@ -160,7 +160,7 @@ load _helpers
 @test "helper/consul.getAutoEncryptClientCA: fails if externalServers.enabled is true but externalServers.hosts are not provided" {
   cd `chart_dir`
   run helm template \
-      -x templates/tests/test-runner.yaml  \
+      -s templates/tests/test-runner.yaml  \
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
       --set 'externalServers.enabled=true' .
@@ -171,7 +171,7 @@ load _helpers
 @test "helper/consul.getAutoEncryptClientCA: can set the provided port if externalServers.enabled is true" {
   cd `chart_dir`
   local command=$(helm template \
-      -x templates/tests/test-runner.yaml  \
+      -s templates/tests/test-runner.yaml  \
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
       --set 'server.enabled=false' \
@@ -197,7 +197,7 @@ load _helpers
 @test "helper/consul.getAutoEncryptClientCA: can pass cloud auto-join string to server address via externalServers.hosts" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/tests/test-runner.yaml  \
+      -s templates/tests/test-runner.yaml  \
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
       --set 'server.enabled=false' \
@@ -211,7 +211,7 @@ load _helpers
 @test "helper/consul.getAutoEncryptClientCA: can set TLS server name if externalServers.enabled is true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/tests/test-runner.yaml  \
+      -s templates/tests/test-runner.yaml  \
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
       --set 'server.enabled=false' \
@@ -227,7 +227,7 @@ load _helpers
 @test "helper/consul.getAutoEncryptClientCA: doesn't provide the CA if externalServers.enabled is true and externalServers.useSystemRoots is true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/tests/test-runner.yaml  \
+      -s templates/tests/test-runner.yaml  \
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
       --set 'server.enabled=false' \
@@ -243,7 +243,7 @@ load _helpers
 @test "helper/consul.getAutoEncryptClientCA: doesn't mount the consul-ca-cert volume if externalServers.enabled is true and externalServers.useSystemRoots is true" {
   cd `chart_dir`
   local actual=$(helm template \
-      -x templates/tests/test-runner.yaml  \
+      -s templates/tests/test-runner.yaml  \
       --set 'global.tls.enabled=true' \
       --set 'global.tls.enableAutoEncrypt=true' \
       --set 'server.enabled=false' \
@@ -254,22 +254,4 @@ load _helpers
       yq '.spec.initContainers[] | select(.name == "get-auto-encrypt-client-ca").volumeMounts[] | select(.name=="consul-ca-cert")' | tee /dev/stderr)
 
   [ "${actual}" = "" ]
-}
-
-#--------------------------------------------------------------------
-# bootstrapACLs deprecation
-#
-# Test that every place global.bootstrapACLs is used, global.acls.manageSystemACLs
-# is also used.
-# If this test is failing, you've used either only global.bootstrapACLs or
-# only global.acls.manageSystemACLs instead of using the backwards compatible:
-#     or global.acls.manageSystemACLs global.bootstrapACLs
-@test "helper/bootstrapACLs: used alongside manageSystemACLs" {
-  cd `chart_dir`
-
-  diff=$(diff <(grep -r '\.Values\.global\.bootstrapACLs' templates/*) <(grep -r 'or \.Values\.global\.acls\.manageSystemACLs \.Values\.global\.bootstrapACLs' templates/*) | tee /dev/stderr)
-  [ "$diff" = "" ]
-
-  diff=$(diff <(grep -r '\.Values\.global\.acls\.manageSystemACLs' templates/*) <(grep -r 'or \.Values\.global\.acls\.manageSystemACLs \.Values\.global\.bootstrapACLs' templates/*) | tee /dev/stderr)
-  [ "$diff" = "" ]
 }

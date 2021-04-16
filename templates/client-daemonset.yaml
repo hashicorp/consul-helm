@@ -1,5 +1,6 @@
-# DaemonSet to run the Consul clients on every node.
 {{- if (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) }}
+{{- if (and (and .Values.global.tls.enabled .Values.global.tls.httpsOnly) (and .Values.global.metrics.enabled .Values.global.metrics.enableAgentMetrics))}}{{ fail "global.metrics.enableAgentMetrics cannot be enabled if TLS (HTTPS only) is enabled" }}{{ end -}}
+# DaemonSet to run the Consul clients on every node.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -30,10 +31,19 @@ spec:
         release: {{ .Release.Name }}
         component: client
         hasDNS: "true"
+        {{- if .Values.client.extraLabels }}
+          {{- toYaml .Values.client.extraLabels | nindent 8 }}
+        {{- end }}
       annotations:
         "consul.hashicorp.com/connect-inject": "false"
+        "consul.hashicorp.com/config-checksum": {{ include (print $.Template.BasePath "/client-config-configmap.yaml") . | sha256sum }}
         {{- if .Values.client.annotations }}
           {{- tpl .Values.client.annotations . | nindent 8 }}
+        {{- end }}
+        {{- if (and .Values.global.metrics.enabled .Values.global.metrics.enableAgentMetrics) }}
+        "prometheus.io/scrape": "true"
+        "prometheus.io/path": "/v1/agent/metrics"
+        "prometheus.io/port": "8500"
         {{- end }}
     spec:
     {{- if .Values.client.affinity }}
@@ -47,12 +57,21 @@ spec:
       terminationGracePeriodSeconds: 10
       serviceAccountName: {{ template "consul.fullname" . }}-client
 
+      {{- if not .Values.global.openshift.enabled }}
+      securityContext:
+        {{- toYaml .Values.client.securityContext | nindent 8 -}}
+      {{- end }}
+
       {{- if .Values.client.priorityClassName }}
       priorityClassName: {{ .Values.client.priorityClassName | quote }}
       {{- end }}
 
       {{- if .Values.client.dnsPolicy }}
       dnsPolicy: {{ .Values.client.dnsPolicy }}
+      {{- end }}
+
+      {{- if .Values.client.hostNetwork }}
+      hostNetwork: {{ .Values.client.hostNetwork }}
       {{- end }}
 
       volumes:
@@ -105,7 +124,7 @@ spec:
             secretName: {{ .name }}
             {{- end }}
         {{- end }}
-        {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+        {{- if .Values.global.acls.manageSystemACLs }}
         - name: aclconfig
           emptyDir: {}
         {{- end }}
@@ -116,12 +135,12 @@ spec:
             - name: ADVERTISE_IP
               valueFrom:
                 fieldRef:
-                  {{- if not .Values.client.exposeGossipPorts }}
-                  fieldPath: status.podIP
-                  {{- else }}
-                  # Clients will be exposed on their node's hostPort for external-to-k8s communication,
-                  # so they need to advertise their host ip instead of their pod ip.
+                  {{- if .Values.client.exposeGossipPorts }}
+                  {{- /* Clients will be exposed on their node's hostPort for external-to-k8s communication,
+                  so they need to advertise their host ip instead of their pod ip. */}}
                   fieldPath: status.hostIP
+                  {{- else }}
+                  fieldPath: status.podIP
                   {{- end }}
             - name: NAMESPACE
               valueFrom:
@@ -135,6 +154,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             {{- if (and .Values.global.gossipEncryption.secretName .Values.global.gossipEncryption.secretKey) }}
             - name: GOSSIP_KEY
               valueFrom:
@@ -166,12 +189,14 @@ spec:
                 -bind=0.0.0.0 \
                 -client=0.0.0.0 \
                 -node-meta=pod-name:${HOSTNAME} \
+                -node-meta=host-ip:${HOST_IP} \
                 -hcl='leave_on_terminate = true' \
+                -disable-host-node-id=false \
                 {{- if .Values.global.tls.enabled }}
                 -hcl='ca_file = "/consul/tls/ca/tls.crt"' \
                 {{- if .Values.global.tls.enableAutoEncrypt }}
                 -hcl='auto_encrypt = {tls = true}' \
-                -hcl="auto_encrypt = {ip_san = [\"$HOST_IP\"]}" \
+                -hcl="auto_encrypt = {ip_san = [\"$HOST_IP\",\"$POD_IP\"]}" \
                 {{- else }}
                 -hcl='cert_file = "/consul/tls/client/tls.crt"' \
                 -hcl='key_file = "/consul/tls/client/tls.key"' \
@@ -191,14 +216,20 @@ spec:
                 {{- if .Values.client.grpc }}
                 -hcl='ports { grpc = 8502 }' \
                 {{- end }}
+                {{- if (and .Values.global.metrics.enabled .Values.global.metrics.enableAgentMetrics) }}
+                -hcl='telemetry { prometheus_retention_time = "{{ .Values.global.metrics.agentMetricsRetentionTime }}" }' \
+                {{- end }}
                 -config-dir=/consul/config \
+                {{- if .Values.global.acls.manageSystemACLs }}
+                -config-dir=/consul/aclconfig \
+                {{- end }}
+                {{- /* Always include the extraVolumes at the end so that users can
+                      override other Consul settings. The last -config-dir takes
+                      precedence. */}}
                 {{- range .Values.client.extraVolumes }}
                 {{- if .load }}
                 -config-dir=/consul/userconfig/{{ .name }} \
                 {{- end }}
-                {{- end }}
-                {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
-                -config-dir=/consul/aclconfig \
                 {{- end }}
                 -datacenter={{ .Values.global.datacenter }} \
                 -data-dir=/consul/data \
@@ -211,8 +242,9 @@ spec:
                 {{- end }}
                 {{- else }}
                 {{- if .Values.server.enabled }}
+                {{- $serverSerfLANPort  := .Values.server.ports.serflan.port -}}
                 {{- range $index := until (.Values.server.replicas | int) }}
-                -retry-join="${CONSUL_FULLNAME}-server-{{ $index }}.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc" \
+                -retry-join="${CONSUL_FULLNAME}-server-{{ $index }}.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc:{{ $serverSerfLANPort }}" \
                 {{- end }}
                 {{- end }}
                 {{- end }}
@@ -237,7 +269,7 @@ spec:
               readOnly: true
               mountPath: /consul/userconfig/{{ .name }}
             {{- end }}
-            {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+            {{- if .Values.global.acls.manageSystemACLs }}
             - name: aclconfig
               mountPath: /consul/aclconfig
             {{- end }}
@@ -267,10 +299,6 @@ spec:
               {{- end }}
               protocol: "UDP"
               name: serflan-udp
-            - containerPort: 8302
-              name: serfwan
-            - containerPort: 8300
-              name: server
             - containerPort: 8600
               name: dns-tcp
               protocol: "TCP"
@@ -301,9 +329,9 @@ spec:
             {{- toYaml .Values.client.resources | nindent 12 }}
             {{- end }}
           {{- end }}
-      {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs (and .Values.global.tls.enabled (not .Values.global.tls.enableAutoEncrypt))) }}
+      {{- if (or .Values.global.acls.manageSystemACLs (and .Values.global.tls.enabled (not .Values.global.tls.enableAutoEncrypt))) }}
       initContainers:
-      {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+      {{- if .Values.global.acls.manageSystemACLs }}
       - name: client-acl-init
         image: {{ .Values.global.imageK8S }}
         command:
@@ -333,6 +361,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.hostIP
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
         command:
           - "/bin/sh"
           - "-ec"
@@ -340,6 +372,7 @@ spec:
             cd /consul/tls/client
             consul tls cert create -client \
               -additional-ipaddress=${HOST_IP} \
+              -additional-ipaddress=${POD_IP} \
               -dc={{ .Values.global.datacenter }} \
               -domain={{ .Values.global.domain }} \
               -ca=/consul/tls/ca/cert/tls.crt \
@@ -357,10 +390,10 @@ spec:
             readOnly: true
         resources:
           requests:
-            memory: "25Mi"
+            memory: "50Mi"
             cpu: "50m"
           limits:
-            memory: "25Mi"
+            memory: "50Mi"
             cpu: "50m"
       {{- end }}
       {{- end }}

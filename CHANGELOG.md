@@ -1,6 +1,480 @@
 ## Unreleased
 
+IMPROVEMENTS: 
+
+* Specify `kubeVersion` in `Chart.yaml` to denote that this chart is compatible with Kubernetes 1.16+. [[GH-883](https://github.com/hashicorp/consul-helm/pull/883)]
+* CRDs: update the CRD versions from v1beta1 to v1. [[GH-883](https://github.com/hashicorp/consul-helm/pull/883)]
+* Enterprise: support applying Consul Enterprise license when security context defaults to non-root users. [[GH-880](https://github.com/hashicorp/consul-helm/pull/880)]
+* Sync Catalog: add new `syncCatalog.extraLabels` Helm value for configuring labels on sync catalog pods. [[GH-892](https://github.com/hashicorp/consul-helm/pull/892)]
+* Connect: Support high availability of the connect-inject deployment. [[GH-903](https://github.com/hashicorp/consul-helm/pull/903)]
+
+BREAKING CHANGES:
+* Minimum Kubernetes versions supported is 1.16+. [[GH-883](https://github.com/hashicorp/consul-helm/pull/883)]
+* Connect: The Helm values for health checks and cleanup controller have been removed: `connectInject.healthChecks` and `connectInject.cleanupController`, as these controllers have been replaced by the endpoints controller. [[GH-899](https://github.com/hashicorp/consul-helm/pull/899)]
+* Connect: connect webhook deployment now uses `webhook-cert-manager` to bootstrap the webhook certificates instead of generating them inside of the webhook. [[GH-861](https://github.com/hashicorp/consul-helm/pull/861)]
+* Connect: Kubernetes Services are now required for all connect injected applications.
+  The Kubernetes service name will be used as the service name to register with Consul unless the annotation `consul.hashicorp.com/connect-service` is provided to the pod to override this.
+  If using ACLs the ServiceAccountName must match the service name used with Consul.
+
+  Example Service:
+  ```yaml
+  ---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: sample-app
+  spec:
+    selector:
+      app: sample-app
+    ports:
+    - port: 80
+      targetPort: 9090
+  ---
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: sample-app
+    name: sample-app
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: sample-app
+    template:
+      metadata:
+        annotations:
+          'consul.hashicorp.com/connect-inject': 'true'
+        labels:
+          app: sample-app
+      spec:
+        containers:
+        - name: sample-app
+          image: sample-app:0.1.0
+          ports:
+          - containerPort: 9090
+    ```
+  **Note: if you're already using a Kubernetes service, no changes are required.**
+* Connect: `-enable-health-checks-controller`, `-health-checks-reconcile-period`, `-cleanup-controller-reconcile-period` have been removed
+  and are no longer supported as the controllers have been replaced by the endpoints controller. [[GH-892](https://github.com/hashicorp/consul-helm/pull/899)]
+* Connect: Support transparent proxy. [[GH-905](https://github.com/hashicorp/consul-helm/pull/905)]
+  This feature allows users to reach other services on the Consul Service Mesh by using KubeDNS instead of using `localhost`
+  and enforces all inbound and outbound traffic within a pod to go through the Envoy proxy.
+  Please see [Transparent Proxy](https://www.consul.io/docs/connect/transparent-proxy ) docs for more information.
+
+  **Note: This feature is currently in beta and requires consul-k8s `v0.26.0-beta1` or higher.**
+
+  Transparent proxy is enabled by default for all Consul service mesh application. You can disable it for the
+  entire Helm installation by setting:
+
+  ```yaml
+  connectInject:
+    transparentProxy:
+      defaultEnabled: false
+  ```
+
+  Alternatively, you can enable or disable it for each individual application by using
+  the `consul.hashicorp.com/transparent-proxy` pod annotation:
+
+  ```yaml
+  ...
+  metadata:
+    name: example
+    labels:
+      app: example
+    annotations:
+      "consul.hashicorp.com/transparent-proxy": "true"
+  ...
+  ```
+
+BUG FIXES:
+* Add startup probe to connect-inject deployment to give time for certificates to be available.
+  Previously, the deployment could be killed by Kubernetes and crash loop because certificates would take a couple
+  of seconds. [[GH-885](https://github.com/hashicorp/consul-helm/pull/885)]
+
+## 0.31.1 (Mar 19, 2021)
+
+BUG FIXES:
+* Sync Catalog: fix issue running with clients disabled and auto encrypt enabled. [[GH-891](https://github.com/hashicorp/consul-helm/pull/891)]
+* Remove `kubeVersion` in `Chart.yaml` since it was causing installs to fail on EKS and GKE. [[GH-873](https://github.com/hashicorp/consul-helm/pull/873)]
+
+## 0.31.0 (Mar 18, 2021)
+
+BREAKING CHANGES:
+* Helm 2 is no longer supported as of the previous release, 0.30.0. the `apiVersion` for the `Chart.yaml` is now correctly set to `v2` to properly indicate that the chart is now only supported for Helm 3 [[GH-868](https://github.com/hashicorp/consul-helm/pull/868)]
+
 FEATURES:
+* Metrics: add support for metrics in Consul. This enables support for Consul Agent metrics,
+  Consul Gateway metrics, metrics merging to serve both application and sidecar metrics and support to configure a metrics provider for the Consul UI.
+  Additionally, adds templates for a demo installation of Prometheus and Grafana.
+	* If you have these Prometheus annotations on your Connect-inject Pods and enable Connect-Inject metrics (via `connectInject.metrics.defaultEnabled` or `consul.hashicorp.com/enable-metrics`), they will be overridden:
+		* `prometheus.io/scrape`
+		* `prometheus.io/port`
+		* `prometheus.io/path`
+
+*Note* Metrics merging is supported in Consul version 1.10+
+
+IMPROVEMENTS:
+* CRDs: add field Last Synced Time to CRD status and add printer column on CRD to display time since when the
+  resource was last successfully synced with Consul. [[GH-849](https://github.com/hashicorp/consul-helm/pull/849)]
+* Specify `kubeVersion` in `Chart.yaml` to denote that this chart is tested with Kubernetes 1.13+ [[GH-870](https://github.com/hashicorp/consul-helm/pull/870)]
+* Updated the default Consul image to `hashicorp/consul:1.9.4`.
+* Updated the default consul-k8s image to `hashicorp/consul-k8s:0.25.0`.
+
+BUG FIXES:
+* Increase Consul client daemonset's memory from `25Mi` to `50Mi` for its `client-tls-init`
+  init container that runs when TLS is enabled and auto-encrypt is disabled. [[GH-832](https://github.com/hashicorp/consul-helm/pull/832)]
+* Add UDP port specification for server's serf WAN. Previously there was only one
+  port specification that defaulted to TCP. However in some cases (like when exposing as a host port)
+  UDP traffic would not be routed properly.
+
+  In addition, if `server.exposeGossipAndRPCPorts` is true, expose the WAN port
+  (`8302`) as a host port. [[GH-839](https://github.com/hashicorp/consul-helm/pull/839)]
+* Fix a warning when running `helm template` and overriding `client.affinity` setting with a string.
+  [[GH-854](https://github.com/hashicorp/consul-helm/pull/854)]
+
+## 0.30.0 (Feb 16, 2021)
+
+BREAKING CHANGES:
+* The following Helm settings are no longer supported and will cause errors on `helm upgrade`.
+  See [Upgrade to CRDs](https://www.consul.io/docs/k8s/crds/upgrade-to-crds)
+  for more information on how to upgrade. [[GH-763](https://github.com/hashicorp/consul-helm/pull/763)]
+  * `connectInject.centralConfig.defaultProtocol`
+  * `connectInject.centralConfig.proxyDefaults`
+  * `connectInject.centralConfig.enabled`
+  * `meshGateway.globalMode`
+* The `consul.hashicorp.com/connect-service-protocol` annotation on Connect pods is
+  no longer supported with this version of `consul-k8s` (0.23.0).
+
+  Current deployments that have the annotation should remove it, otherwise they
+  will get an error if a pod from that deployment is rescheduled.
+
+  See [Upgrade to CRDs](https://www.consul.io/docs/k8s/crds/upgrade-to-crds)
+  for more information on how to upgrade.
+* The lifecycle-sidecar command and container has been renamed to
+  consul-sidecar. The Helm value `global.lifecycleSidecarContainer` has been
+  renamed to `global.consulSidecarContainer`.
+  `global.lifecycleSidecarContainer` is no longer supported and will cause
+  errors on `helm upgrade`. Please use `global.consulSidecarContainer` instead.
+  [[GH-810](https://github.com/hashicorp/consul-helm/pull/810)]
+* Ingress Gateways: when running on platforms that use hostnames instead of IPs for LoadBalancers (e.g. EKS)
+  the hostname will now be used as the address of the ingress gateway. Previously the first IP was
+  used, however, the IP could be recycled or go stale whereas the hostname will always work. [[GH-813](https://github.com/hashicorp/consul-helm/pull/813]
+* Helm 2 is no longer supported. It may still work, however the chart is no longer unit tested against Helm 2. [[GH-807](https://github.com/hashicorp/consul-helm/pull/807)]
+
+IMPROVEMENTS:
+* Add ability to set extra labels on Consul client pods. [[GH-612](https://github.com/hashicorp/consul-helm/pull/612)]
+* CRDs: add value `controller.aclToken` to support manually passing in an ACL token to the CRD controller if independently managing ACLs. [[GH-783](https://github.com/hashicorp/consul-helm/pull/783)]
+* TLS: Consul client certificates now include their pod IPs in the IP SANs. This applies to auto-encrypt enabled and disabled. [[GH-805](https://github.com/hashicorp/consul-helm/pull/805)]
+* Consul client nodes have a new meta key called "host-ip" set to the IP of the Kubernetes node they're running on. [[GH-805](https://github.com/hashicorp/consul-helm/pull/805)]
+* Connect: the latest version of consul-k8s cleans up Consul connect service mesh instances whose pods are no longer running.
+  This could happen if the pod's `preStop` hook failed to execute for some reason. [[GH-806](https://github.com/hashicorp/consul-helm/pull/806)]
+* Updated the default Consul image to `hashicorp/consul:1.9.3`.
+* Updated the default consul-k8s image to `hashicorp/consul-k8s:0.24.0`.
+
+BUG FIXES:
+* Use `rbac.authorization.k8s.io/v1` instead of `rbac.authorization.k8s.io/v1beta1` API version for the `roles` and `rolebindings` used by the `tls-init`
+  and `tls-init-cleanup` jobs. [[GH-789](https://github.com/hashicorp/consul-helm/issues/789)]
+* Fix API version of Ingress resource for Consul UI. [[GH-786](https://github.com/hashicorp/consul-helm/pull/786)]
+* Provide a deterministic host-based node ID for the Consul clients to fix an error when a client is terminated without a graceful shutdown.
+  [[GH-791](https://github.com/hashicorp/consul-helm/pull/791)]
+
+## 0.29.0 (Jan 22, 2021)
+
+IMPROVEMENTS:
+* Use `consul-k8s` subcommand to perform `tls-init` job. This allows for server certificates to get rotated on subsequent runs.
+  Consul servers have to be restarted in order for them to update their server certificates. [[GH-749](https://github.com/hashicorp/consul-helm/pull/721)]
+* Add support for Ingress resource for Consul UI. [[GH-774](https://github.com/hashicorp/consul-helm/pull/774)]
+* Updated the default Consul image to `hashicorp/consul:1.9.2`.
+* Updated the default consul-k8s image to `hashicorp/consul-k8s:0.23.0`.
+
+BUG FIXES:
+* Consul servers no longer call `consul leave` command when restarted or deleted.
+  This is because `consul leave` reduces the quorum size, but we want to maintain the quorum size.
+  For example, for a server with 3 replicas the quorum size should always be 2.
+  [[GH-764](https://github.com/hashicorp/consul-helm/pull/764)]
+
+## 0.28.0 (Dec 21, 2020)
+⚠️  This release defaults the Consul image to 1.9.1, which panics on upgrades
+([Issue](https://github.com/hashicorp/consul/issues/9566)). We recommend using
+Consul-helm 0.29.0+ or updating the Consul image to 1.9.2+. ⚠️
+
+BREAKING CHANGES:
+* Setting `server.bootstrapExpect` to a value less than `server.replicas` will now
+  give an error. This was a misconfiguration as the servers wouldn't wait
+  until the proper number have started before electing a leader. [[GH-721](https://github.com/hashicorp/consul-helm/pull/721)]
+* Clients and servers now run as non root. Users can also configure `server.securityContext` and `client.securityContext`
+  if they wish to overwrite this behavior. Please see [Helm reference](https://www.consul.io/docs/k8s/helm) for more information.
+  [[GH-748](https://github.com/hashicorp/consul-helm/pull/748)]
+
+FEATURES:
+* CRDs: add new CRD `IngressGateway` for configuring Consul's [ingress-gateway](https://www.consul.io/docs/agent/config-entries/ingress-gateway) config entry. [[GH-714](https://github.com/hashicorp/consul-helm/pull/714)]
+* CRDs: add new CRD `TerminatingGateway` for configuring Consul's [terminating-gateway](https://www.consul.io/docs/agent/config-entries/terminating-gateway) config entry. [[GH-715](https://github.com/hashicorp/consul-helm/pull/715)]
+* Enable client agents outside of the K8s cluster to join a consul datacenter
+  without the Pod IPs of the consul servers and clients in K8s needing to be
+  routeable. Adds new helm values `server.exposeGossipAndRPCPorts` and
+  `server.ports.serflan.port`. To enable external client agents, enable
+  `server.exposeGossipAndRPCPorts` and `client.exposeGossipAndPorts`, and set
+  `server.ports.serflan.port` to a port not being used on the host, e.g 9301.
+  The internal IP of the K8s nodes do need to be routeable from the external
+  client agent and the external client agent's IP also needs to be routeable
+  from the K8s nodes.
+  [[GH-740](https://github.com/hashicorp/consul-helm/pull/740)]
+
+IMPROVEMENTS:
+* Updated the default consul-k8s image to `hashicorp/consul-k8s:0.22.0`.
+  This release includes an important bug fix where the lifecycle-sidecar sometimes re-registered the application.
+  Please see consul-k8s [v0.22.0](https://github.com/hashicorp/consul-k8s/releases/tag/v0.22.0) release for more info.
+* Updated the default Consul image to `hashicorp/consul:1.9.1`.
+* Make `server.bootstrapExpect` optional. If not set, will now default to `server.replicas`.
+  If you're currently setting `server.replicas`, there is no effect. [[GH-721](https://github.com/hashicorp/consul-helm/pull/721)]
+
+BUG FIXES:
+* Fix pod security policy when running mesh gateways in `hostNetwork` mode. [[GH-605](https://github.com/hashicorp/consul-helm/issues/605)]
+* CRDs: **(Consul Enterprise only)** change `ServiceResolver` field `failover[].namespaces` to `failover[].namespace`.
+  This will not affect existing `ServiceResolver` resources and will only update the documentation for that field.
+ 
+  If `failover[].namespaces` was used previously, it was ignored and after this change it will still be ignored.
+  If `failover[].namespace` was used previously, it worked correctly and after this change it will still work correctly. [[GH-714](https://github.com/hashicorp/consul-helm/pull/714)]
+* Recreate the Server/Client Pod when the Server/Client ConfigMap is updated via `helm upgrade`
+  by using Server ConfigMap and Client ConfigMap values as hashes on Server StatefulSet and Client DaemonSet annotations respectively.
+  This updates the previously hashed values of the extraConfig. [[GH-550](https://github.com/hashicorp/consul-helm/pull/550)]
+* Remove unused ports `8302` and `8300` from the client daemonset pods. [[GH-737](https://github.com/hashicorp/consul-helm/pull/737)]
+
+## 0.27.0 (Nov 25, 2020)
+⚠️  This release defaults the Consul image to 1.9.0, which panics on upgrades
+([Issue](https://github.com/hashicorp/consul/issues/9566)). We recommend using
+Consul-helm 0.29.0+ or updating the Consul image to 1.9.2+. ⚠️
+
+IMPROVEMENTS:
+* Connect: support `connectInject.logLevel` setting. [[GH-699](https://github.com/hashicorp/consul-helm/pull/699)]
+* Connect: **(Consul Enterprise only)** error out if `connectInject.consulNamespaces.mirroringK8S: true` but `global.enableConsulNamespaces: false`. [[GH-695](https://github.com/hashicorp/consul-helm/pull/695)]
+* Updated the default Consul image to `hashicorp/consul:1.9.0`.
+* Updated the default consul-k8s image to `hashicorp/consul-k8s:0.21.0`.
+* Updated the default envoy image to `envoyproxy/envoy-alpine:v1.16.0`.
+
+## 0.26.0 (Nov 12, 2020)
+
+FEATURES:
+* Kubernetes health check synchronization with Consul for connect injected pods via `connectInject.healthChecks` [[GH-651](https://github.com/hashicorp/consul-helm/pull/651)].
+  The default behavior for this feature is `enabled: true`.
+  See [https://www.consul.io/docs/k8s/connect/health](https://www.consul.io/docs/k8s/connect/health) for more information.
+  In order to enable this feature for existing installations it is required to restart all connect injected deployments so that they are re-injected.
+  Until this is done, health checks for these deployments will not be synced to Consul.
+
+  **It is recommended to enable TLS with this setting enabled because it requires making calls to Consul clients across the cluster.
+    Without TLS enabled, these calls could leak ACL tokens should the cluster network become compromised.**
+* Support for custom resource definitions (CRDs) is now generally available.
+  CRDs require Consul >= 1.8.4. If you wish to use `ServiceIntentions`
+  custom resources then this requires Consul >= 1.9.0 (which is still in beta as of this release).
+
+  To enable, set `controller.enabled: true` in your Helm configuration:
+
+  ```yaml
+  controller:
+    enabled: true
+  ```
+
+  See [https://www.consul.io/docs/k8s/crds](https://www.consul.io/docs/k8s/crds)
+  for more information. **NOTE:** Using CRDs with an existing cluster may require additional steps to migrate previously created
+  config entries so they can be managed by CRDs. See [https://www.consul.io/docs/k8s/crds/upgrade-to-crds](https://www.consul.io/docs/k8s/crds/upgrade-to-crds)
+  for full details.
+
+BREAKING CHANGES:
+* This helm release only supports consul-k8s versions 0.20+
+* With the addition of the connect-inject health checks controller, any connect services which have failing Kubernetes readiness
+  probes will no longer be routable through connect until their Kubernetes health probes are passing.
+  Previously, if any connect services were failing their Kubernetes readiness checks they were still routable through connect.
+  Users should verify that their connect services are passing Kubernetes readiness probes prior to using health checks synchronization.
+* When health checks are enabled, Consul clients will have `check_update_interval` set to `0s`. Previously,
+  it was set to its default of `5m`. This change ensures the output of the check will show up in the Consul UI immediately. [[GH-674](https://github.com/hashicorp/consul-helm/pull/674)]
+* CRDs: controller default `limits.memory` increased from `30Mi` to `50Mi` and `requests.memory` increased from `20Mi` to `50Mi`
+  based on observed usage. [[GH-649](https://github.com/hashicorp/consul-helm/pull/649)]
+
+BUG FIXES:
+* Fix issue where Consul enterprise license job would fail for Consul versions >= 1.8.1. [[GH-647](https://github.com/hashicorp/consul-helm/issues/647)]
+
+IMPROVEMENTS:
+* Connect: support passing extra arguments to the injected envoy sidecar. [[GH-675](https://github.com/hashicorp/consul-helm/pull/675)]
+
+  To pass extra arguments to envoy, set `connectInject.envoyExtraArgs` in your
+  Helm configuration:
+
+  ```yaml
+  connectInject:
+    enabled: true
+    envoyExtraArgs: "--log-level debug --disable-hot-restart"
+  ```
+* Connect: update MutatingWebhook resource version to `admissionregistration.k8s.io/v1` from `admissionregistration.k8s.io/v1beta1`
+  for clusters where it is supported. [[GH-658](https://github.com/hashicorp/consul-helm/pull/658)]
+* Updated the default Consul image to `consul:1.8.5`.
+* Updated the default consul-k8s image to `hashicorp/consul-k8s:0.20.0`.
+
+## 0.25.0 (Oct 12, 2020)
+
+FEATURES:
+
+* Support deploying this Helm chart to OpenShift 4.x. [[GH-600](https://github.com/hashicorp/consul-helm/pull/600)]
+
+  To install on OpenShift, set `global.openshift.enabled` to `true`:
+
+  ```sh
+  helm install consul hashicorp/consul \
+    --set global.name=consul \
+    --set global.openshift.enabled=true
+  ```
+
+* Beta support for custom resource definitions. [[GH-636](https://github.com/hashicorp/consul-helm/pull/636)]
+
+  **Requires Consul >= 1.8.4.**
+  
+  The currently supported CRDs can be used to manage Consul's [Configuration Entries](https://www.consul.io/docs/agent/config-entries),
+  specifically:
+    * `ProxyDefaults` - https://www.consul.io/docs/agent/config-entries/proxy-defaults
+    * `ServiceDefaults` - https://www.consul.io/docs/agent/config-entries/service-defaults
+    * `ServiceSplitter` - https://www.consul.io/docs/agent/config-entries/service-splitter
+    * `ServiceRouter` - https://www.consul.io/docs/agent/config-entries/service-router
+    * `ServiceResolver` - https://www.consul.io/docs/agent/config-entries/service-resolver
+    * `ServiceIntentions` (requires Consul >= 1.9.0) - https://www.consul.io/docs/agent/config-entries/service-intentions
+
+  An example use looks like:
+
+  ```yaml
+  apiVersion: consul.hashicorp.com/v1alpha1
+  kind: ServiceDefaults
+  metadata:
+    name: defaults
+  spec:
+    protocol: "http"
+  ```
+
+  See [https://www.consul.io/docs/k8s/crds](https://www.consul.io/docs/k8s/crds)
+  for more information on the CRD schemas.
+
+  To enable, set `controller.enabled: true` in your Helm configuration:
+
+  ```yaml
+  controller:
+    enabled: true
+  ```
+
+  This will install the CRDs, the controller that watches for CR creation, and
+  a webhook certificate manager that manages the certificates for the controller's
+  webhooks.
+
+* Add acceptance test framework and automated acceptance tests to the Helm chart.
+  Please see Contributing docs for more info on how to [run](https://github.com/hashicorp/consul-helm/blob/master/CONTRIBUTING.md#acceptance-tests)
+  and [add](https://github.com/hashicorp/consul-helm/blob/master/CONTRIBUTING.md#writing-acceptance-tests) acceptance tests. [[GH-551](https://github.com/hashicorp/consul-helm/pull/551)]
+
+IMPROVEMENTS:
+
+* Add `dns.type` and `dns.additionalSpec` settings for changing the DNS service type and adding additional spec. [[GH-555](https://github.com/hashicorp/consul-helm/pull/555)]
+* Catalog Sync: Can now be run when Consul clients are disabled. It will make API calls to the Consul servers instead. [[GH-570](https://github.com/hashicorp/consul-helm/pull/570)]
+* Catalog Sync: Add support for changing the Consul node name where services are sync'd. [[GH-580](https://github.com/hashicorp/consul-helm/pull/580)]
+* Support for setting `priorityClassName` for sync-catalog and connect-inject deployments. [[GH-609](https://github.com/hashicorp/consul-helm/pull/609)]
+* Updated the default Consul image to `consul:1.8.4`.
+* Updated the default Envoy image to `envoyproxy/envoy-alpine:v1.14.4`.
+
+BREAKING CHANGES:
+* `connectInject.imageEnvoy` and `meshGateway.imageEnvoy` have been removed and now inherit from `global.imageEnvoy`
+  which is now standardized across terminating/ingress/mesh gateways and connectInject.
+  `global.imageEnvoy` is now a required parameter. [GH-585](https://github.com/hashicorp/consul-helm/pull/585)
+
+## 0.24.1 (Aug 10, 2020)
+
+BUG FIXES:
+
+* Bumps default Consul version to `1.8.2`. This version of Consul contains a fix
+  for [https://github.com/hashicorp/consul/issues/8430](https://github.com/hashicorp/consul/issues/8430)
+  which causes Consul clients running on the same node as a connect-injected pod
+  to crash loop indefinitely when restarted.
+
+* Bumps default consul-k8s version to `0.18.1`. This version contains a fix
+  for an issue that caused all connect-injected pods to be unhealthy for 60s
+  if they were restarted. To roll out this fix, all Connect deployments must
+  be restarted so that they are re-injected.
+
+## 0.24.0 (July 31, 2020)
+
+IMPROVEMENTS:
+
+* Add server.extraConfig and client.extraConfig values as hashes on Server
+  StatefulSet and Client Daemonset annotations respectively. This recreates
+  the server/client pod when the server/client extraConfig is updated via `helm upgrade` [[GH-550](https://github.com/hashicorp/consul-helm/pull/550)]
+
+* Introduce field `server.extraLabels` to append additional labels to consul server pods. [[GH-553](https://github.com/hashicorp/consul-helm/pull/553)]
+
+* Introduce field `server.disableFsGroupSecurityContext` which disables setting the fsGroup securityContext on the server statefulset.
+  This enables deploying on platforms where the fsGroup is automatically set to an arbitrary gid. (eg OpenShift) [[GH-528](https://github.com/hashicorp/consul-helm/pull/528)]
+
+* Connect: Resource settings for Connect, mesh, ingress and terminating gateway init containers and lifecycle sidecars have been made configurable. The default values correspond to the previously set limits, except that the lifecycle sidecar memory limit has been increased to `50Mi` [[GH-556](https://github.com/hashicorp/consul-helm/pull/556)]. These new fields are:
+  * `global.lifecycleSidecarContainer.resources` - Configures the resource settings for all lifecycle sidecar containers used with Connect inject, mesh gateways, ingress gateways and terminating gateways.
+  * `connectInject.initContainer.resources` - Configures resource settings for the Connect-injected init container.
+  * `meshGateway.initCopyConsulContainer.resources` - Configures the resource settings for the `copy-consul-bin` init container for mesh gateways.
+  * `ingressGateways.defaults.initCopyConsulContainer.resources` - Configures the resource settings for the `copy-consul-bin` init container for ingress gateways. Defaults can be overridden per ingress gateway.
+  * `terminatingGateways.defaults.initCopyConsulContainer.resources` - Configures the resource settings for the `copy-consul-bin` init container for terminating gateways. Defaults can be overridden per terminating gateway.
+
+* Updated the default consul version to 1.8.1.
+
+BREAKING CHANGES:
+
+* Updating either server.extraConfig or client.extraConfig and running `helm upgrade` will force a restart of the
+  server or agent pods respectively.
+
+## 0.23.1 (July 10, 2020)
+
+BUG FIXES:
+
+* TLS: Fixes bug introduced in 0.23.0 where the DNS subject alternative names
+  for the server certs were invalid. This would cause the server-acl-init job
+  to run forever without completing. [[GH-538](https://github.com/hashicorp/consul-helm/pull/538)]
+
+## 0.23.0 (July 9, 2020)
+
+BREAKING CHANGES:
+
+* Connect: Resource limits have been set for ingress and terminating gateway containers and
+  bumped up for mesh gateways. See deployment definitions for new resource settings. [[GH-533](https://github.com/hashicorp/consul-helm/pull/533), [GH-534](https://github.com/hashicorp/consul-helm/pull/534)]
+
+IMPROVEMENTS:
+
+* Default version of `consul-k8s` has been set to `hashicorp/consul-k8s:0.17.0`.
+* ClusterRoles and ClusterRoleBindings have been converted to Roles and RoleBindings
+  for the following components because they only required access within their namespace:
+  * Enterprise License Job
+  * Server ACL Init
+  * Server Statefulset
+  * Client Daemonset
+  * Client Snapshot Agent
+
+   [[GH-403](https://github.com/hashicorp/consul-helm/issues/403)]
+
+* The volumes set by `client.extraVolumes` are now passed as the last `-config-dir` argument.
+  This means any settings there will override previous settings. This allows users to override
+  settings that Helm is setting automatically, for example the acl down policy. [[GH-531](https://github.com/hashicorp/consul-helm/pull/531)]
+
+BUG FIXES:
+
+* Connect: Resource settings for mesh, ingress and terminating gateway init containers
+ lifecycle sidecar containers have been changed to avoid out of memory errors and hitting CPU limits. [[GH-515](https://github.com/hashicorp/consul-helm/issues/515)]
+     * `copy-consul-bin` has its memory limit set to `150M` up from `25M`
+     * `lifecycle-sidecar` has its CPU request and limit set to `20m` up from `10m`.
+
+## 0.22.0 (June 18, 2020)
+
+FEATURES:
+
+* Supports deploying Consul [Ingress](https://www.consul.io/docs/connect/ingress_gateway)
+  and [Terminating](https://www.consul.io/docs/connect/terminating_gateway) Gateways.
+  Multiple different gateways of each type can be deployed with default values that can
+  be overridden for specific gateways if desired. Full documentation of the configuration
+  options can be found in the values file or in the Helm chart documentation
+  ([Ingress](https://www.consul.io/docs/k8s/helm#v-ingressgateways),
+  [Terminating](https://www.consul.io/docs/k8s/helm#v-terminatinggateways)).
+  Requires Consul 1.8.0+.
+
+  Ingress gateways: [[GH-456](https://github.com/hashicorp/consul-helm/pull/456)], 
+  Terminating gateways: [[GH-503](https://github.com/hashicorp/consul-helm/pull/503)]
 
 * Resources are now set on all containers. This enables the chart to be deployed
   in clusters that have resource quotas set. This also ensures that Consul
@@ -8,13 +482,23 @@ FEATURES:
   resource limits.
   
   Resource settings have been made configurable for sync catalog, connect inject
-  and client snapshot deployments.
+  and client snapshot deployments and sidecar proxies. [[GH-470](https://github.com/hashicorp/consul-helm/pull/470)]
   
   The default settings were chosen based on a cluster with a small workload.
   For production, we recommend monitoring resource usage and modifying the
-  defaults according to your usage.
+  defaults according to your usage. [[GH-466](https://github.com/hashicorp/consul-helm/pull/466)]
 
 BREAKING CHANGES:
+
+* If upgrading to Consul 1.8.0 and using Consul Connect, you will need to upgrade consul-k8s to 0.16.0 (by setting `global.imageK8S: hashicorp/consul-k8s:0.16.0`) and re-roll your Connect pods so they get re-injected, before upgrading consul. This is required because we were previously setting a health check incorrectly that now fails on Consul 1.8.0. If you upgrade to 1.8.0 without upgrading to consul-k8s 0.16.0 and re-rolling your connect pods first, the connect pods will fail their health checks and no traffic will be routed to them.
+
+* It is recommended to use the helm repository to install the helm chart instead of cloning this repo directly. Starting with this release
+ the master branch may contain breaking changes.
+
+  ```sh
+    $ helm repo add hashicorp https://helm.releases.hashicorp.com
+    $ helm install consul hashicorp/consul --set global.name=consul
+  ```
 
 * Mesh Gateway: `meshGateway.enableHealthChecks` is no longer supported. This config
   option was to work around an issue where mesh gateways would not listen on their
@@ -47,21 +531,39 @@ BREAKING CHANGES:
         cpu: "100m"
   ```
 
- * Clients and Servers: There are now default resource settings for Consul clients
+* Clients and Servers: There are now default resource settings for Consul clients
    and servers. Previously, there were no default settings which meant the default
    was unlimited. This change was made because Kubernetes will prefer to evict
    pods that don't have resource settings and that resulted in the Consul client
    and servers being evicted. The default resource settings were chosen based
    on a low-usage cluster. If you are running a production cluster, use the
    `kubectl top` command to see how much CPU and memory your clients and servers
-   are using and set the resources accordingly. ([GH-466](https://github.com/hashicorp/consul-helm/pull/466)]
+   are using and set the resources accordingly [[GH-466](https://github.com/hashicorp/consul-helm/pull/466)].
+* `global.bootstrapACLs` has been removed, use `global.acls.manageSystemACLs` instead [[GH-501](https://github.com/hashicorp/consul-helm/pull/501)].
+
+IMPROVEMENTS:
+
+* Add component label to the server, DNS, and UI services [[GH-480](https://github.com/hashicorp/consul-helm/pull/480)].
+* Provide the ability to set a custom CA Cert for consul snapshot agent [[GH-481](https://github.com/hashicorp/consul-helm/pull/481)].
+* Add support for client host networking [[GH-496](https://github.com/hashicorp/consul-helm/pull/496)].
+
+  To enable:
+  ```yaml
+  client:
+    hostNetwork: true
+    dnsPolicy: ClusterFirstWithHostNet
+  ```
+* Add ability to set Affinity and Tolerations to Connect Inject and Catalog Sync [[GH-335](https://github.com/hashicorp/consul-helm/pull/335)].
+* Updated the default consul-k8s version to 0.16.0.
+* Updated the default consul version to 1.8.0.
+* Update default Envoy image version and OS to `envoyproxy/envoy-alpine:1.14.2` [[GH-502](https://github.com/hashicorp/consul-helm/pull/502)].
 
 DEPRECATIONS
 
 * Setting resources via YAML string is now deprecated. Instead, set directly as YAML.
   This affects `client.resources`, `server.resources` and `meshGateway.resources`.
   To set directly as YAML, simply remove the pipe (`|`) character that defines
-  the YAML as a string: 
+  the YAML as a string [[GH-465](https://github.com/hashicorp/consul-helm/pull/465)]: 
   
   Before:
   ```yaml

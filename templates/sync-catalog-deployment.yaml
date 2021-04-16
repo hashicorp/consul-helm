@@ -1,5 +1,6 @@
-# The deployment for running the sync-catalog pod
+{{- $clientEnabled := (or (and (ne (.Values.client.enabled | toString) "-") .Values.client.enabled) (and (eq (.Values.client.enabled | toString) "-") .Values.global.enabled)) }}
 {{- if (or (and (ne (.Values.syncCatalog.enabled | toString) "-") .Values.syncCatalog.enabled) (and (eq (.Values.syncCatalog.enabled | toString) "-") .Values.global.enabled)) }}
+# The deployment for running the sync-catalog pod
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,6 +26,9 @@ spec:
         chart: {{ template "consul.chart" . }}
         release: {{ .Release.Name }}
         component: sync-catalog
+        {{- if .Values.syncCatalog.extraLabels }}
+          {{- toYaml .Values.syncCatalog.extraLabels | nindent 8 }}
+        {{- end }}
       annotations:
         "consul.hashicorp.com/connect-inject": "false"
     spec:
@@ -43,7 +47,7 @@ spec:
           - key: {{ default "tls.crt" .Values.global.tls.caCert.secretKey }}
             path: tls.crt
       {{- end }}
-      {{- if .Values.global.tls.enableAutoEncrypt }}
+      {{- if (and .Values.global.tls.enableAutoEncrypt $clientEnabled) }}
       - name: consul-auto-encrypt-ca-cert
         emptyDir:
           medium: "Memory"
@@ -68,7 +72,7 @@ spec:
                   name: {{ .Values.syncCatalog.aclSyncToken.secretName }}
                   key: {{ .Values.syncCatalog.aclSyncToken.secretKey }}
             {{- end }}
-            {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+            {{- if .Values.global.acls.manageSystemACLs }}
             - name: CONSUL_HTTP_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -76,17 +80,27 @@ spec:
                   key: "token"
             {{- end}}
             {{- if .Values.global.tls.enabled }}
+            {{- if .Values.client.enabled }}
             - name: CONSUL_HTTP_ADDR
               value: https://$(HOST_IP):8501
+            {{- else }}
+            - name: CONSUL_HTTP_ADDR
+              value: https://{{ template "consul.fullname" . }}-server:8501
+            {{- end }}
             - name: CONSUL_CACERT
               value: /consul/tls/ca/tls.crt
             {{- else }}
+            {{- if .Values.client.enabled }}
             - name: CONSUL_HTTP_ADDR
               value: http://$(HOST_IP):8500
+            {{- else }}
+            - name: CONSUL_HTTP_ADDR
+              value: http://{{ template "consul.fullname" . }}-server:8500
+            {{- end }}
             {{- end }}
           {{- if .Values.global.tls.enabled }}
           volumeMounts:
-            {{- if .Values.global.tls.enableAutoEncrypt }}
+            {{- if (and .Values.global.tls.enableAutoEncrypt $clientEnabled) }}
             - name: consul-auto-encrypt-ca-cert
             {{- else }}
             - name: consul-ca-cert
@@ -135,6 +149,9 @@ spec:
                 {{- if .Values.syncCatalog.k8sTag }}
                 -consul-k8s-tag={{ .Values.syncCatalog.k8sTag }} \
                 {{- end }}
+                {{- if .Values.syncCatalog.consulNodeName }}
+                -consul-node-name={{ .Values.syncCatalog.consulNodeName }} \
+                {{- end }}
                 {{- if .Values.syncCatalog.consulPrefix}}
                 -consul-service-prefix="{{ .Values.syncCatalog.consulPrefix}}" \
                 {{- end}}
@@ -152,7 +169,7 @@ spec:
                 -k8s-namespace-mirroring-prefix={{ .Values.syncCatalog.consulNamespaces.mirroringK8SPrefix }} \
                 {{- end }}
                 {{- end }}
-                {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+                {{- if .Values.global.acls.manageSystemACLs }}
                 -consul-cross-namespace-acl-policy=cross-namespace-policy \
                 {{- end }}
                 {{- end }}
@@ -180,9 +197,9 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- if or (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) }}
+      {{- if or .Values.global.acls.manageSystemACLs (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt $clientEnabled) }}
       initContainers:
-      {{- if (or .Values.global.acls.manageSystemACLs .Values.global.bootstrapACLs) }}
+      {{- if .Values.global.acls.manageSystemACLs }}
       - name: sync-acl-init
         image: {{ .Values.global.imageK8S }}
         command:
@@ -200,12 +217,23 @@ spec:
             memory: "25Mi"
             cpu: "50m"
       {{- end }}
-      {{- if (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt) }}
+      {{- if (and .Values.global.tls.enabled .Values.global.tls.enableAutoEncrypt $clientEnabled) }}
       {{- include "consul.getAutoEncryptClientCA" . | nindent 6 }}
       {{- end }}
+      {{- end }}
+      {{- if .Values.syncCatalog.priorityClassName }}
+      priorityClassName: {{ .Values.syncCatalog.priorityClassName | quote }}
       {{- end }}
       {{- if .Values.syncCatalog.nodeSelector }}
       nodeSelector:
         {{ tpl .Values.syncCatalog.nodeSelector . | indent 8 | trim }}
-      {{- end }}  
+      {{- end }}
+      {{- if .Values.syncCatalog.affinity }}
+      affinity:
+        {{ tpl .Values.syncCatalog.affinity . | indent 8 | trim }}
+      {{- end }}
+      {{- if .Values.syncCatalog.tolerations }}
+      tolerations:
+        {{ tpl .Values.syncCatalog.tolerations . | indent 8 | trim }}
+      {{- end }}
 {{- end }}
