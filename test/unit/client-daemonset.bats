@@ -1211,6 +1211,7 @@ rollingUpdate:
 # client.disableHostNodeID
 
 @test "client/DaemonSet: disableHostNodeID defaults to false" {
+  cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-daemonset.yaml \
       . | tee /dev/stderr | \
@@ -1220,6 +1221,7 @@ rollingUpdate:
 }
 
 @test "client/DaemonSet: disableHostNodeID can be set to true" {
+  cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-daemonset.yaml \
       --set 'client.disableHostNodeID=true' \
@@ -1228,4 +1230,3 @@ rollingUpdate:
       | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
-
