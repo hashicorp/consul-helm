@@ -92,6 +92,10 @@ func TestController(t *testing.T) {
 					proxyDefaultEntry, ok := entry.(*api.ProxyConfigEntry)
 					require.True(r, ok, "could not cast to ProxyConfigEntry")
 					require.Equal(r, api.MeshGatewayModeLocal, proxyDefaultEntry.MeshGateway.Mode)
+					require.Equal(r, "tcp", proxyDefaultEntry.Config["protocol"])
+					require.Equal(r, "/health", proxyDefaultEntry.Expose.Paths[0].Path)
+					require.Equal(r, 22000, proxyDefaultEntry.Expose.Paths[0].ListenerPort)
+					require.Equal(r, 8080, proxyDefaultEntry.Expose.Paths[0].LocalPathPort)
 
 					// service-router
 					entry, _, err = consulClient.ConfigEntries().Get(api.ServiceRouter, "router", nil)
