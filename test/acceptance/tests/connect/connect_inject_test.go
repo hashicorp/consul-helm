@@ -31,7 +31,7 @@ func TestConnectInject(t *testing.T) {
 		{true, true},
 	}
 
-	tproxyEnabledCases := []bool{false, true}
+	tproxyEnabledCases := []bool{false}
 
 	for _, c := range cases {
 		for _, tproxyEnabled := range tproxyEnabledCases {

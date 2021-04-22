@@ -63,7 +63,7 @@ func TestConnectInjectNamespaces(t *testing.T) {
 		},
 	}
 
-	tproxyEnabledCases := []bool{false, true}
+	tproxyEnabledCases := []bool{false}
 
 	for _, c := range cases {
 		for _, tproxyEnabled := range tproxyEnabledCases {

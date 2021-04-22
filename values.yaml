@@ -1306,7 +1306,7 @@ connectInject:
     # If true, then all Consul Service mesh will run with transparent proxy enabled by default,
     # i.e. we enforce that all traffic within the pod will go through the proxy.
     # This value is overridable via the "consul.hashicorp.com/transparent-proxy" pod annotation.
-    defaultEnabled: true
+    defaultEnabled: false
 
   # Configures metrics for Consul Connect services. All values are overridable
   # via annotations on a per-pod basis.
