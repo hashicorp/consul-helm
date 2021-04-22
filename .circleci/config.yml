@@ -141,12 +141,11 @@ jobs:
               if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 2h -failfast \
                     -use-kind \
                     -enable-enterprise \
-                    -enable-multi-cluster \
                     -kubecontext="kind-dc1" \
                     -secondary-kubecontext="kind-dc2" \
                     -debug-directory="$TEST_RESULTS/debug" \
                     -consul-image="hashicorp/consul-enterprise:1.10.0-ent-beta1" \
-                    -consul-k8s-image="docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest"
+                    -consul-k8s-image="ishustava/consul-k8s-dev:04-22-2021-2e98ec9"
               then
                 echo "Tests in ${pkg} failed, aborting early"
                 exit_code=1
