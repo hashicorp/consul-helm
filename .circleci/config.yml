@@ -145,7 +145,7 @@ jobs:
                     -secondary-kubecontext="kind-dc2" \
                     -debug-directory="$TEST_RESULTS/debug" \
                     -consul-image="hashicorp/consul-enterprise:1.10.0-ent-beta1" \
-                    -consul-k8s-image="ishustava/consul-k8s-dev:04-22-2021-b061202"
+                    -consul-k8s-image="ishustava/consul-k8s-dev:04-23-2021-3ccc701"
               then
                 echo "Tests in ${pkg} failed, aborting early"
                 exit_code=1
@@ -224,7 +224,7 @@ jobs:
               -secondary-kubeconfig="$secondary_kubeconfig" \
               -debug-directory="$TEST_RESULTS/debug" \
               -consul-image="hashicorp/consul-enterprise:1.10.0-ent-beta1" \
-              -consul-k8s-image="ishustava/consul-k8s-dev:04-22-2021-b061202"
+              -consul-k8s-image="ishustava/consul-k8s-dev:04-23-2021-3ccc701"
 
       - store_test_results:
           path: /tmp/test-results
@@ -287,7 +287,7 @@ jobs:
               -secondary-kubeconfig="$secondary_kubeconfig" \
               -debug-directory="$TEST_RESULTS/debug" \
               -consul-image="hashicorp/consul-enterprise:1.10.0-ent-beta1" \
-              -consul-k8s-image="ishustava/consul-k8s-dev:04-22-2021-b061202"
+              -consul-k8s-image="ishustava/consul-k8s-dev:04-23-2021-3ccc701"
 
       - store_test_results:
           path: /tmp/test-results
@@ -361,7 +361,7 @@ jobs:
               -secondary-kubeconfig="$secondary_kubeconfig" \
               -debug-directory="$TEST_RESULTS/debug" \
               -consul-image="hashicorp/consul-enterprise:1.10.0-ent-beta1" \
-              -consul-k8s-image="ishustava/consul-k8s-dev:04-22-2021-b061202"
+              -consul-k8s-image="ishustava/consul-k8s-dev:04-23-2021-3ccc701"
 
       - store_test_results:
           path: /tmp/test-results
@@ -491,7 +491,7 @@ jobs:
               -secondary-kubecontext="kind-dc2" \
               -debug-directory="$TEST_RESULTS/debug" \
               -consul-image="hashicorp/consul-enterprise:1.10.0-ent-beta1" \
-              -consul-k8s-image="ishustava/consul-k8s-dev:04-22-2021-b061202"
+              -consul-k8s-image="ishustava/consul-k8s-dev:04-23-2021-3ccc701"
 
       - store_test_results:
           path: /tmp/test-results
