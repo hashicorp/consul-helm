@@ -140,6 +140,7 @@ jobs:
             do
               if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 2h -failfast \
                     -use-kind \
+                    -enable-transparent-proxy \
                     -enable-enterprise \
                     -enable-multi-cluster \
                     -kubecontext="kind-dc1" \
@@ -635,7 +636,7 @@ workflows:
               only:
                 - master
     jobs:
-    # - acceptance-openshift >> disabled because OpenShift 4.4 was too flaky. Can possibly re-enable when latest OpenShift version is released.
+      # - acceptance-openshift >> disabled because OpenShift 4.4 was too flaky. Can possibly re-enable when latest OpenShift version is released.
       - acceptance-gke-1-16
       - acceptance-eks-1-17
       - acceptance-aks-1-18
