@@ -17,6 +17,14 @@ rules:
   - {{ template "consul.fullname" . }}-server
   verbs:
   - use
+{{- if (and .Values.global.openshift.enabled .Values.server.exposeGossipAndRPCPorts ) }}
+- apiGroups: ["security.openshift.io"]
+  resources: ["securitycontextconstraints"]
+  resourceNames:
+  - {{ template "consul.fullname" . }}-server
+  verbs:
+  - use
+{{- end}}
 {{- else }}
 rules: []
 {{- end }}
