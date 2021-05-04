@@ -28,15 +28,3 @@ load _helpers
       yq -s 'length > 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
-
-@test "server/SecurityContextConstraints: host ports are allowed by default" {
-  cd `chart_dir`
-  local actual=$(helm template \
-      -s templates/server-securitycontextconstraints.yaml  \
-      --set 'global.openshift.enabled=true' \
-      --set 'server.exposeGossipAndRPCPorts=true' \
-      . | tee /dev/stderr |
-      yq -c '.allowHostPorts' | tee /dev/stderr)
-  [ "${actual}" = 'true' ]
-}
-
