@@ -15,6 +15,9 @@ spec:
     spec:
       containers:
         - name: static-server
+          securityContext:
+            runAsUser: 5000
+            runAsGroup: 5000
           image: docker.mirror.hashicorp.services/hashicorp/http-echo:latest
           args:
             - -text="hello world"
