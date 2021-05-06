@@ -302,9 +302,6 @@ jobs:
             terraform destroy -auto-approve
           when: always
 
-      - slack/status:
-          fail_only: true
-          failure_message: "AKS acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
 
   acceptance-eks-1-17:
     environment:
@@ -376,9 +373,6 @@ jobs:
             terraform destroy -auto-approve
           when: always
 
-      - slack/status:
-          fail_only: true
-          failure_message: "EKS acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
 
   acceptance-openshift:
     environment:
@@ -432,9 +426,6 @@ jobs:
           path: /tmp/test-results
       - store_artifacts:
           path: /tmp/test-results
-      - slack/status:
-          fail_only: true
-          failure_message: "OpenShift acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
 
   acceptance-kind-1-20:
     environment:
@@ -498,9 +489,6 @@ jobs:
           path: /tmp/test-results
       - store_artifacts:
           path: /tmp/test-results
-      - slack/status:
-          fail_only: true
-          failure_message: "Acceptance tests against Kind with Kubernetes v1.20 failed. Check the logs at: ${CIRCLE_BUILD_URL}"
 
   go-fmt-and-vet-helm-gen:
     executor: go
@@ -612,20 +600,10 @@ workflows:
   version: 2
   test:
     jobs:
-      - go-fmt-and-vet-acceptance
-      - go-fmt-and-vet-helm-gen
-      - unit-acceptance-framework:
-          requires:
-            - go-fmt-and-vet-acceptance
-      - unit-helm-gen:
-          requires:
-            - go-fmt-and-vet-helm-gen
-      - test-helm-gen
-      - unit-helm
-      - acceptance:
-          requires:
-            - unit-helm
-            - unit-acceptance-framework
+      - acceptance-gke-1-16
+      - acceptance-eks-1-17
+      - acceptance-aks-1-18
+      - acceptance-kind-1-20
   nightly-acceptance-tests:
     triggers:
       - schedule:
