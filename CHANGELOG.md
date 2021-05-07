@@ -1,3 +1,8 @@
+## Unreleased
+
+IMPROVEMENTS:
+* Updated the default envoy image to `envoyproxy/envoy-alpine:v1.18.2`.
+
 ## 0.32.0-beta2 (May 6, 2021)
 
 IMPROVEMENTS:

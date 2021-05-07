@@ -18,12 +18,14 @@ annotations:
     - name: consul-k8s
       image: hashicorp/consul-k8s:0.26.0-beta2
     - name: envoy
-      image: envoyproxy/envoy-alpine:v1.16.0
+      image: envoyproxy/envoy-alpine:v1.18.2
   artifacthub.io/license: MPL-2.0
   artifacthub.io/links: |
-    - name: Consul Homepage
-      url: https://www.consul.io
     - name: Documentation
       url: https://www.consul.io/docs/k8s
-    - name: Chart GitHub Repository
+    - name: hashicorp/consul-helm
       url: https://github.com/hashicorp/consul-helm
+    - name: hashicorp/consul
+      url: https://github.com/hashicorp/consul
+    - name: hashicorp/consul-k8s
+      url: https://github.com/hashicorp/consul-k8s
