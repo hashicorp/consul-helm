@@ -3,6 +3,9 @@
 IMPROVEMENTS:
 * Updated the default envoy image to `envoyproxy/envoy-alpine:v1.18.2`.
 
+BUG FIXES:
+* OpenShift: support `server.exposeGossipAndRPCPorts`. [[GH-932](https://github.com/hashicorp/consul-helm/issues/932)]
+
 ## 0.32.0-beta2 (May 6, 2021)
 
 IMPROVEMENTS:
