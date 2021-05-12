@@ -325,6 +325,8 @@ server:
     secretName: null
     # The key within the Kubernetes secret that holds the enterprise license.
     secretKey: null
+    # Manages license autoload. Supported in Consul 1.10+
+    enableLicenseAutoload: true
 
   # Exposes the servers' gossip and RPC ports as hostPorts. To enable a client
   # agent outside of the k8s cluster to join the datacenter, you would need to

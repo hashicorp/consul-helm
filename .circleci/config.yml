@@ -69,7 +69,8 @@ commands:
                         -enable-enterprise \
                         -enable-multi-cluster \
                         -debug-directory="$TEST_RESULTS/debug" \
-                        -consul-k8s-image="docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest"
+                        -consul-k8s-image="docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest" \
+                        -consul-image="ashwinvenkatesh/consul@sha256:7a5c5f6fc043bd690a1d27648b0cc3bcac68656e2841c2d862a7666b661ba864"
                   then
                     echo "Tests in ${pkg} failed, aborting early"
                     exit_code=1
@@ -189,9 +190,16 @@ jobs:
           paths:
             - ~/.go_workspace/pkg/mod
       - run: mkdir -p $TEST_RESULTS
+      - run:
+          name: Create enterprise license secret
+          command: |
+            # Create an enterprise license secret in the primary cluster.
+            # This license is set as a CircleCI project env variable.
+            # The license expires 15-Oct-2025.
+            kubectl create secret generic ent-license --from-literal=key="${CONSUL_ENT_LICENSE}" --context=kind-dc1
       - run-acceptance-tests:
           failfast: true
-          additional-flags: -use-kind -kubecontext="kind-dc1" -secondary-kubecontext="kind-dc2"
+          additional-flags: -use-kind -kubecontext="kind-dc1" -secondary-kubecontext="kind-dc2" -enterprise-license-secret-name=ent-license -enterprise-license-secret-key=key
       - store_test_results:
           path: /tmp/test-results
       - store_artifacts:
@@ -221,9 +229,16 @@ jobs:
           paths:
             - ~/.go_workspace/pkg/mod
       - run: mkdir -p $TEST_RESULTS
+      - run:
+          name: Create enterprise license secret
+          command: |
+            # Create an enterprise license secret in the primary cluster.
+            # This license is set as a CircleCI project env variable.
+            # The license expires 15-Oct-2025.
+            kubectl create secret generic ent-license --from-literal=key="${CONSUL_ENT_LICENSE}" --context=kind-dc1
       - run-acceptance-tests:
           failfast: true
-          additional-flags: -use-kind -kubecontext="kind-dc1" -secondary-kubecontext="kind-dc2" -enable-transparent-proxy
+          additional-flags: -use-kind -kubecontext="kind-dc1" -secondary-kubecontext="kind-dc2" -enable-transparent-proxy -enterprise-license-secret-name=ent-license -enterprise-license-secret-key=key
       - store_test_results:
           path: /tmp/test-results
       - store_artifacts:
