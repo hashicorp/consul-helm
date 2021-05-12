@@ -146,7 +146,8 @@ jobs:
                     -secondary-kubecontext="kind-dc2" \
                     -debug-directory="$TEST_RESULTS/debug" \
                     -consul-image="hashicorp/consul-enterprise:1.10.0-ent-beta2" \
-                    -consul-k8s-image="docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest"
+                    -consul-k8s-image="docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest" \
+                    -run TestMeshGatewaySecure
               then
                 echo "Tests in ${pkg} failed, aborting early"
                 exit_code=1
