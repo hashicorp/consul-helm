@@ -36,7 +36,10 @@ func TestMeshGatewayDefault(t *testing.T) {
 		"global.federation.createFederationSecret": "true",
 
 		"connectInject.enabled": "true",
-		"controller.enabled":    "true",
+		// Temporarily disable tproxy regardless of the global setting.
+		// This should be removed once multi-cluster is working with explicit upstreams.
+		"connectInject.transparentProxy.defaultEnabled": "false",
+		"controller.enabled":                            "true",
 
 		"meshGateway.enabled":  "true",
 		"meshGateway.replicas": "1",
@@ -87,6 +90,9 @@ func TestMeshGatewayDefault(t *testing.T) {
 		"server.enterpriseLicense.secretKey":  "",
 
 		"connectInject.enabled": "true",
+		// Temporarily disable tproxy regardless of the global setting.
+		// This should be removed once multi-cluster is working with explicit upstreams.
+		"connectInject.transparentProxy.defaultEnabled": "false",
 
 		"meshGateway.enabled":  "true",
 		"meshGateway.replicas": "1",
@@ -165,7 +171,10 @@ func TestMeshGatewaySecure(t *testing.T) {
 				"global.federation.createFederationSecret": "true",
 
 				"connectInject.enabled": "true",
-				"controller.enabled":    "true",
+				// Temporarily disable tproxy regardless of the global setting.
+				// This should be removed once multi-cluster is working with explicit upstreams.
+				"connectInject.transparentProxy.defaultEnabled": "false",
+				"controller.enabled":                            "true",
 
 				"meshGateway.enabled":  "true",
 				"meshGateway.replicas": "1",
@@ -221,6 +230,9 @@ func TestMeshGatewaySecure(t *testing.T) {
 				"server.enterpriseLicense.secretKey":  "",
 
 				"connectInject.enabled": "true",
+				// Temporarily disable tproxy regardless of the global setting.
+				// This should be removed once multi-cluster is working with explicit upstreams.
+				"connectInject.transparentProxy.defaultEnabled": "false",
 
 				"meshGateway.enabled":  "true",
 				"meshGateway.replicas": "1",
