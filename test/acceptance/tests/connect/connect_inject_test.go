@@ -193,13 +193,13 @@ func TestConnectInject_CleanupKilledPods(t *testing.T) {
 // the services get re-registered and can continue to talk to each other.
 func TestConnectInject_RestartConsulClients(t *testing.T) {
 	cfg := suite.Config()
+	if cfg.EnableTransparentProxy {
+		t.Skip("skipping this test because it's currently flakey when transparent proxy is enabled")
+	}
 	ctx := suite.Environment().DefaultContext(t)
 
 	helmValues := map[string]string{
-		"global.image":                        "hashicorp/consul:1.10.0-beta2",
-		"server.enterpriseLicense.secretName": "",
-		"server.enterpriseLicense.secretKey":  "",
-		"connectInject.enabled":               "true",
+		"connectInject.enabled": "true",
 	}
 
 	releaseName := helpers.RandomName()
