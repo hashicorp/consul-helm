@@ -1024,6 +1024,9 @@ load _helpers
   local actual=$(helm template \
       -s templates/server-acl-init-job.yaml  \
       --set 'global.acls.manageSystemACLs=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      --set 'meshGateway.enabled=true' \
       --set 'global.acls.createReplicationToken=false' \
       --set 'global.federation.enabled=true' \
       . | tee /dev/stderr |
