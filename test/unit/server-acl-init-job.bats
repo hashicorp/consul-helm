@@ -1019,6 +1019,19 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
+@test "serverACLInit/Job: -create-acl-replication-token is true when federation is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-acl-init-job.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'global.acls.createReplicationToken=false' \
+      --set 'global.federation.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-create-acl-replication-token"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+
 #--------------------------------------------------------------------
 # global.acls.replicationToken
 

@@ -195,7 +195,7 @@ spec:
                 -create-client-token=false \
                 {{- end }}
 
-                {{- if .Values.global.acls.createReplicationToken }}
+                {{- if (or .Values.global.federation.enabled .Values.global.acls.createReplicationToken) }}
                 -create-acl-replication-token=true \
                 {{- end }}
 
