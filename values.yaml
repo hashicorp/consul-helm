@@ -699,6 +699,9 @@ client:
   # This also changes the clients' advertised IP to the `hostIP` rather than `podIP`.
   exposeGossipPorts: false
 
+  # A map of annotations to add to the client service account
+  serviceAccountAnnotations: {}
+
   # Resource settings for Client agents.
   # NOTE: The use of a YAML string is deprecated. Instead, set directly as a
   # YAML map.
