@@ -907,6 +907,9 @@ client:
       # The key of the Kubernetes secret.
       secretKey: null
 
+    # A map of annotations to add to the snapshot agent service account
+    serviceAccountAnnotations: {}
+
     # Resource settings for snapshot agent pods.
     # @recurse: false
     # @type: map
