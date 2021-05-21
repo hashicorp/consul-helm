@@ -371,8 +371,9 @@ server:
   # by setting the `server.extraConfig` value.
   connect: true
 
-  # A map of annotations to add to the server service account
-  serviceAccountAnnotations: {}
+  serviceAccount:
+    # A map of annotations to add to the server service account 
+    annotations: {}
 
   # The resource requests (CPU, memory, etc.)
   # for each of the server agents. This should be a YAML map corresponding to a Kubernetes
@@ -702,8 +703,9 @@ client:
   # This also changes the clients' advertised IP to the `hostIP` rather than `podIP`.
   exposeGossipPorts: false
 
-  # A map of annotations to add to the client service account
-  serviceAccountAnnotations: {}
+  serviceAccount:
+    # A map of annotations to add to the client service account 
+    annotations: {}
 
   # Resource settings for Client agents.
   # NOTE: The use of a YAML string is deprecated. Instead, set directly as a
@@ -910,8 +912,9 @@ client:
       # The key of the Kubernetes secret.
       secretKey: null
 
-    # A map of annotations to add to the snapshot agent service account
-    serviceAccountAnnotations: {}
+    serviceAccount:
+      # A map of annotations to add to the snapshot agent service account 
+      annotations: {}
 
     # Resource settings for snapshot agent pods.
     # @recurse: false

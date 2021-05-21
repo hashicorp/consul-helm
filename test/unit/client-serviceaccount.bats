@@ -69,7 +69,7 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
-# client.serviceAccountAnnotations
+# client.serviceAccount.annotations
 
 @test "client/ServiceAccount: no annotations by default" {
   cd `chart_dir`
@@ -84,7 +84,7 @@ load _helpers
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-serviceaccount.yaml \
-      --set "client.serviceAccountAnnotations.foo=bar" \
+      --set "client.serviceAccount.annotations.foo=bar" \
       . | tee /dev/stderr |
       yq -r '.metadata.annotations.foo' | tee /dev/stderr)
   [ "${actual}" = "bar" ]

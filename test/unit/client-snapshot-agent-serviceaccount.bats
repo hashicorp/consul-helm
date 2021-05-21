@@ -59,7 +59,7 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
-# client.snapshotAgent.serviceAccountAnnotations
+# client.snapshotAgent.serviceAccount.annotations
 
 @test "client/SnapshotAgentServiceAccount: no annotations by default" {
   cd `chart_dir`
@@ -76,7 +76,7 @@ load _helpers
   local actual=$(helm template \
       -s templates/client-snapshot-agent-serviceaccount.yaml \
       --set 'client.snapshotAgent.enabled=true' \
-      --set "client.snapshotAgent.serviceAccountAnnotations.foo=bar" \
+      --set "client.snapshotAgent.serviceAccount.annotations.foo=bar" \
       . | tee /dev/stderr |
       yq -r '.metadata.annotations.foo' | tee /dev/stderr)
   [ "${actual}" = "bar" ]
