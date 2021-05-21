@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// HelmChartPath The path to the helm chart.
+// HelmChartPath is the path to the helm chart.
 // Note: this will need to be changed if this file is moved.
 const HelmChartPath = "../../../.."
 
