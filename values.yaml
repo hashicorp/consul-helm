@@ -1297,6 +1297,19 @@ syncCatalog:
   # @type: string
   tolerations: null
 
+  serviceAccount:
+    # This value defines additional annotations for the mesh gateways' service account. This should be formatted as a
+    # multi-line string.
+    #
+    # ```yaml
+    # annotations: |
+    #   "sample/annotation1": "foo"
+    #   "sample/annotation2": "bar"
+    # ```
+    #
+    # @type: string
+    annotations: null
+
   # Resource settings for sync catalog pods.
   # @recurse: false
   # @type: map
