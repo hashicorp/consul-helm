@@ -2118,6 +2118,19 @@ terminatingGateways:
     # @type: string
     annotations: null
 
+    serviceAccount:
+      # This value defines additional annotations for the terminating gateways' service account. This should be 
+      # formatted as a multi-line string.
+      #
+      # ```yaml
+      # annotations: |
+      #   "sample/annotation1": "foo"
+      #   "sample/annotation2": "bar"
+      # ```
+      #
+      # @type: string
+      annotations: null
+
     # [Enterprise Only] `consulNamespace` defines the Consul namespace to register
     # the gateway into. Requires `global.enableConsulNamespaces` to be true and
     # Consul Enterprise v1.7+ with a valid Consul Enterprise license.
