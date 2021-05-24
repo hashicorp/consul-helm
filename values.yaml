@@ -1886,19 +1886,6 @@ ingressGateways:
   # and `client.enabled=true`.
   enabled: false
 
-  serviceAccount:
-    # This value defines additional annotations for the ingress gateways' service account. This should be formatted as a
-    # multi-line string.
-    #
-    # ```yaml
-    # annotations: |
-    #   "sample/annotation1": "foo"
-    #   "sample/annotation2": "bar"
-    # ```
-    #
-    # @type: string
-    annotations: null
-
   # Defaults sets default values for all gateway fields. With the exception
   # of annotations, defining any of these values in the `gateways` list
   # will override the default values provided here. Annotations will
@@ -1945,6 +1932,19 @@ ingressGateways:
       # Optional YAML string that will be appended to the Service spec.
       # @type: string
       additionalSpec: null
+
+    serviceAccount:
+      # This value defines additional annotations for the ingress gateways' service account. This should be formatted 
+      # as a multi-line string.
+      #
+      # ```yaml
+      # annotations: |
+      #   "sample/annotation1": "foo"
+      #   "sample/annotation2": "bar"
+      # ```
+      #
+      # @type: string
+      annotations: null
 
     # Resource limits for all ingress gateway pods
     # @recurse: false
