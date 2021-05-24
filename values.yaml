@@ -1417,8 +1417,8 @@ connectInject:
   logLevel: info
 
   serviceAccount:
-    # This value defines additional annotations for the client service account. This should be formatted as a multi-line
-    # string.
+    # This value defines additional annotations for the injector service account. This should be formatted as a 
+    # multi-line string.
     #
     # ```yaml
     # annotations: |
@@ -1616,8 +1616,8 @@ controller:
   logLevel: info
 
   serviceAccount:
-    # This value defines additional annotations for the client service account. This should be formatted as a multi-line
-    # string.
+    # This value defines additional annotations for the controller service account. This should be formatted as a 
+    # multi-line string.
     #
     # ```yaml
     # annotations: |
@@ -1859,6 +1859,19 @@ ingressGateways:
   # Enable ingress gateway deployment. Requires `connectInject.enabled=true`
   # and `client.enabled=true`.
   enabled: false
+
+  serviceAccount:
+    # This value defines additional annotations for the ingress gateways' service account. This should be formatted as a
+    # multi-line string.
+    #
+    # ```yaml
+    # annotations: |
+    #   "sample/annotation1": "foo"
+    #   "sample/annotation2": "bar"
+    # ```
+    #
+    # @type: string
+    annotations: null
 
   # Defaults sets default values for all gateway fields. With the exception
   # of annotations, defining any of these values in the `gateways` list

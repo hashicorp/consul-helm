@@ -66,3 +66,29 @@ load _helpers
       yq -r '.[2] | length > 0' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 }
+
+#--------------------------------------------------------------------
+# ingressGateways.serviceAccount.annotations
+
+@test "ingressGateways/ServiceAccount: no annotations by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/ingress-gateways-serviceaccount.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.metadata.annotations | length > 0' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "ingressGateways/ServiceAccount: annotations when enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/ingress-gateways-serviceaccount.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set "ingressGateways.serviceAccount.annotations=foo: bar" \
+      . | tee /dev/stderr |
+      yq -r '.metadata.annotations.foo' | tee /dev/stderr)
+  [ "${actual}" = "bar" ]
+}
