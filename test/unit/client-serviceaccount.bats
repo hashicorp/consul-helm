@@ -84,7 +84,7 @@ load _helpers
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-serviceaccount.yaml \
-      --set "client.serviceAccount.annotations.foo=bar" \
+      --set "client.serviceAccount.annotations=foo: bar" \
       . | tee /dev/stderr |
       yq -r '.metadata.annotations.foo' | tee /dev/stderr)
   [ "${actual}" = "bar" ]

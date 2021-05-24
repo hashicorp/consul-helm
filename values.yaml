@@ -372,8 +372,17 @@ server:
   connect: true
 
   serviceAccount:
-    # A map of annotations to add to the server service account 
-    annotations: {}
+    # This value defines additional annotations for the server service account. This should be formatted as a multi-line
+    # string.
+    #
+    # ```yaml
+    # annotations: |
+    #   "sample/annotation1": "foo"
+    #   "sample/annotation2": "bar"
+    # ```
+    #
+    # @type: string
+    annotations: null
 
   # The resource requests (CPU, memory, etc.)
   # for each of the server agents. This should be a YAML map corresponding to a Kubernetes
@@ -704,8 +713,18 @@ client:
   exposeGossipPorts: false
 
   serviceAccount:
-    # A map of annotations to add to the client service account 
-    annotations: {}
+    serviceAccount:
+    # This value defines additional annotations for the client service account. This should be formatted as a multi-line
+    # string.
+    #
+    # ```yaml
+    # annotations: |
+    #   "sample/annotation1": "foo"
+    #   "sample/annotation2": "bar"
+    # ```
+    #
+    # @type: string
+    annotations: null
 
   # Resource settings for Client agents.
   # NOTE: The use of a YAML string is deprecated. Instead, set directly as a
@@ -913,8 +932,17 @@ client:
       secretKey: null
 
     serviceAccount:
-      # A map of annotations to add to the snapshot agent service account 
-      annotations: {}
+      # This value defines additional annotations for the snapshot agent service account. This should be formatted as a 
+      # multi-line string.
+      #
+      # ```yaml
+      # annotations: |
+      #   "sample/annotation1": "foo"
+      #   "sample/annotation2": "bar"
+      # ```
+      #
+      # @type: string
+      annotations: null
 
     # Resource settings for snapshot agent pods.
     # @recurse: false
