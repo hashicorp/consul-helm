@@ -128,7 +128,7 @@ spec:
         - name: aclconfig
           emptyDir: {}
         {{- else }}
-        {{- if (and (and .Values.server.enterpriseLicense.secretName .Values.server.enterpriseLicense.secretKey) .Values.server.enterpriseLicense.enableLicenseAutoload) }}
+        {{- if (and .Values.server.enterpriseLicense.secretName .Values.server.enterpriseLicense.secretKey .Values.server.enterpriseLicense.enableLicenseAutoload) }}
         - name: consul-license
           secret:
             secretName: {{ .Values.server.enterpriseLicense.secretName }}
@@ -171,7 +171,7 @@ spec:
                   name: {{ .Values.global.gossipEncryption.secretName }}
                   key: {{ .Values.global.gossipEncryption.secretKey }}
             {{- end }}
-            {{- if (and (and .Values.server.enterpriseLicense.secretName .Values.server.enterpriseLicense.secretKey) .Values.server.enterpriseLicense.enableLicenseAutoload (not .Values.global.acls.manageSystemACLs)) }}
+            {{- if (and .Values.server.enterpriseLicense.secretName .Values.server.enterpriseLicense.secretKey .Values.server.enterpriseLicense.enableLicenseAutoload (not .Values.global.acls.manageSystemACLs)) }}
             - name: CONSUL_LICENSE_PATH
               value: /consul/license/{{ .Values.server.enterpriseLicense.secretKey }}
             {{- end }}
@@ -282,7 +282,7 @@ spec:
             - name: aclconfig
               mountPath: /consul/aclconfig
             {{- else }}
-            {{- if (and (and .Values.server.enterpriseLicense.secretName .Values.server.enterpriseLicense.secretKey) .Values.server.enterpriseLicense.enableLicenseAutoload) }}
+            {{- if (and .Values.server.enterpriseLicense.secretName .Values.server.enterpriseLicense.secretKey .Values.server.enterpriseLicense.enableLicenseAutoload) }}
             - name: consul-license
               mountPath: /consul/license
               readOnly: true
