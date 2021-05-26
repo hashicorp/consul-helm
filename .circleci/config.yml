@@ -69,8 +69,7 @@ commands:
                         -enable-enterprise \
                         -enable-multi-cluster \
                         -debug-directory="$TEST_RESULTS/debug" \
-                        -consul-k8s-image="docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest" \
-                        -consul-image="ashwinvenkatesh/consul@sha256:7a5c5f6fc043bd690a1d27648b0cc3bcac68656e2841c2d862a7666b661ba864"
+                        -consul-k8s-image="docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest"
                   then
                     echo "Tests in ${pkg} failed, aborting early"
                     exit_code=1

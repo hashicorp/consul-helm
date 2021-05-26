@@ -68,7 +68,9 @@ func (t *TestFlags) init() {
 
 	flag.BoolVar(&t.flagEnableEnterprise, "enable-enterprise", false,
 		"If true, the test suite will run tests for enterprise features. "+
-			"Note that some features may require setting the enterprise license flags below.")
+			"Note that some features may require setting the enterprise license flag below or the env var CONSUL_ENT_LICENSE")
+	flag.StringVar(&t.flagEnterpriseLicense, "enterprise-license", "",
+		"The enterprise license for Consul.")
 
 	flag.BoolVar(&t.flagEnableOpenshift, "enable-openshift", false,
 		"If true, the tests will automatically add Openshift Helm value for each Helm install.")
@@ -90,7 +92,9 @@ func (t *TestFlags) init() {
 	flag.BoolVar(&t.flagUseKind, "use-kind", false,
 		"If true, the tests will assume they are running against a local kind cluster(s).")
 
-	t.flagEnterpriseLicense = os.Getenv("CONSUL_ENT_LICENSE")
+	if t.flagEnterpriseLicense == "" {
+		t.flagEnterpriseLicense = os.Getenv("CONSUL_ENT_LICENSE")
+	}
 }
 
 func (t *TestFlags) Validate() error {
