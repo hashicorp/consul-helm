@@ -121,6 +121,9 @@ spec:
           image: "{{ default .Values.global.image .Values.server.image }}"
           env:
             - name: ADVERTISE_IP
+              {{- if .Values.server.advertiseAddr }}
+              value: {{ .Values.server.advertiseAddr }}
+              {{- else }}
               valueFrom:
                 fieldRef:
                   {{- if .Values.server.exposeGossipAndRPCPorts }}
@@ -132,6 +135,7 @@ spec:
                   {{- else }}
                   fieldPath: status.podIP
                   {{- end }}
+              {{- end }}
             - name: POD_IP
               valueFrom:
                 fieldRef:

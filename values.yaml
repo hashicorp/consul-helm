@@ -332,6 +332,7 @@ server:
   # set `server.ports.serflan.port` to a port not being used on the host. Since
   # `client.exposeGossipPorts` uses the hostPort 8301,
   # `server.ports.serflan.port` must be set to something other than 8301.
+  # Has no effect when then `server.advertiseAddr` is set.
   exposeGossipAndRPCPorts: false
 
   # Configures ports for the consul servers.
@@ -347,6 +348,12 @@ server:
     # the consul server Pods.
     serflan:
       port: 8301
+
+  # The address the consul server(s) will advertise to other agents.
+  # If unset, the advertise address will default to the Pod IP
+  # (see `server.exposeGossipAndRPCPorts`).
+  # @type: string
+  advertiseAddr: null
 
   # This defines the disk size for configuring the
   # servers' StatefulSet storage. For dynamically provisioned storage classes, this is the

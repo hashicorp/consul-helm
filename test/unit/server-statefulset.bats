@@ -232,6 +232,21 @@ load _helpers
   [ "${actual}" = '[{"name":"ADVERTISE_IP","valueFrom":{"fieldRef":{"fieldPath":"status.hostIP"}}}]' ]
 
 }
+#--------------------------------------------------------------------
+# advertiseAddr
+
+@test "server/StatefulSet: advertiseAddr can be explicitely set" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -s templates/server-statefulset.yaml  \
+      --set 'server.advertiseAddr=1.2.3.4' \
+      . | tee /dev/stderr )
+
+  # Test that ADVERTISE_IP is being set to advertiseAddr
+  local actual=$(echo "$object" |
+    yq -r -c '.spec.template.spec.containers[0].env | map(select(.name == "ADVERTISE_IP"))' | tee /dev/stderr)
+  [ "${actual}" = '[{"name": "ADVERTISE_IP", "value": "1.2.3.4"}]' ]
+}
 
 #--------------------------------------------------------------------
 # serflan
