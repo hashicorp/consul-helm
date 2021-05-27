@@ -623,9 +623,9 @@ workflows:
 #            - unit-helm
 #            - unit-acceptance-framework
       - acceptance-gke-1-17
-      - acceptance-eks-1-18
-      - acceptance-aks-1-19
-      - acceptance-kind-1-21
+#      - acceptance-eks-1-18
+#      - acceptance-aks-1-19
+#      - acceptance-kind-1-21
   nightly-acceptance-tests:
     triggers:
       - schedule:
