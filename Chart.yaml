@@ -18,7 +18,7 @@ annotations:
     - name: consul-k8s
       image: hashicorp/consul-k8s:0.26.0-beta2
     - name: envoy
-      image: envoyproxy/envoy-alpine:v1.18.2
+      image: envoyproxy/envoy-alpine:v1.18.3
   artifacthub.io/license: MPL-2.0
   artifacthub.io/links: |
     - name: Documentation

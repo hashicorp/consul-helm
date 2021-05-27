@@ -613,7 +613,7 @@ workflows:
 #          requires:
 #            - go-fmt-and-vet-helm-gen
 #      - test-helm-gen
-#      - unit-helm
+      - unit-helm
 #      - acceptance:
 #          requires:
 #            - unit-helm
