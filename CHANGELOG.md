@@ -1,4 +1,4 @@
-## Unreleased
+## 0.32.0-beta3 (May 27, 2021)
 IMPROVEMENTS:
 * Connect: Allow overwriting Kubernetes HTTP probes when running with transparent proxy enabled.
   [[GH-953](https://github.com/hashicorp/consul-helm/pull/953)]
