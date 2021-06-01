@@ -464,7 +464,7 @@ func createOrUpdateLicenseSecret(t *testing.T, client kubernetes.Interface, cfg 
 }
 
 // configureSCCs creates RoleBindings that bind the default service account to cluster roles
-// allowing access tot he anyuid and privileged Security Context Constraints on OpenShift.
+// allowing access to the anyuid and privileged Security Context Constraints on OpenShift.
 func configureSCCs(t *testing.T, client kubernetes.Interface, cfg *config.TestConfig, namespace string) {
 	anyuidClusterRole := "system:openshift:scc:anyuid"
 	privilegedClusterRole := "system:openshift:scc:privileged"
