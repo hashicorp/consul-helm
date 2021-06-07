@@ -166,6 +166,8 @@ spec:
                 WAN_ADDR="${HOST_IP}"
                 {{- else if (or (eq $serviceType "ClusterIP") (eq $serviceType "LoadBalancer")) }}
                 consul-k8s service-address \
+                  -log-level={{ $root.Values.global.logLevel }} \
+                  -log-json={{ $root.Values.global.logJSON }} \
                   -k8s-namespace={{ $root.Release.Namespace }} \
                   -name={{ template "consul.fullname" $root }}-{{ .name }} \
                   -output-file=/tmp/address.txt
@@ -368,11 +370,11 @@ spec:
                   - "/bin/sh"
                   - "-ec"
                   - |
-                      /consul-bin/consul services deregister \
-                      {{- if $root.Values.global.enableConsulNamespaces }}
-                      -namespace={{ default $defaults.consulNamespace .consulNamespace }} \
-                      {{- end }}
-                      -id="${POD_NAME}"
+                    /consul-bin/consul services deregister \
+                    {{- if $root.Values.global.enableConsulNamespaces }}
+                    -namespace={{ default $defaults.consulNamespace .consulNamespace }} \
+                    {{- end }}
+                    -id="${POD_NAME}"
 
         # consul-sidecar ensures the ingress gateway is always registered with
         # the local Consul agent, even if it loses the initial registration.
@@ -417,13 +419,17 @@ spec:
               value: http://$(HOST_IP):8500
             {{- end }}
           command:
-            - consul-k8s
-            - consul-sidecar
-            - -service-config=/consul/service/service.hcl
-            - -consul-binary=/consul-bin/consul
-            {{- if $root.Values.global.acls.manageSystemACLs }}
-            - -token-file=/consul/service/acl-token
-            {{- end }}
+            - "/bin/sh"
+            - "-ec"
+            - |
+                consul-k8s consul-sidecar \
+                  -log-level={{ $root.Values.global.logLevel }} \
+                  -log-json={{ $root.Values.global.logJSON }} \
+                  -service-config=/consul/service/service.hcl \
+                  {{- if $root.Values.global.acls.manageSystemACLs }}
+                  -token-file=/consul/service/acl-token \
+                  {{- end }}
+                  -consul-binary=/consul-bin/consul
       {{- if (default $defaults.priorityClassName .priorityClassName) }}
       priorityClassName: {{ default $defaults.priorityClassName .priorityClassName | quote }}
       {{- end }}

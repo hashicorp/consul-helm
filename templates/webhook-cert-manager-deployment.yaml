@@ -36,6 +36,8 @@ spec:
         - "-ec"
         - |
           consul-k8s webhook-cert-manager \
+            -log-level={{ .Values.global.logLevel }} \
+            -log-json={{ .Values.global.logJSON }} \
             -config-file=/bootstrap/config/webhook-config.json
         image: {{ .Values.global.imageK8S }}
         name: webhook-cert-manager
