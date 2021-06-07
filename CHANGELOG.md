@@ -1,3 +1,10 @@
+## Unreleased
+
+IMPROVEMENTS:
+* Allow setting annotations on service accounts for: server, client, client
+  snapshot agent, connect inject, controller, ingressGateways, meshGateway,
+  syncCatalog, and terminatingGateways. [[GH-964](https://github.com/hashicorp/consul-helm/pull/964)]
+
 ## 0.32.0-beta3 (May 27, 2021)
 KNOWN ISSUES:
 * This beta release does not work when Pod Security Policies are enabled. This will be fixed in the upcoming release.
