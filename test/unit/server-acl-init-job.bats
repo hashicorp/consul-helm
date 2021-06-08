@@ -992,7 +992,8 @@ load _helpers
 
   local actual=$(echo $object |
     yq 'any(contains("inject-k8s-namespace-mirroring-prefix"))' | tee /dev/stderr)
-  [ "${actual}" = "true"
+  [ "${actual}" = "true" ]
+}
 
 #--------------------------------------------------------------------
 # global.acls.createReplicationToken
