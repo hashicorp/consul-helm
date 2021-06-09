@@ -5,6 +5,10 @@ IMPROVEMENTS:
   snapshot agent, connect inject, controller, ingressGateways, meshGateway,
   syncCatalog, and terminatingGateways. [[GH-964](https://github.com/hashicorp/consul-helm/pull/964)]
 
+BUG FIXES:
+* CRDs: Update the type of connectTimeout and TTL in ServiceResolver and ServiceRouter from int64 to string.
+  This allows a user to set these values as a duration string on the resource ex '5s'.
+
 ## 0.32.0-beta3 (May 27, 2021)
 KNOWN ISSUES:
 * This beta release does not work when Pod Security Policies are enabled. This will be fixed in the upcoming release.
