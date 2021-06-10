@@ -91,10 +91,10 @@ global:
     # encryption key.
     secretKey: ""
 
-  # A list of addresses of upstream DNS servers that are used to recursively resolve queries.
-  # These values are given as `-recursor` flag to consul server and client
-  # See (https://www.consul.io/docs/agent/options#_recursor).
-  # If this is `null` (default), then the clients can only resolve queries inside of consul domain.
+  # A list of addresses of upstream DNS servers that are used to recursively resolve DNS queries.
+  # These values are given as `-recursor` flags to Consul servers and clients.
+  # See https://www.consul.io/docs/agent/options#_recursor for more details.
+  # If this is an empty array (the default), then Consul DNS will only resolve queries for the Consul top level domain (by default `.consul`).
   # @type: array<string>
   recursors: []
 
