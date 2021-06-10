@@ -96,7 +96,7 @@ global:
   # See (https://www.consul.io/docs/agent/options#_recursor).
   # If this is `null` (default), then the clients can only resolve queries inside of consul domain.
   # @type: array<string>
-  recursors: null
+  recursors: []
 
   # Enables TLS (https://learn.hashicorp.com/tutorials/consul/tls-encryption-secure)
   # across the cluster to verify authenticity of the Consul servers and clients.
