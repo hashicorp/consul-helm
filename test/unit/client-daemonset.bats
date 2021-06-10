@@ -1282,7 +1282,7 @@ rollingUpdate:
 #--------------------------------------------------------------------
 # recursors
 
-@test "server/DaemonSet: -recursor can be set by global.recursors" {
+@test "client/DaemonSet: -recursor can be set by global.recursors" {
   cd `chart_dir`
   local object=$(helm template \
       -s templates/client-daemonset.yaml  \
