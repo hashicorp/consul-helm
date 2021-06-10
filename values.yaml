@@ -91,6 +91,13 @@ global:
     # encryption key.
     secretKey: ""
 
+  # A list of addresses of upstream DNS servers that are used to recursively resolve queries.
+  # These values are given as `-recursor` flag to consul server and client
+  # See (https://www.consul.io/docs/agent/options#_recursor).
+  # If this is `null` (default), then the clients can only resolve queries inside of consul domain.
+  # @type: array<string>
+  recursors: null
+
   # Enables TLS (https://learn.hashicorp.com/tutorials/consul/tls-encryption-secure)
   # across the cluster to verify authenticity of the Consul servers and clients.
   # Requires Consul v1.4.1+ and consul-k8s v0.16.2+
@@ -127,13 +134,6 @@ global:
     # If true, the Helm chart will configure Consul to disable the HTTP port on
     # both clients and servers and to only accept HTTPS connections.
     httpsOnly: true
-
-    # A list of addresses of upstream DNS servers that are used to recursively resolve queries.
-    # These values are given as `-recursor` flag to consul server and client
-    # See (https://www.consul.io/docs/agent/options#_recursor).
-    # If this is `null` (default), then the clients can only resolve queries inside of consul domain.
-    # @type: array<string>
-    recursors: null
 
     # A Kubernetes secret containing the certificate of the CA to use for
     # TLS communication within the Consul cluster. If you have generated the CA yourself
