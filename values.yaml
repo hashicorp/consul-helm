@@ -128,6 +128,13 @@ global:
     # both clients and servers and to only accept HTTPS connections.
     httpsOnly: true
 
+    # A list of addresses of upstream DNS servers that are used to recursively resolve queries.
+    # These values are given as `-recursor` flag to consul server and client
+    # See (https://www.consul.io/docs/agent/options#_recursor).
+    # If this is `null` (default), then the clients can only resolve queries inside of consul domain.
+    # @type: array<string>
+    recursors: null
+
     # A Kubernetes secret containing the certificate of the CA to use for
     # TLS communication within the Consul cluster. If you have generated the CA yourself
     # with the consul CLI, you could use the following command to create the secret
@@ -933,7 +940,7 @@ client:
       secretKey: null
 
     serviceAccount:
-      # This value defines additional annotations for the snapshot agent service account. This should be formatted as a 
+      # This value defines additional annotations for the snapshot agent service account. This should be formatted as a
       # multi-line string.
       #
       # ```yaml
@@ -1432,7 +1439,7 @@ connectInject:
   logLevel: info
 
   serviceAccount:
-    # This value defines additional annotations for the injector service account. This should be formatted as a 
+    # This value defines additional annotations for the injector service account. This should be formatted as a
     # multi-line string.
     #
     # ```yaml
@@ -1631,7 +1638,7 @@ controller:
   logLevel: info
 
   serviceAccount:
-    # This value defines additional annotations for the controller service account. This should be formatted as a 
+    # This value defines additional annotations for the controller service account. This should be formatted as a
     # multi-line string.
     #
     # ```yaml
@@ -1936,7 +1943,7 @@ ingressGateways:
       additionalSpec: null
 
     serviceAccount:
-      # This value defines additional annotations for the ingress gateways' service account. This should be formatted 
+      # This value defines additional annotations for the ingress gateways' service account. This should be formatted
       # as a multi-line string.
       #
       # ```yaml
@@ -2121,7 +2128,7 @@ terminatingGateways:
     annotations: null
 
     serviceAccount:
-      # This value defines additional annotations for the terminating gateways' service account. This should be 
+      # This value defines additional annotations for the terminating gateways' service account. This should be
       # formatted as a multi-line string.
       #
       # ```yaml
