@@ -67,7 +67,7 @@ commands:
                 echo $pkgs
                 for pkg in $pkgs
                 do
-                  if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 2h -failfast \
+                  if ! gotestsum --no-summary=all --jsonfile=jsonfile-${pkg////-} -- $pkg -p 1 -timeout 2h \
                         << parameters.additional-flags >> \
                         -enable-enterprise \
                         -enable-multi-cluster \
@@ -92,7 +92,7 @@ commands:
                 command: |
                   pkgs=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
                   echo "Running $pkgs"
-                  gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- $pkgs -p 1 -timeout 2h -failfast \
+                  gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- $pkgs -p 1 -timeout 2h \
                       << parameters.additional-flags >> \
                       -enable-multi-cluster \
                       -enable-enterprise \
@@ -195,7 +195,7 @@ jobs:
             - ~/.go_workspace/pkg/mod
       - run: mkdir -p $TEST_RESULTS
       - run-acceptance-tests:
-          failfast: true
+          failfast: false
           additional-flags: -use-kind -kubecontext="kind-dc1" -secondary-kubecontext="kind-dc2"
       - store_test_results:
           path: /tmp/test-results
@@ -227,7 +227,7 @@ jobs:
             - ~/.go_workspace/pkg/mod
       - run: mkdir -p $TEST_RESULTS
       - run-acceptance-tests:
-          failfast: true
+          failfast: false
           additional-flags: -use-kind -kubecontext="kind-dc1" -secondary-kubecontext="kind-dc2" -enable-transparent-proxy
       - store_test_results:
           path: /tmp/test-results
