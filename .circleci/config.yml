@@ -72,7 +72,8 @@ commands:
                         -enable-enterprise \
                         -enable-multi-cluster \
                         -debug-directory="$TEST_RESULTS/debug" \
-                        -consul-k8s-image=<< parameters.consul-k8s-image >>
+                        -consul-k8s-image=<< parameters.consul-k8s-image >> \
+                        -consul-image="gcr.io/nitya-293720/consul-dev:ent-fix"
                   then
                     echo "Tests in ${pkg} failed, aborting early"
                     exit_code=1
@@ -82,22 +83,6 @@ commands:
                 gotestsum --raw-command --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- cat jsonfile*
                 exit $exit_code
 
-      - unless:
-          condition: << parameters.failfast >>
-          steps:
-            - run:
-                name: Run acceptance tests
-                working_directory: test/acceptance/tests
-                no_output_timeout: 2h
-                command: |
-                  pkgs=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
-                  echo "Running $pkgs"
-                  gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- $pkgs -p 1 -timeout 2h \
-                      << parameters.additional-flags >> \
-                      -enable-multi-cluster \
-                      -enable-enterprise \
-                      -debug-directory="$TEST_RESULTS/debug" \
-                      -consul-k8s-image=<< parameters.consul-k8s-image >>
 jobs:
   unit-helm:
     docker:
@@ -195,7 +180,6 @@ jobs:
             - ~/.go_workspace/pkg/mod
       - run: mkdir -p $TEST_RESULTS
       - run-acceptance-tests:
-          failfast: false
           additional-flags: -use-kind -kubecontext="kind-dc1" -secondary-kubecontext="kind-dc2"
       - store_test_results:
           path: /tmp/test-results
@@ -227,7 +211,6 @@ jobs:
             - ~/.go_workspace/pkg/mod
       - run: mkdir -p $TEST_RESULTS
       - run-acceptance-tests:
-          failfast: false
           additional-flags: -use-kind -kubecontext="kind-dc1" -secondary-kubecontext="kind-dc2" -enable-transparent-proxy
       - store_test_results:
           path: /tmp/test-results
@@ -634,11 +617,11 @@ workflows:
           requires:
             - unit-helm
             - unit-acceptance-framework
-      - acceptance-openshift
-      - acceptance-gke-1-17
-      - acceptance-eks-1-18
-      - acceptance-aks-1-19
-      - acceptance-kind-1-21
+#      - acceptance-openshift
+#      - acceptance-gke-1-17
+#      - acceptance-eks-1-18
+#      - acceptance-aks-1-19
+#      - acceptance-kind-1-21
   nightly-acceptance-tests:
     triggers:
       - schedule:
