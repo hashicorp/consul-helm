@@ -83,6 +83,23 @@ commands:
                 gotestsum --raw-command --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- cat jsonfile*
                 exit $exit_code
 
+      - unless:
+          condition: << parameters.failfast >>
+          steps:
+            - run:
+                name: Run acceptance tests
+                working_directory: test/acceptance/tests
+                no_output_timeout: 2h
+                command: |
+                  pkgs=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
+                  echo "Running $pkgs"
+                  gotestsum --junitfile "$TEST_RESULTS/gotestsum-report.xml" -- $pkgs -p 1 -timeout 2h \
+                      << parameters.additional-flags >> \
+                      -enable-multi-cluster \
+                      -enable-enterprise \
+                      -debug-directory="$TEST_RESULTS/debug" \
+                      -consul-k8s-image=<< parameters.consul-k8s-image >> \
+                      -consul-image="gcr.io/nitya-293720/consul-dev:ent-fix"
 jobs:
   unit-helm:
     docker:
