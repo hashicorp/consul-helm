@@ -1434,6 +1434,7 @@ load _helpers
 
 #--------------------------------------------------------------------
 # global.federation.enabled
+
 @test "serverACLInit/Job: ensure federation is passed when federation is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
