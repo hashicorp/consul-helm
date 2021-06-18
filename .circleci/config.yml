@@ -351,9 +351,9 @@ jobs:
             terraform destroy -auto-approve
           when: always
 
-      - slack/status:
-          fail_only: true
-          failure_message: "AKS acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
+#      - slack/status:
+#          fail_only: true
+#          failure_message: "AKS acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
 
   acceptance-eks-1-18:
     environment:
@@ -469,9 +469,9 @@ jobs:
           command: |
             terraform destroy -auto-approve
           when: always
-      - slack/status:
-          fail_only: true
-          failure_message: "OpenShift acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
+#      - slack/status:
+#          fail_only: true
+#          failure_message: "OpenShift acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
 
   acceptance-kind-1-21:
     environment:
@@ -612,6 +612,20 @@ jobs:
           fail_only: true
           failure_message: "Failed to trigger an update to the helm charts index. Check the logs at: ${CIRCLE_BUILD_URL}"
 
+  cleanup-azure-resources:
+    docker:
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.9.0
+    steps:
+      - run:
+          name: cleanup leftover resources
+          command: |
+            az login --service-principal -u "$ARM_CLIENT_ID" -p "$ARM_CLIENT_SECRET" --tenant "$ARM_TENANT_ID" > /dev/null
+            resource_groups=$(az group list -o json  | jq -r '.[] | select(.name | test("^consul-k8s-\\d+$")) | .name')
+            for group in $resource_groups; do
+              echo "Deleting $group resource group"
+              az group delete -n $group --yes
+            done
+
 workflows:
   version: 2
   test:
@@ -634,6 +648,12 @@ workflows:
           requires:
             - unit-helm
             - unit-acceptance-framework
+      - acceptance-openshift
+      - acceptance-aks-1-19
+      - cleanup-azure-resources:
+          requires:
+            - acceptance-aks-1-19
+            - acceptance-openshift
   nightly-acceptance-tests:
     triggers:
       - schedule:
@@ -648,6 +668,10 @@ workflows:
       - acceptance-eks-1-18
       - acceptance-aks-1-19
       - acceptance-kind-1-21
+      - cleanup-azure-resources:
+          requires:
+            - acceptance-aks-1-19
+            - acceptance-openshift
   update-helm-charts-index:
     jobs:
       - update-helm-charts-index:
