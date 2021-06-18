@@ -663,6 +663,7 @@ workflows:
             - unit-helm
             - unit-acceptance-framework
       - cleanup-gcp-resources
+      - cleanup-azure-resources
   nightly-acceptance-tests:
     triggers:
       - schedule:
