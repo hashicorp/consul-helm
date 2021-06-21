@@ -43,7 +43,7 @@ spec:
         {{- if (and .Values.global.metrics.enabled .Values.global.metrics.enableAgentMetrics) }}
         "prometheus.io/scrape": "true"
         "prometheus.io/path": "/v1/agent/metrics"
-        "prometheus.io/port": "8500"
+        "prometheus.io/port": "{{ .Values.client.ports.http.port }}"
         {{- end }}
     spec:
     {{- if .Values.client.affinity }}
@@ -177,7 +177,7 @@ spec:
             {{- end }}
             {{- if .Values.global.tls.enabled }}
             - name: CONSUL_HTTP_ADDR
-              value: https://localhost:8501
+              value: https://localhost:{{ .Values.client.ports.https.port }}
             {{- if .Values.global.tls.enableAutoEncrypt }}
             - name: CONSUL_HTTP_SSL_VERIFY
               value: "false"
@@ -185,6 +185,9 @@ spec:
             - name: CONSUL_CACERT
               value: /consul/tls/ca/tls.crt
             {{- end }}
+            {{- else }}
+            - name: CONSUL_HTTP_ADDR
+              value: http://localhost:{{ .Values.client.ports.http.port }}
             {{- end }}
             {{- include "consul.extraEnvironmentVars" .Values.client | nindent 12 }}
           command:
@@ -218,13 +221,16 @@ spec:
                 -hcl='verify_server_hostname = true' \
                 {{- end }}
                 {{- end }}
-                -hcl='ports { https = 8501 }' \
+                -hcl='ports { https = {{ .Values.client.ports.https.port }} }' \
                 {{- if .Values.global.tls.httpsOnly }}
                 -hcl='ports { http = -1 }' \
                 {{- end }}
                 {{- end }}
+                {{- if (not (and .Values.global.tls.enabled .Values.global.tls.httpsOnly)) }}
+                -hcl='ports { http = {{ .Values.client.ports.http.port }} }' \
+                {{- end }}
                 {{- if .Values.client.grpc }}
-                -hcl='ports { grpc = 8502 }' \
+                -hcl='ports { grpc = {{ .Values.client.ports.grpc.port }} }' \
                 {{- end }}
                 {{- if (and .Values.global.metrics.enabled .Values.global.metrics.enableAgentMetrics) }}
                 -hcl='telemetry { prometheus_retention_time = "{{ .Values.global.metrics.agentMetricsRetentionTime }}" }' \
@@ -294,34 +300,34 @@ spec:
             {{- end }}
           ports:
             {{- if (or (not .Values.global.tls.enabled) (not .Values.global.tls.httpsOnly)) }}
-            - containerPort: 8500
-              hostPort: 8500
+            - containerPort: {{ .Values.client.ports.http.port }}
+              hostPort: {{ .Values.client.ports.http.port }}
               name: http
             {{- end }}
             {{- if .Values.global.tls.enabled }}
-            - containerPort: 8501
-              hostPort: 8501
+            - containerPort: {{ .Values.client.ports.https.port }}
+              hostPort: {{ .Values.client.ports.https.port }}
               name: https
             {{- end }}
-            - containerPort: 8502
-              hostPort: 8502
+            - containerPort: {{ .Values.client.ports.grpc.port }}
+              hostPort: {{ .Values.client.ports.grpc.port }}
               name: grpc
-            - containerPort: 8301
+            - containerPort: {{ .Values.client.ports.serflanTcp.port }}
               {{- if .Values.client.exposeGossipPorts }}
-              hostPort: 8301
+              hostPort: {{ .Values.client.ports.serflanTcp.port }}
               {{- end }}
               protocol: "TCP"
               name: serflan-tcp
-            - containerPort: 8301
+            - containerPort: {{ .Values.client.ports.serflanUdp.port }}
               {{- if .Values.client.exposeGossipPorts }}
-              hostPort: 8301
+              hostPort: {{ .Values.client.ports.serflanUdp.port }}
               {{- end }}
               protocol: "UDP"
               name: serflan-udp
-            - containerPort: 8600
+            - containerPort: {{ .Values.client.ports.dnsTcp.port }}
               name: dns-tcp
               protocol: "TCP"
-            - containerPort: 8600
+            - containerPort: {{ .Values.client.ports.dnsUdp.port }}
               name: dns-udp
               protocol: "UDP"
           readinessProbe:
@@ -335,9 +341,9 @@ spec:
                   {{- if .Values.global.tls.enabled }}
                   curl \
                     -k \
-                    https://127.0.0.1:8501/v1/status/leader \
+                    https://127.0.0.1:{{ .Values.client.ports.https.port }}/v1/status/leader \
                   {{- else }}
-                  curl http://127.0.0.1:8500/v1/status/leader \
+                  curl http://127.0.0.1:{{ .Values.client.ports.http.port }}/v1/status/leader \
                   {{- end }}
                   2>/dev/null | grep -E '".+"'
           {{- if .Values.client.resources }}

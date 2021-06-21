@@ -736,6 +736,23 @@ client:
   # This also changes the clients' advertised IP to the `hostIP` rather than `podIP`.
   exposeGossipPorts: false
 
+  ports:
+  # Customizes ports for the different client functionalities.
+    serflanTcp:
+      port: 8301
+    serflanUdp:
+      port: 8301
+    http:
+      port: 8500
+    https:
+      port: 8501
+    grpc:
+      port: 8502
+    dnsTcp:
+      port: 8600
+    dnsUdp:
+      port: 8600
+
   serviceAccount:
     # This value defines additional annotations for the client service account. This should be formatted as a multi-line
     # string.
