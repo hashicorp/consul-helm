@@ -5,7 +5,7 @@ FEATURES:
   This feature allows users to reach other services on the Consul Service Mesh by using KubeDNS instead of using `localhost` and enforces all inbound and outbound traffic within a pod to go through the Envoy proxy.
   Please see [Transparent Proxy](https://www.consul.io/docs/connect/transparent-proxy ) docs for more information.
 
-  **Note: This feature requires consul-k8s `v0.26.0` or higher.**
+  **Note: This feature requires Consul 1.10.0 or higher and consul-k8s `v0.26.0` or higher.**
 
   Transparent proxy is enabled by default for all Consul service mesh application. You can disable it for the
   entire Helm installation by setting:
