@@ -123,7 +123,7 @@ jobs:
       # Restore go module cache if there is one
       - restore_cache:
           keys:
-            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+            - consul-helm-acceptance-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
 
       - run:
           name: go mod download
@@ -132,7 +132,7 @@ jobs:
 
       # Save go module cache if the go.mod file has changed
       - save_cache:
-          key: consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+          key: consul-helm-acceptance-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
           paths:
             - "/go/pkg/mod"
 
@@ -161,7 +161,7 @@ jobs:
       # Restore go module cache if there is one
       - restore_cache:
           keys:
-            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+            - consul-helm-acceptance-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
 
       - run: mkdir -p $TEST_RESULTS
 
@@ -190,7 +190,7 @@ jobs:
           version: "v1.20.7"
       - restore_cache:
           keys:
-            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+            - consul-helm-acceptance-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
       - run:
           name: go mod download
           working_directory: test/acceptance
@@ -222,7 +222,7 @@ jobs:
           version: "v1.20.7"
       - restore_cache:
           keys:
-            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+            - consul-helm-acceptance-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
       - run:
           name: go mod download
           working_directory: test/acceptance
@@ -283,7 +283,7 @@ jobs:
       # Restore go module cache if there is one
       - restore_cache:
           keys:
-            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+            - consul-helm-acceptance-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
 
       - run: mkdir -p $TEST_RESULTS
 
@@ -338,7 +338,7 @@ jobs:
       # Restore go module cache if there is one
       - restore_cache:
           keys:
-            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+            - consul-helm-acceptance-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
 
       - run: mkdir -p $TEST_RESULTS
 
@@ -404,7 +404,7 @@ jobs:
       # Restore go module cache if there is one
       - restore_cache:
           keys:
-            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+            - consul-helm-acceptance-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
 
       - run: mkdir -p $TEST_RESULTS
 
@@ -458,7 +458,7 @@ jobs:
       # Restore go module cache if there is one
       - restore_cache:
           keys:
-            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+            - consul-helm-acceptance-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
 
       - run: mkdir -p $TEST_RESULTS
 
