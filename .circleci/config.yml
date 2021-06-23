@@ -14,13 +14,10 @@ commands:
       - run:
           name: Install gotestsum, kind, kubectl, and helm
           command: |
-            env
-            which go
-            
             wget https://golang.org/dl/go1.16.5.linux-amd64.tar.gz
-            sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.16.5.linux-amd64.tar.gz
+            sudo rm -rf /home/circleci/.go_workspace/go && sudo tar -C /home/circleci/.go_workspace -xzf go1.16.5.linux-amd64.tar.gz
             rm go1.16.5.linux-amd64.tar.gz
-            echo 'export PATH=$PATH:/usr/local/go/bin' >> $BASH_ENV
+            go version
 
             go get gotest.tools/gotestsum
 
