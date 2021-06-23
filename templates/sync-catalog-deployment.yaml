@@ -82,7 +82,7 @@ spec:
             {{- if .Values.global.tls.enabled }}
             {{- if .Values.client.enabled }}
             - name: CONSUL_HTTP_ADDR
-              value: https://$(HOST_IP):8501
+              value: https://$(HOST_IP):{{ .Values.client.ports.https.port }}
             {{- else }}
             - name: CONSUL_HTTP_ADDR
               value: https://{{ template "consul.fullname" . }}-server:8501
@@ -92,7 +92,7 @@ spec:
             {{- else }}
             {{- if .Values.client.enabled }}
             - name: CONSUL_HTTP_ADDR
-              value: http://$(HOST_IP):8500
+              value: http://$(HOST_IP):{{ .Values.client.ports.http.port }}
             {{- else }}
             - name: CONSUL_HTTP_ADDR
               value: http://{{ template "consul.fullname" . }}-server:8500
