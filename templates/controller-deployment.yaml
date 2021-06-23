@@ -64,6 +64,7 @@ spec:
             {{- else }}
             -log-level={{ .Values.global.logLevel }} \
             {{- end }}
+            -log-json={{ .Values.global.logJSON }} \
             -webhook-tls-cert-dir=/tmp/controller-webhook/certs \
             -datacenter={{ .Values.global.datacenter }} \
             -enable-leader-election \

@@ -88,6 +88,7 @@ spec:
                 {{- else }}
                 -log-level={{ .Values.global.logLevel }} \
                 {{- end }}
+                -log-json={{ .Values.global.logJSON }} \
                 -default-inject={{ .Values.connectInject.default }} \
                 -consul-image="{{ default .Values.global.image .Values.connectInject.imageConsul }}" \
                 -envoy-image="{{ .Values.global.imageEnvoy }}" \
