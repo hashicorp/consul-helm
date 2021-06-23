@@ -157,12 +157,12 @@ spec:
                   fieldPath: metadata.name
             {{- if $root.Values.global.tls.enabled }}
             - name: CONSUL_HTTP_ADDR
-              value: https://$(HOST_IP):8501
+              value: https://$(HOST_IP):{{ $root.Values.client.ports.https.port }}
             - name: CONSUL_CACERT
               value: /consul/tls/ca/tls.crt
             {{- else }}
             - name: CONSUL_HTTP_ADDR
-              value: http://$(HOST_IP):8500
+              value: http://$(HOST_IP):{{ $root.Values.client.ports.http.port }}
             {{- end }}
           command:
             - "/bin/sh"
@@ -270,16 +270,16 @@ spec:
             {{- end}}
             {{- if $root.Values.global.tls.enabled }}
             - name: CONSUL_HTTP_ADDR
-              value: https://$(HOST_IP):8501
+              value: https://$(HOST_IP):{{ $root.Values.client.ports.https.port }}
             - name: CONSUL_GRPC_ADDR
-              value: https://$(HOST_IP):8502
+              value: https://$(HOST_IP):{{ $root.Values.client.ports.grpc.port }}
             - name: CONSUL_CACERT
               value: /consul/tls/ca/tls.crt
             {{- else }}
             - name: CONSUL_HTTP_ADDR
-              value: http://$(HOST_IP):8500
+              value: http://$(HOST_IP):{{ $root.Values.client.ports.http.port }}
             - name: CONSUL_GRPC_ADDR
-              value: $(HOST_IP):8502
+              value: $(HOST_IP):{{ $root.Values.client.ports.grpc.port }}
             {{- end }}
           command:
             - /consul-bin/consul
@@ -357,12 +357,12 @@ spec:
                   fieldPath: status.podIP
             {{- if $root.Values.global.tls.enabled }}
             - name: CONSUL_HTTP_ADDR
-              value: https://$(HOST_IP):8501
+              value: https://$(HOST_IP):{{ $root.Values.client.ports.https.port }}
             - name: CONSUL_CACERT
               value: /consul/tls/ca/tls.crt
             {{- else }}
             - name: CONSUL_HTTP_ADDR
-              value: http://$(HOST_IP):8500
+              value: http://$(HOST_IP):{{ $root.Values.client.ports.http.port }}
             {{- end }}
           command:
             - consul-k8s
