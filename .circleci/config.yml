@@ -14,6 +14,8 @@ commands:
       - run:
           name: Install gotestsum, kind, kubectl, and helm
           command: |
+            env
+
             wget https://golang.org/dl/go1.16.5.linux-amd64.tar.gz
             sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.16.5.linux-amd64.tar.gz
             rm go1.16.5.linux-amd64.tar.gz
