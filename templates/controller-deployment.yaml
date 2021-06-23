@@ -104,9 +104,9 @@ spec:
         {{- end }}
         - name: CONSUL_HTTP_ADDR
           {{- if .Values.global.tls.enabled }}
-          value: https://$(HOST_IP):8501
+          value: https://$(HOST_IP):{{ .Values.client.ports.https.port }}
           {{- else }}
-          value: http://$(HOST_IP):8500
+          value: http://$(HOST_IP):{{ .Values.client.ports.http.port }}
           {{- end }}
         image: {{ .Values.global.imageK8S }}
         name: controller
