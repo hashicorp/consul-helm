@@ -193,7 +193,7 @@ jobs:
           version: "v1.20.7"
       - restore_cache:
           keys:
-            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+            - consul-helm-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
       - run:
           name: go mod download
           working_directory: test/acceptance
@@ -225,7 +225,7 @@ jobs:
           version: "v1.20.7"
       - restore_cache:
           keys:
-            - consul-helm-acceptance-modcache-v1-{{ checksum "test/acceptance/go.mod" }}
+            - consul-helm-modcache-v2-{{ checksum "test/acceptance/go.mod" }}
       - run:
           name: go mod download
           working_directory: test/acceptance
