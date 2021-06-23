@@ -736,6 +736,72 @@ client:
   # This also changes the clients' advertised IP to the `hostIP` rather than `podIP`.
   exposeGossipPorts: false
 
+  # Configure an optional NodePort service for the Consul client in case
+  # HostPorts are not available. Activating this service will also disable any
+  # hostPort security capabilities.
+  #
+  # Note: This will also require the feature gate `ServiceTopology` for
+  # Kubernetes < v1.21 and `TopologyAwareHints` for Kubernetes >= v1.21
+  # respectively activated. If the Consul client standard ports (e.g. `8051`)
+  # are used the `--service-node-port-range` of Kubernetes must be extended
+  # from the default range `30000-32767` to also include the Consul client
+  # ports (e.g. `8500-32767`). In most scenarios it is recommended to adjust
+  # the Consul client ports to be within the default NodePort service range.
+  service:
+    # This will enable/disable registering a Kubernetes NodePort Service for
+    # the Consul client. This value only takes effect if `client.enabled` or
+    # `global.enabled` is true.
+    enabled: false
+
+    # Customize the nodePort values of the client NodePort service.
+    # Note: These ports must match with the configured client ports.
+    nodePorts:
+      http:
+        port: 8500
+        nodePort: 8500
+        targetPort: 8500
+      https:
+        port: 8501
+        nodePort: 8501
+        targetPort: 8501
+      grpc:
+        port: 8502
+        nodePort: 8502
+        targetPort: 8502
+
+    # Annotations to apply to the nodePort client service. If
+    # `TopologyAwareHints` are used with Kubernetes >= v1.21 configure the
+    # required hints here.
+    #
+    # Example:
+    #
+    # ```yaml
+    # annotations: |
+    #   'annotation-key': annotation-value
+    #   service.kubernetes.io/topology-aware-hints: auto
+    # ```
+    # @type: string
+    annotations: null
+
+    # TopologyKeys to apply to the nodePort client service. If
+    # `ServiceTopology` is used with Kubernetes < v1.21 configure the required
+    # keys here.
+    #
+    # Example:
+    #
+    # ```yaml
+    # topologyKeys: |
+    #   - "kubernetes.io/hostname"
+    # ```
+    # @type: string
+    topologyKeys: null
+
+    # Additional ServiceSpec values
+    # This should be a multi-line string mapping directly to a Kubernetes
+    # ServiceSpec object.
+    # @type: string
+    additionalSpec: null
+
   serviceAccount:
     # This value defines additional annotations for the client service account. This should be formatted as a multi-line
     # string.

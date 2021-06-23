@@ -19,7 +19,11 @@ allowHostDirVolumePlugin: false
 allowHostIPC: false
 allowHostNetwork: {{ .Values.client.hostNetwork }}
 allowHostPID: false
+{{- if (not .Values.client.service.enabled) }}
 allowHostPorts: true
+{{- else }}
+allowHostPorts: false
+{{- end }}
 allowPrivilegeEscalation: true
 allowPrivilegedContainer: false
 allowedCapabilities: null
