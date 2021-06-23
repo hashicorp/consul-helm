@@ -661,7 +661,6 @@ workflows:
             - go-fmt-and-vet-helm-gen
       - test-helm-gen
       - unit-helm
-      - acceptance-gke-1-17
       - acceptance:
           requires:
             - unit-helm
