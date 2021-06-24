@@ -1617,6 +1617,13 @@ connectInject:
     # @type: string
     secretKey: null
 
+  # Configures on which ports the Consul clients are reachable for the Connect
+  # inject init container.
+  clientPorts:
+    http: 8500
+    https: 8501
+    grpc: 8502
+
   sidecarProxy:
     # Set default resources for sidecar proxy. If null, that resource won't
     # be set.

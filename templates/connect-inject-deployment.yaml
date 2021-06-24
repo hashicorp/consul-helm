@@ -92,6 +92,9 @@ spec:
                 -release-name="{{ .Release.Name }}" \
                 -release-namespace="{{ .Release.Namespace }}" \
                 -listen=:8080 \
+                -consul-client-port-http={{ .Values.connectInject.clientPorts.http }} \
+                -consul-client-port-https={{ .Values.connectInject.clientPorts.https }} \
+                -consul-client-port-grpc={{ .Values.connectInject.clientPorts.grpc }} \
                 {{- if .Values.connectInject.transparentProxy.defaultEnabled }}
                 -default-enable-transparent-proxy=true \
                 {{- else }}
