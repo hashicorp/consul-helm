@@ -28,6 +28,9 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
+#--------------------------------------------------------------------
+# client.service
+
 @test "client/SecurityContextConstraints: host ports are allowed by default" {
   cd `chart_dir`
   local actual=$(helm template \
@@ -38,6 +41,16 @@ load _helpers
   [ "${actual}" = 'true' ]
 }
 
+@test "client/SecurityContextConstraints: host ports are disallowed with client.service.enabled=true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-securitycontextconstraints.yaml  \
+      --set 'global.openshift.enabled=true' \
+      --set 'client.service.enabled=true' \
+      . | tee /dev/stderr |
+      yq -c '.allowHostPorts' | tee /dev/stderr)
+  [ "${actual}" = 'false' ]
+}
 
 #--------------------------------------------------------------------
 # client.dataDirectoryHostPath

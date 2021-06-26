@@ -67,6 +67,30 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# client.service
+
+@test "client/PodSecurityPolicy: hostPorts enabled and nodePort service disabled by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-podsecuritypolicy.yaml  \
+      --set 'global.enablePodSecurityPolicies=true' \
+      . | tee /dev/stderr |
+      yq -c '.spec.hostPorts' | tee /dev/stderr)
+  [ "${actual}" != '' ]
+}
+
+@test "client/PodSecurityPolicy: hostPorts disabled when nodePort service is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-podsecuritypolicy.yaml  \
+      --set 'global.enablePodSecurityPolicies=true' \
+      --set 'client.service.enabled=true' \
+      . | tee /dev/stderr |
+      yq -c '.spec.hostPorts' | tee /dev/stderr)
+  [ "${actual}" = 'null' ]
+}
+
+#--------------------------------------------------------------------
 # client.dataDirectoryHostPath
 
 @test "client/PodSecurityPolicy: disallows hostPath volume by default" {
