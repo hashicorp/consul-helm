@@ -913,6 +913,54 @@ EOF
 }
 
 #--------------------------------------------------------------------
+# clientPorts
+
+@test "connectInject/Deployment: default client ports" {
+  cd `chart_dir`
+  local cmd=$(helm template \
+      -s templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-consul-client-port-http=8500"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-consul-client-port-https=8501"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-consul-client-port-grpc=8502"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "connectInject/Deployment: can set client ports" {
+  cd `chart_dir`
+  local cmd=$(helm template \
+      -s templates/connect-inject-deployment.yaml \
+      --set 'connectInject.enabled=true' \
+      --set 'connectInject.clientPorts.http=32500' \
+      --set 'connectInject.clientPorts.https=32501' \
+      --set 'connectInject.clientPorts.grpc=32502' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-consul-client-port-http=32500"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-consul-client-port-https=32501"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual=$(echo "$cmd" |
+    yq 'any(contains("-consul-client-port-grpc=32502"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
 # resources
 
 @test "connectInject/Deployment: default resources" {
