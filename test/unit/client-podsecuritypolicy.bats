@@ -67,6 +67,41 @@ load _helpers
 }
 
 #--------------------------------------------------------------------
+# client.ports
+
+@test "client/PodSecurityPolicy: hostPort default ports are set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-podsecuritypolicy.yaml  \
+      --set 'global.enablePodSecurityPolicies=true' \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.httpsOnly=false' \
+      --set 'client.grpc=true' \
+      --set 'client.exposeGossipPorts=true' \
+      . | tee /dev/stderr |
+      yq -c '.spec.hostPorts' | tee /dev/stderr)
+  [ "${actual}" = '[{"min":8500,"max":8500},{"min":8501,"max":8501},{"min":8502,"max":8502},{"min":8301,"max":8301}]' ]
+}
+
+@test "client/PodSecurityPolicy: hostPort default ports are customizable" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-podsecuritypolicy.yaml  \
+      --set 'global.enablePodSecurityPolicies=true' \
+      --set 'global.tls.enabled=true' \
+      --set 'global.tls.httpsOnly=false' \
+      --set 'client.grpc=true' \
+      --set 'client.exposeGossipPorts=true' \
+      --set 'client.ports.http.port=32500' \
+      --set 'client.ports.https.port=32501' \
+      --set 'client.ports.grpc.port=32502' \
+      --set 'client.ports.serflanTcp.port=32301' \
+      . | tee /dev/stderr |
+      yq -c '.spec.hostPorts' | tee /dev/stderr)
+  [ "${actual}" = '[{"min":32500,"max":32500},{"min":32501,"max":32501},{"min":32502,"max":32502},{"min":32301,"max":32301}]' ]
+}
+
+#--------------------------------------------------------------------
 # client.dataDirectoryHostPath
 
 @test "client/PodSecurityPolicy: disallows hostPath volume by default" {

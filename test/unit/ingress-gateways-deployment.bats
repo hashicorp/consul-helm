@@ -101,7 +101,107 @@ load _helpers
 #--------------------------------------------------------------------
 # global.tls.enabled
 
-@test "ingressGateways/Deployment: sets TLS env variables when global.tls.enabled" {
+@test "ingressGateways/Deployment: sets Consul environment variables for init container when global.tls.enabled=false" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=false' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers[1].env[]' | tee /dev/stderr)
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'http://$(HOST_IP):8500' ]
+}
+
+@test "ingressGateways/Deployment: sets Consul environment variables for init container when global.tls.enabled=false and custom client HTTP port set" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=false' \
+      --set 'client.ports.http.port=32500' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers[1].env[]' | tee /dev/stderr)
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'http://$(HOST_IP):32500' ]
+}
+
+@test "ingressGateways/Deployment: sets Consul environment variables for init container when global.tls.enabled" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers[1].env[]' | tee /dev/stderr)
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'https://$(HOST_IP):8501' ]
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
+  [ "${actual}" = "/consul/tls/ca/tls.crt" ]
+}
+
+@test "ingressGateways/Deployment: sets Consul environment variables for init container when global.tls.enabled and custom client HTTPS port set" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      --set 'client.ports.https.port=32501' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.initContainers[1].env[]' | tee /dev/stderr)
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'https://$(HOST_IP):32501' ]
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
+  [ "${actual}" = "/consul/tls/ca/tls.crt" ]
+}
+
+@test "ingressGateways/Deployment: sets Consul environment variables when global.tls.enabled=false" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=false' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.containers[0].env[]' | tee /dev/stderr)
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'http://$(HOST_IP):8500' ]
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_GRPC_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = '$(HOST_IP):8502' ]
+}
+
+@test "ingressGateways/Deployment: sets Consul environment variables when global.tls.enabled=false and custom client HTTP/GRPC port set" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=false' \
+      --set 'client.ports.http.port=32500' \
+      --set 'client.ports.grpc.port=32502' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.containers[0].env[]' | tee /dev/stderr)
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'http://$(HOST_IP):32500' ]
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_GRPC_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = '$(HOST_IP):32502' ]
+}
+
+@test "ingressGateways/Deployment: sets Consul environment variables when global.tls.enabled" {
   cd `chart_dir`
   local env=$(helm template \
       -s templates/ingress-gateways-deployment.yaml  \
@@ -121,7 +221,58 @@ load _helpers
   [ "${actual}" = "/consul/tls/ca/tls.crt" ]
 }
 
-@test "ingressGateways/Deployment: sets TLS env variables in consul sidecar when global.tls.enabled" {
+@test "ingressGateways/Deployment: sets Consul environment variables when global.tls.enabled and custom client HTTPS/GRPC port set" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      --set 'client.ports.https.port=32501' \
+      --set 'client.ports.grpc.port=32502' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.containers[0].env[]' | tee /dev/stderr)
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'https://$(HOST_IP):32501' ]
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_GRPC_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'https://$(HOST_IP):32502' ]
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
+  [ "${actual}" = "/consul/tls/ca/tls.crt" ]
+}
+
+@test "ingressGateways/Deployment: sets Consul environment variables in consul sidecar when global.tls.enabled=false" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=false' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.containers[1].env[]' | tee /dev/stderr)
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'http://$(HOST_IP):8500' ]
+}
+
+@test "ingressGateways/Deployment: sets Consul environment variables in consul sidecar when global.tls.enabled=false and custom client HTTP port set" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=false' \
+      --set 'client.ports.http.port=32500' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.containers[1].env[]' | tee /dev/stderr)
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'http://$(HOST_IP):32500' ]
+}
+
+@test "ingressGateways/Deployment: sets Consul environment variables in consul sidecar when global.tls.enabled" {
   cd `chart_dir`
   local env=$(helm template \
       -s templates/ingress-gateways-deployment.yaml  \
@@ -133,6 +284,24 @@ load _helpers
 
   local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
   [ "${actual}" = 'https://$(HOST_IP):8501' ]
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
+  [ "${actual}" = "/consul/tls/ca/tls.crt" ]
+}
+
+@test "ingressGateways/Deployment: sets Consul environment variables in consul sidecar when global.tls.enabled and custom client HTTPS port set" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/ingress-gateways-deployment.yaml  \
+      --set 'ingressGateways.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      --set 'client.ports.https.port=32501' \
+      . | tee /dev/stderr |
+      yq -s -r '.[0].spec.template.spec.containers[1].env[]' | tee /dev/stderr)
+
+  local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'https://$(HOST_IP):32501' ]
 
   local actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
   [ "${actual}" = "/consul/tls/ca/tls.crt" ]

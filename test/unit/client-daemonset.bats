@@ -490,6 +490,18 @@ load _helpers
   [ "${actual}" = "8500" ]
 }
 
+@test "client/DaemonSet: when global.metrics.enableAgentMetrics=true and custom HTTP client port set, adds prometheus custom port annotation" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.metrics.enabled=true'  \
+      --set 'global.metrics.enableAgentMetrics=true'  \
+      --set 'client.ports.http.port=32500' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.metadata.annotations."prometheus.io/port"' | tee /dev/stderr)
+  [ "${actual}" = "32500" ]
+}
+
 @test "client/DaemonSet: when global.metrics.enableAgentMetrics=true, adds prometheus path=/v1/agent/metrics annotation" {
   cd `chart_dir`
   local actual=$(helm template \
@@ -690,7 +702,7 @@ load _helpers
   [ "${actual}" != "" ]
 }
 
-@test "client/DaemonSet: port 8501 is not exposed when TLS is disabled" {
+@test "client/DaemonSet: default HTTPS port is not exposed when TLS is disabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-daemonset.yaml  \
@@ -700,7 +712,7 @@ load _helpers
   [ "${actual}" == "" ]
 }
 
-@test "client/DaemonSet: port 8501 is exposed when TLS is enabled" {
+@test "client/DaemonSet: default HTTPS port is exposed when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-daemonset.yaml  \
@@ -710,7 +722,7 @@ load _helpers
   [ "${actual}" != "" ]
 }
 
-@test "client/DaemonSet: port 8500 is still exposed when httpsOnly is not enabled" {
+@test "client/DaemonSet: default HTTP port is still exposed when httpsOnly is not enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-daemonset.yaml  \
@@ -721,7 +733,7 @@ load _helpers
   [ "${actual}" != "" ]
 }
 
-@test "client/DaemonSet: port 8500 is not exposed when httpsOnly is enabled" {
+@test "client/DaemonSet: default HTTP port is not exposed when httpsOnly is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-daemonset.yaml  \
@@ -732,7 +744,7 @@ load _helpers
   [ "${actual}" == "" ]
 }
 
-@test "client/DaemonSet: readiness checks are over HTTP TLS is disabled" {
+@test "client/DaemonSet: readiness checks are over default HTTP port when TLS is disabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-daemonset.yaml  \
@@ -742,13 +754,35 @@ load _helpers
   [ "${actual}" = "true" ]
 }
 
-@test "client/DaemonSet: readiness checks are over HTTPS when TLS is disabled" {
+@test "client/DaemonSet: readiness checks are over custom HTTP port when TLS is disabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=false' \
+      --set 'client.ports.http.port=32500' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("http://127.0.0.1:32500")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: readiness checks are over default HTTPS port when TLS is enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-daemonset.yaml  \
       --set 'global.tls.enabled=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("https://127.0.0.1:8501")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: readiness checks are over custom HTTPS port when TLS is enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'client.ports.https.port=32501' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].readinessProbe.exec.command | join(" ") | contains("https://127.0.0.1:32501")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -804,6 +838,33 @@ load _helpers
   [ "${has_tls_init_container}" = "true" ]
 }
 
+@test "client/DaemonSet: sets Consul environment variables when global.tls.enabled=false" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=false' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].env[]' | tee /dev/stderr)
+
+  local actual
+  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = "http://localhost:8500" ]
+}
+
+@test "client/DaemonSet: sets Consul environment variables when global.tls.enabled=false and custom client HTTP port set" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=false' \
+      --set 'client.ports.http.port=32500' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].env[]' | tee /dev/stderr)
+
+  local actual
+  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = "http://localhost:32500" ]
+}
+
 @test "client/DaemonSet: sets Consul environment variables when global.tls.enabled" {
   cd `chart_dir`
   local env=$(helm template \
@@ -815,6 +876,23 @@ load _helpers
   local actual
   actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
   [ "${actual}" = "https://localhost:8501" ]
+
+  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
+    [ "${actual}" = "/consul/tls/ca/tls.crt" ]
+}
+
+@test "client/DaemonSet: sets Consul environment variables when global.tls.enabled and custom client HTTPS port set" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'client.ports.https.port=32501' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].env[]' | tee /dev/stderr)
+
+  local actual
+  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = "https://localhost:32501" ]
 
   actual=$(echo $env | jq -r '. | select(.name == "CONSUL_CACERT") | .value' | tee /dev/stderr)
     [ "${actual}" = "/consul/tls/ca/tls.crt" ]
@@ -1095,6 +1173,237 @@ load _helpers
       yq '.spec.template.spec.containers  | map(select(.name=="consul")) | .[0].ports | map(select(.containerPort==8301)) | .[0].hostPort'  |
       tee /dev/stderr)
   [ "${actual}" = "8301" ]
+}
+
+#--------------------------------------------------------------------
+# client.ports
+#
+@test "client/DaemonSet: client HTTP port parameter has default value" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("ports { http = 8500 }"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: client HTTP port parameter has default value when global.tls.enabled and global.tls.httpsOnly=false" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.enabled=true' \
+      --set 'global.tls.enabled=true'  \
+      --set 'global.tls.httpsOnly=false'  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("ports { http = 8500 }"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: client HTTP port parameter is not set when global.tls.enabled and global.tls.httpsOnly" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.enabled=true' \
+      --set 'global.tls.enabled=true'  \
+      --set 'global.tls.httpsOnly=true'  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("ports { http = 8500 }"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "client/DaemonSet: custom HTTP custom port parameter can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.enabled=true' \
+      --set 'client.ports.http.port=32500' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("ports { http = 32500 }"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: client HTTPS port parameter has default value when global.tls.enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true'  \
+      --set 'client.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("ports { https = 8501 }"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: client HTTPS custom port parameter can be set when global.tls.enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true'  \
+      --set 'client.enabled=true' \
+      --set 'client.ports.https.port=32501' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("ports { https = 32501 }"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: client GRPC port parameter has default value when client.grpc" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.enabled=true' \
+      --set 'client.grpc=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("ports { grpc = 8502 }"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: client GRPC custom port parameter can be set when client.rpc" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.enabled=true' \
+      --set 'client.grpc=true' \
+      --set 'client.ports.grpc.port=32502' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("ports { grpc = 32502 }"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: exposed HTTP port has default value" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8500)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed HTTP port can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.ports.http.port=32500' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 32500)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed HTTPS port has default value if global.tls.enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8501)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed HTTPS port can be set if global.tls.enabled" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.tls.enabled=true' \
+      --set 'client.ports.https.port=32501' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 32501)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed GRPC port has default value if client.grpc" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.grpc=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8502)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed GRPC port can be set if client.grpc" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.grpc=true' \
+      --set 'client.ports.grpc.port=32502' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 32502)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed Serf LAN TCP port has default value" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8301)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed Serf LAN TCP port can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.ports.serflanTcp.port=32301' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 32301)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed Serf LAN UDP port has default value" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8301)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed Serf LAN UDP port can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.ports.serflanUdp.port=32301' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 32301)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed DNS TCP port has default value" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8600)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed DNS TCP port can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.ports.dnsTcp.port=32600' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 32600)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed DNS UDP port has default value" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 8600)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
+}
+
+@test "client/DaemonSet: exposed DNS UDP port can be set" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'client.ports.dnsUdp.port=32600' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select (.containerPort == 32600)' | tee /dev/stderr)
+  [ "${actual}" != "" ]
 }
 
 #--------------------------------------------------------------------

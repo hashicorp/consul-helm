@@ -95,6 +95,41 @@ load _helpers
 #--------------------------------------------------------------------
 # global.tls
 
+@test "createFederationSecet/Job: sets Consul environment variables when global.tls.enabled" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/create-federation-secret-job.yaml  \
+      --set 'global.federation.enabled=true' \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      --set 'global.federation.createFederationSecret=true' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].env[]' | tee /dev/stderr)
+
+  local actual
+  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'https://$(HOST_IP):8501' ]
+}
+
+@test "createFederationSecet/Job: sets Consul environment variables when global.tls.enabled and custom client HTTPS port set" {
+  cd `chart_dir`
+  local env=$(helm template \
+      -s templates/create-federation-secret-job.yaml  \
+      --set 'global.federation.enabled=true' \
+      --set 'meshGateway.enabled=true' \
+      --set 'connectInject.enabled=true' \
+      --set 'global.tls.enabled=true' \
+      --set 'global.federation.createFederationSecret=true' \
+      --set 'client.ports.https.port=32501' \
+      . | tee /dev/stderr |
+      yq -r '.spec.template.spec.containers[0].env[]' | tee /dev/stderr)
+
+  local actual
+  actual=$(echo $env | jq -r '. | select(.name == "CONSUL_HTTP_ADDR") | .value' | tee /dev/stderr)
+  [ "${actual}" = 'https://$(HOST_IP):32501' ]
+}
+
 @test "createFederationSecet/Job: mounts caCert secrets when set manually" {
   cd `chart_dir`
   local volumes=$(helm template \
