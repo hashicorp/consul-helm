@@ -365,17 +365,15 @@ spec:
               value: http://$(HOST_IP):8500
             {{- end }}
           command:
-            - "/bin/sh"
-            - "-ec"
-            - |
-                consul-k8s consul-sidecar \
-                  -log-level={{ .Values.global.logLevel }} \
-                  -log-json={{ .Values.global.logJSON }} \
-                  -service-config=/consul/service/service.hcl \
-                  {{- if .Values.global.acls.manageSystemACLs }}
-                  -token-file=/consul/service/acl-token \
-                  {{- end }}
-                  -consul-binary=/consul-bin/consul
+            - consul-k8s
+            - consul-sidecar
+            - -log-level={{ .Values.global.logLevel }}
+            - -log-json={{ .Values.global.logJSON }}
+            - -service-config=/consul/service/service.hcl
+            {{- if .Values.global.acls.manageSystemACLs }}
+            - -token-file=/consul/service/acl-token
+            {{- end }}
+            - -consul-binary=/consul-bin/consul
       {{- if .Values.meshGateway.priorityClassName }}
       priorityClassName: {{ .Values.meshGateway.priorityClassName | quote }}
       {{- end }}
