@@ -1,6 +1,7 @@
 ## UNRELEASED
 
 IMPROVEMENTS:
+* Allow setting global.logLevel and global.logJSON and propogate this to all consul-k8s commands. [[GH-980](https://github.com/hashicorp/consul-helm/pull/980)]
 * Allow setting annotations on service accounts for: server, client, client
   snapshot agent, connect inject, controller, ingressGateways, meshGateway,
   syncCatalog, and terminatingGateways. [[GH-964](https://github.com/hashicorp/consul-helm/pull/964)]
