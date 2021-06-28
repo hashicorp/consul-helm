@@ -11,7 +11,7 @@ global:
 
   # The default log level to apply to all components which do not otherwise override this setting.
   # It is recommended to generally not set this below "info" unless actively debugging due to logging verbosity.
-  # One of "trace", "debug", "info", "warn", or "error".
+  # One of "debug", "info", "warn", or "error".
   # @type: string
   logLevel: "info"
 
@@ -1340,7 +1340,7 @@ syncCatalog:
       memory: "50Mi"
       cpu: "50m"
 
-  # Log verbosity level. One of "trace", "debug", "info", "warn", or "error".
+  # Override global log verbosity level. One of "debug", "info", "warn", or "error".
   # @type: string
   logLevel: ""
 
@@ -1446,7 +1446,7 @@ connectInject:
   # @type: string
   imageConsul: null
 
-  # Log verbosity level. One of "debug", "info", "warn", or "error".
+  # Override global log verbosity level. One of "debug", "info", "warn", or "error".
   # @type: string
   logLevel: ""
 

@@ -370,11 +370,11 @@ spec:
                   - "/bin/sh"
                   - "-ec"
                   - |
-                    /consul-bin/consul services deregister \
-                    {{- if $root.Values.global.enableConsulNamespaces }}
-                    -namespace={{ default $defaults.consulNamespace .consulNamespace }} \
-                    {{- end }}
-                    -id="${POD_NAME}"
+                      /consul-bin/consul services deregister \
+                        {{- if $root.Values.global.enableConsulNamespaces }}
+                        -namespace={{ default $defaults.consulNamespace .consulNamespace }} \
+                        {{- end }}
+                        -id="${POD_NAME}"
 
         # consul-sidecar ensures the ingress gateway is always registered with
         # the local Consul agent, even if it loses the initial registration.

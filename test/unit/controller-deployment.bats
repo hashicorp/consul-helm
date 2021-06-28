@@ -503,12 +503,12 @@ load _helpers
   local cmd=$(helm template \
       -s templates/controller-deployment.yaml  \
       --set 'controller.enabled=true' \
-      --set 'controller.logLevel=debug' \
+      --set 'controller.logLevel=error' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[0].command' | tee /dev/stderr)
 
   local actual=$(echo "$cmd" |
-    yq 'any(contains("-log-level=debug"))' | tee /dev/stderr)
+    yq 'any(contains("-log-level=error"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 

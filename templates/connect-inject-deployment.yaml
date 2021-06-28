@@ -83,11 +83,7 @@ spec:
               CONSUL_FULLNAME="{{template "consul.fullname" . }}"
 
               consul-k8s inject-connect \
-                {{- if .Values.connectInject.logLevel }}
-                -log-level={{ .Values.connectInject.logLevel }} \
-                {{- else }}
-                -log-level={{ .Values.global.logLevel }} \
-                {{- end }}
+                -log-level={{ default .Values.global.logLevel .Values.connectInject.logLevel }} \
                 -log-json={{ .Values.global.logJSON }} \
                 -default-inject={{ .Values.connectInject.default }} \
                 -consul-image="{{ default .Values.global.image .Values.connectInject.imageConsul }}" \

@@ -59,11 +59,7 @@ spec:
         - "-ec"
         - |
           consul-k8s controller \
-            {{- if .Values.controller.logLevel }}
-            -log-level={{ .Values.controller.logLevel }} \
-            {{- else }}
-            -log-level={{ .Values.global.logLevel }} \
-            {{- end }}
+            -log-level={{ default .Values.global.logLevel .Values.controller.logLevel }} \
             -log-json={{ .Values.global.logJSON }} \
             -webhook-tls-cert-dir=/tmp/controller-webhook/certs \
             -datacenter={{ .Values.global.datacenter }} \
