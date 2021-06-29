@@ -113,11 +113,7 @@ spec:
             - "-ec"
             - |
               consul-k8s sync-catalog \
-                {{- if .Values.syncCatalog.logLevel }}
-                -log-level={{ .Values.syncCatalog.logLevel }} \
-                {{- else }}
-                -log-level={{ .Values.global.logLevel }} \
-                {{- end }}
+                -log-level={{ default .Values.global.logLevel .Values.syncCatalog.logLevel }} \
                 -log-json={{ .Values.global.logJSON }} \
                 -k8s-default-sync={{ .Values.syncCatalog.default }} \
                 {{- if (not .Values.syncCatalog.toConsul) }}

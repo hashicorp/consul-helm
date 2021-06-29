@@ -424,10 +424,10 @@ spec:
             - -log-level={{ $root.Values.global.logLevel }}
             - -log-json={{ $root.Values.global.logJSON }}
             - -service-config=/consul/service/service.hcl
+            - -consul-binary=/consul-bin/consul
             {{- if $root.Values.global.acls.manageSystemACLs }}
             - -token-file=/consul/service/acl-token
             {{- end }}
-            - -consul-binary=/consul-bin/consul
       {{- if (default $defaults.priorityClassName .priorityClassName) }}
       priorityClassName: {{ default $defaults.priorityClassName .priorityClassName | quote }}
       {{- end }}
