@@ -39,6 +39,18 @@ spec:
       port: 8501
       targetPort: 8501
     {{- end }}
+    {{- if .Values.server.adminPartitions }}
+    {{- range $partition := .Values.server.adminPartitions }}
+    - targetPort: {{ $partition.port }}
+      port: {{ $partition.port }}
+      protocol: "TCP"
+      name: {{ $partition.name }}-tcp
+    - targetPort: {{ $partition.port }}
+      port: {{ $partition.port }}
+      protocol: "UDP"
+      name: {{ $partition.name }}-udp
+    {{- end }}
+    {{- end }}
     - name: serflan-tcp
       protocol: "TCP"
       port: 8301

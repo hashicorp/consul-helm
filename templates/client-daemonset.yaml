@@ -240,6 +240,10 @@ spec:
                 -config-dir=/consul/userconfig/{{ .name }} \
                 {{- end }}
                 {{- end }}
+                {{- if .Values.client.adminPartition }}
+                -segment={{ .Values.client.adminPartition }} \
+{{/*                -partition={{ .Values.client.adminPartition }} \*/}}
+                {{- end }}
                 -datacenter={{ .Values.global.datacenter }} \
                 -data-dir=/consul/data \
                 {{- if (and .Values.global.gossipEncryption.secretName .Values.global.gossipEncryption.secretKey) }}

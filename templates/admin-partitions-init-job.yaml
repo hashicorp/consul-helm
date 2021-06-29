@@ -1,0 +1,80 @@
+{{- $serverEnabled := (or (and (ne (.Values.server.enabled | toString) "-") .Values.server.enabled) (and (eq (.Values.server.enabled | toString) "-") .Values.global.enabled)) -}}
+{{- if (and $serverEnabled .Values.externalServers.enabled) }}{{ fail "only one of server.enabled or externalServers.enabled can be set" }}{{ end -}}
+{{- if (or $serverEnabled .Values.externalServers.enabled) }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "consul.fullname" . }}-admin-partitions-init
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "consul.name" . }}
+    chart: {{ template "consul.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  template:
+    metadata:
+      name: {{ template "consul.fullname" . }}-admin-partitions-init
+      labels:
+        app: {{ template "consul.name" . }}
+        chart: {{ template "consul.chart" . }}
+        release: {{ .Release.Name }}
+        component: admin-partitions-init
+      annotations:
+        "consul.hashicorp.com/connect-inject": "false"
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ template "consul.fullname" . }}-admin-partitions-init
+      volumes:
+      - name: config
+        configMap:
+          name: {{ template "consul.fullname" . }}-admin-partitions-config
+      containers:
+        - name: post-install-job
+          image: {{ .Values.global.imageK8S }}
+          env:
+          - name: HOST_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+            {{- if (and .Values.controller.aclToken.secretName .Values.controller.aclToken.secretKey) }}
+          - name: CONSUL_HTTP_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.controller.aclToken.secretName }}
+                key: {{ .Values.controller.aclToken.secretKey }}
+            {{- end }}
+            {{- if .Values.global.acls.manageSystemACLs }}
+          - name: CONSUL_HTTP_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: "{{ template "consul.fullname" . }}-controller-acl-token"
+                key: "token"
+            {{- end}}
+            {{- if .Values.global.tls.enabled }}
+          - name: CONSUL_CACERT
+            value: /consul/tls/ca/tls.crt
+            {{- end }}
+          - name: CONSUL_HTTP_ADDR
+            {{- if .Values.global.tls.enabled }}
+            value: https://$(HOST_IP):8501
+            {{- else }}
+            value: http://$(HOST_IP):8500
+          {{- end }}
+          volumeMounts:
+          - name: config
+            mountPath: /config
+          command:
+            - "/bin/sh"
+            - "-ec"
+            - |
+              consul-k8s partitions-init \
+                -config="/config/partitions.json"
+          resources:
+            requests:
+              memory: "50Mi"
+              cpu: "50m"
+            limits:
+              memory: "50Mi"
+              cpu: "50m"
+{{- end }}

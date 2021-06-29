@@ -320,6 +320,14 @@ server:
   # @type: int
   bootstrapExpect: null
 
+  adminPartitions:
+  - name: default
+    port: 8303
+  - name: one
+    port: 8304
+  - name: two
+    port: 8305
+
   # [Enterprise Only] This value refers to a Kubernetes secret that you have created
   # that contains your enterprise license. It is required if you are using an
   # enterprise binary. Defining it here applies it to your cluster once a leader
@@ -341,7 +349,7 @@ server:
   # set `server.ports.serflan.port` to a port not being used on the host. Since
   # `client.exposeGossipPorts` uses the hostPort 8301,
   # `server.ports.serflan.port` must be set to something other than 8301.
-  exposeGossipAndRPCPorts: false
+  exposeGossipAndRPCPorts: true
 
   # Configures ports for the consul servers.
   ports:
@@ -690,6 +698,8 @@ client:
   # @type: string
   image: null
 
+  adminPartition: default
+
   # A list of valid `-retry-join` values (https://consul.io/docs/agent/options#retry-join).
   # If this is `null` (default), then the clients will attempt to automatically
   # join the server cluster running within Kubernetes.
@@ -697,7 +707,10 @@ client:
   # join that cluster. If `server.enabled` is not true, then a value must be
   # specified so the clients can join a valid cluster.
   # @type: array<string>
-  join: null
+  join:
+  - "${CONSUL_FULLNAME}-server-0.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc:8303"
+  - "${CONSUL_FULLNAME}-server-1.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc:8303"
+  - "${CONSUL_FULLNAME}-server-2.${CONSUL_FULLNAME}-server.${NAMESPACE}.svc:8303"
 
   # An absolute path to a directory on the host machine to use as the Consul
   # client data directory. If set to the empty string or null, the Consul agent
