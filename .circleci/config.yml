@@ -55,7 +55,7 @@ commands:
         type: string
       consul-k8s-image:
         type: string
-        default: "kschoche/consul-k8s-dev-logging"
+        default: "docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest"
     steps:
       - when:
           condition: << parameters.failfast >>
