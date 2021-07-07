@@ -18,7 +18,7 @@ webhooks:
       - key: app
         operator: NotIn
         values: [ {{ template "consul.name" . }} ]
-    failurePolicy: Fail
+    failurePolicy: {{ .Values.connectInject.failurePolicy }}
     sideEffects: None
     admissionReviewVersions:
     - "v1beta1"

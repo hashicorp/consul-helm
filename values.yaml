@@ -1483,6 +1483,13 @@ connectInject:
       memory: "50Mi"
       cpu: "50m"
 
+  # Sets the failurePolicy for the mutating webhook. By default this will cause pods to fail scheduling while the webhook
+  # is offline. This has the effect of forcing a pod which is connect-injected to avoid skipping mutation if the
+  # webhook were to be momentarily offline, once the webhook is back online the pod will be scheduled.
+  # In some docker based environments such as Kind this may have an undesirable effect as it uses pods to provision storage volumes in
+  # special namespaces which can cause hangs. This setting can be disabled by setting to "Ignore".
+  failurePolicy: "Fail"
+
   # Selector for restricting the webhook to only
   # specific namespaces. This should be set to a multiline string.
   # See https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#matching-requests-namespaceselector
