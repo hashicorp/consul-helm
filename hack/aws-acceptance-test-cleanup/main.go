@@ -25,6 +25,11 @@ import (
 	"github.com/cenkalti/backoff/v4"
 )
 
+const (
+	// buildURLTag is a tag on AWS resources set by the acceptance tests.
+	buildURLTag = "build_url"
+)
+
 var (
 	flagAutoApprove bool
 	errNotDestroyed = errors.New("not yet destroyed")
@@ -76,7 +81,7 @@ func realMain(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			if hasTag("build_url", clusterData.Cluster.Tags) {
+			if _, ok := clusterData.Cluster.Tags[buildURLTag]; ok {
 				toDeleteClusters = append(toDeleteClusters, *clusterData.Cluster)
 			}
 
@@ -85,7 +90,7 @@ func realMain(ctx context.Context) error {
 
 	var clusterPrint string
 	for _, c := range toDeleteClusters {
-		clusterPrint += fmt.Sprintf("- %s (%s)\n", *c.Name, *c.Tags["build_url"])
+		clusterPrint += fmt.Sprintf("- %s (%s)\n", *c.Name, *c.Tags[buildURLTag])
 	}
 	if len(toDeleteClusters) == 0 {
 		fmt.Println("No EKS clusters to clean up")
@@ -317,14 +322,4 @@ func destroyBackoff(ctx context.Context, resourceKind string, resourceID string,
 		}
 		return err
 	}, backoff.WithContext(expoBackoff, ctx))
-}
-
-// hasTag returns true if tagKey is a key in tags.
-func hasTag(tagKey string, tags map[string]*string) bool {
-	for k := range tags {
-		if k == tagKey {
-			return true
-		}
-	}
-	return false
 }
