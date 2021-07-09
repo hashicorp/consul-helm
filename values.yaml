@@ -1484,10 +1484,11 @@ connectInject:
       cpu: "50m"
 
   # Sets the failurePolicy for the mutating webhook. By default this will cause pods to fail scheduling while the webhook
-  # is offline. This has the effect of forcing a pod which is connect-injected to avoid skipping mutation if the
-  # webhook were to be momentarily offline, once the webhook is back online the pod will be scheduled.
-  # In some docker based environments such as Kind this may have an undesirable effect as it uses pods to provision storage volumes in
-  # special namespaces which can cause hangs. This setting can be disabled by setting to "Ignore".
+  # is offline. This prevents a pod from skipping mutation if the webhook were to be momentarily offline.
+  # Once the webhook is back online the pod will be scheduled.
+  # In some environments such as Kind this may have an undesirable effect as it may prevent provisioner pods from running
+  # which can lead to hangs. In these environments it is recommend to use "Ignore" instead.
+  # This setting can be safely disabled by setting to "Ignore".
   failurePolicy: "Fail"
 
   # Selector for restricting the webhook to only

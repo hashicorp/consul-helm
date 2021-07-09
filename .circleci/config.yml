@@ -663,12 +663,14 @@ workflows:
             - go-fmt-and-vet-helm-gen
       - test-helm-gen
       - unit-helm
-      - cleanup-gcp-resources
-      - acceptance-gke-1-17:
+      - acceptance:
           requires:
-            - unit-acceptance-framework
             - unit-helm
-            - cleanup-gcp-resources
+            - unit-acceptance-framework
+      - acceptance-tproxy:
+          requires:
+            - unit-helm
+            - unit-acceptance-framework
   nightly-acceptance-tests:
     triggers:
       - schedule:
