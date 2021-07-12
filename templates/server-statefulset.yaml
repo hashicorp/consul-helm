@@ -180,6 +180,8 @@ spec:
             - |
               CONSUL_FULLNAME="{{template "consul.fullname" . }}"
 
+              {{ template "consul.extraargs" . }}
+
               exec /bin/consul agent \
                 -advertise="${ADVERTISE_IP}" \
                 -bind=0.0.0.0 \
@@ -240,6 +242,7 @@ spec:
                 {{- range $value := .Values.global.recursors }}
                 -recursor={{ quote $value }} \
                 {{- end }}
+                -config-file=/consul/extra-config/extra-from-values.json \
                 -server
           volumeMounts:
             - name: data-{{ .Release.Namespace }}

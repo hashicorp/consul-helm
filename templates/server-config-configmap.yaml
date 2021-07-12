@@ -11,8 +11,6 @@ metadata:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
 data:
-  extra-from-values.json: |-
-{{ tpl .Values.server.extraConfig . | trimAll "\"" | indent 4 }}
   {{- if .Values.global.acls.manageSystemACLs }}
   acl-config.json: |-
     {

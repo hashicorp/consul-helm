@@ -16,6 +16,20 @@ as well as the global.name setting.
 {{- end -}}
 
 {{/*
+Set's the args for custom command to render the Vault configuration
+file with IP addresses to make the out of box experience easier
+for users looking to use this chart with Consul Helm.
+*/}}
+{{- define "consul.extraargs" -}}
+              mkdir -p /consul/extra-config
+              echo '{{ tpl .Values.server.extraConfig . | trimAll "\"" }}' > /consul/extra-config/extra-from-values.json
+              [ -n "${HOST_IP}" ] && sed -Ei "s|HOST_IP|${HOST_IP?}|g" /consul/extra-config/extra-from-values.json
+              [ -n "${POD_IP}" ] && sed -Ei "s|POD_IP|${POD_IP?}|g" /consul/extra-config/extra-from-values.json
+              [ -n "${HOSTNAME}" ] && sed -Ei "s|HOSTNAME|${HOSTNAME?}|g" /consul/extra-config/extra-from-values.json
+{{- end}}
+
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "consul.chart" -}}
