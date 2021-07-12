@@ -271,8 +271,8 @@ global:
     # @type: boolean
     enableGatewayMetrics: true
 
-  # The consul sidecar is responsible for metrics merging and in the case of ingress/mesh/terminating gateways
-  # it additionally ensures the Consul services are always registered with their local Consul client.
+  # For connect-injected pods, the consul sidecar is responsible for metrics merging. For ingress/mesh/terminating 
+  # gateways, it additionally ensures the Consul services are always registered with their local Consul client.
   # @recurse: false
   # @type: map
   consulSidecarContainer:
