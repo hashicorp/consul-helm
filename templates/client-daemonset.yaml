@@ -364,6 +364,10 @@ spec:
         volumeMounts:
           - name: aclconfig
             mountPath: /consul/aclconfig
+        {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+        securityContext:
+          {{- toYaml .Values.global.securityContext | nindent 10 }}
+        {{- end }}
         resources:
           requests:
             memory: "25Mi"

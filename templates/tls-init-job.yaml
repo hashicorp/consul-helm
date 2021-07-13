@@ -53,6 +53,10 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
           workingDir: /tmp
+          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+          securityContext:
+            {{- toYaml .Values.global.securityContext | nindent 12 }}
+          {{- end }}
           command:
             - "/bin/sh"
             - "-ec"

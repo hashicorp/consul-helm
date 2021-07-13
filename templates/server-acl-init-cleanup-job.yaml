@@ -54,6 +54,10 @@ spec:
             - -log-json={{ .Values.global.logJSON }}
             - -k8s-namespace={{ .Release.Namespace }}
             - {{ template "consul.fullname" . }}-server-acl-init
+          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+          securityContext:
+            {{- toYaml .Values.global.securityContext | nindent 12 }}
+          {{- end }}
           resources:
             requests:
               memory: "50Mi"

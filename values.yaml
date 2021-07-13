@@ -298,6 +298,19 @@ global:
     # its components on OpenShift.
     enabled: false
 
+  # The security context for any consul-k8s pods. This should be a YAML map corresponding to a
+  # Kubernetes [SecurityContext](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/) object.
+  # By default, consul-k8s image has non-numeric user (consul-k8s) and so k8s cannot veryify user is non-root.
+  # This overrides that with the equivalent numerical values.
+  # Note: if running on OpenShift, this setting is ignored because the user and group are set automatically
+  # by the OpenShift platform.
+  # @type: map
+  # @recurse: false
+  securityContext:
+    runAsNonRoot: true
+    runAsGroup: 1000
+    runAsUser: 100
+
 # Server, when enabled, configures a server cluster to run. This should
 # be disabled if you plan on connecting to a Consul cluster external to
 # the Kube cluster.
@@ -725,7 +738,7 @@ client:
   # required for Connect.
   grpc: true
 
-  # nodeMeta specifies an arbitrary metadata key/value pair to associate with the node 
+  # nodeMeta specifies an arbitrary metadata key/value pair to associate with the node
   # (see https://www.consul.io/docs/agent/options.html#_node_meta)
   nodeMeta:
     pod-name: ${HOSTNAME}
