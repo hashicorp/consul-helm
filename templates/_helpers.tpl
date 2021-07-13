@@ -97,6 +97,10 @@ This template is for an init container.
     {{- end }}
     - name: consul-auto-encrypt-ca-cert
       mountPath: /consul/tls/client/ca
+  {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+  securityContext:
+    {{- toYaml .Values.global.securityContext | nindent 10 }}
+  {{- end }}
   resources:
     requests:
       memory: "50Mi"

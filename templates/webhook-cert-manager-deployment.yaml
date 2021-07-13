@@ -44,6 +44,10 @@ spec:
             -deployment-namespace={{ .Release.Namespace }}
         image: {{ .Values.global.imageK8S }}
         name: webhook-cert-manager
+        {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+        securityContext:
+          {{- toYaml .Values.global.securityContext | nindent 10 }}
+        {{- end }}
         resources:
           limits:
             cpu: 100m

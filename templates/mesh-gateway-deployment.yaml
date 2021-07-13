@@ -100,6 +100,10 @@ spec:
             mountPath: /consul-bin
           {{- if .Values.meshGateway.initCopyConsulContainer }}
           {{- if .Values.meshGateway.initCopyConsulContainer.resources }}
+          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+          securityContext:
+            {{- toYaml .Values.global.securityContext | nindent 12 }}
+          {{- end }}
           resources: {{ toYaml .Values.meshGateway.initCopyConsulContainer.resources | nindent 12 }}
           {{- end }}
           {{- end }}
@@ -225,6 +229,10 @@ spec:
               mountPath: /consul/tls/ca
               readOnly: true
             {{- end }}
+          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+          securityContext:
+            {{- toYaml .Values.global.securityContext | nindent 12 }}
+          {{- end }}
           resources:
             requests:
               memory: "50Mi"
@@ -242,6 +250,10 @@ spec:
             {{- else }}
             {{- toYaml .Values.meshGateway.resources | nindent 12 }}
             {{- end }}
+          {{- end }}
+          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+          securityContext:
+            {{- toYaml .Values.global.securityContext | nindent 12 }}
           {{- end }}
           volumeMounts:
           - name: consul-bin
