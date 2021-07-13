@@ -95,7 +95,11 @@ spec:
               path: tls.crt
         - name: consul-server-cert
           secret:
+            {{- if .Values.server.serverCert.secretName }}
+            secretName: {{ .Values.server.serverCert.secretName }}
+            {{- else }}
             secretName: {{ template "consul.fullname" . }}-server-cert
+            {{- end }}
         {{- end }}
         {{- if (and .Values.server.enterpriseLicense.secretName .Values.server.enterpriseLicense.secretKey .Values.server.enterpriseLicense.enableLicenseAutoload) }}
         - name: consul-license
