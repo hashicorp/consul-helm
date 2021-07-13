@@ -193,7 +193,7 @@ spec:
             - |
               CONSUL_FULLNAME="{{template "consul.fullname" . }}"
 
-              {{ template "consul.extraargs" .Values.client }}
+              {{ template "consul.extraconfig" .Values.client }}
 
               exec /bin/consul agent \
                 -node="${NODE}" \

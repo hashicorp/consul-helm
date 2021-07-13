@@ -19,8 +19,10 @@ as well as the global.name setting.
 Sets up the extra-from-values config file passed to consul and then uses sed to do any necessary
 substitution for HOST_IP/POD_IP/HOSTNAME. Useful for dogstats telemetry. The output file
 is passed to consul as a -config-file param on command line.
+The regexReplaceAll removes excess escaped quotes, the trim removes excess quotes,
+the trimSuffix removes the trailing newline that occurs when there are no overrides (default).
 */}}
-{{- define "consul.extraargs" -}}
+{{- define "consul.extraconfig" -}}
               mkdir -p /consul/extra-config
               {{- $conf := toJson .extraConfig }}
               echo '{{ regexReplaceAll "\\\\\"" $conf "\"" | trimAll "\"" | trimSuffix "\\n" }}' > /consul/extra-config/extra-from-values.json
