@@ -2,6 +2,7 @@
 
 IMPROVEMENTS:
 * Allow setting global.logLevel and global.logJSON and propogate this to all consul-k8s commands. [[GH-980](https://github.com/hashicorp/consul-helm/pull/980)]
+* Allow setting `connectInject.replicas` to control number of replicas of webhook injector. [[GH-1029](https://github.com/hashicorp/consul-helm/pull/1029)]
 
 ## 0.32.1 (June 29, 2021)
 
