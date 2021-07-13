@@ -2,6 +2,7 @@
 
 load _helpers
 
+
 @test "server/StatefulSet: enabled by default" {
   cd `chart_dir`
   local actual=$(helm template \
@@ -624,7 +625,7 @@ load _helpers
       -s templates/server-statefulset.yaml  \
       . | tee /dev/stderr |
       yq -r '.spec.template.metadata.annotations."consul.hashicorp.com/config-checksum"' | tee /dev/stderr)
-  [ "${actual}" = df8f3705556144cfb39ae46653965f84faf85001af69306f74d01793503908f4 ]
+  [ "${actual}" = 106d2bc2a8b32b11a05d1f1c3eaaa9077ba5057613ce9eed21640c1774e0fe33 ]
 }
 
 @test "server/StatefulSet: adds config-checksum annotation when extraConfig is provided" {
@@ -634,7 +635,7 @@ load _helpers
       --set 'server.extraConfig="{\"hello\": \"world\"}"' \
       . | tee /dev/stderr |
       yq -r '.spec.template.metadata.annotations."consul.hashicorp.com/config-checksum"' | tee /dev/stderr)
-  [ "${actual}" = a97d7f332bb6585541f1eab2d1782f8b00bd16b883c34b2db3dd3ce7d67ba39e ]
+  [ "${actual}" = 106d2bc2a8b32b11a05d1f1c3eaaa9077ba5057613ce9eed21640c1774e0fe33 ]
 }
 
 @test "server/StatefulSet: adds config-checksum annotation when config is updated" {
@@ -644,8 +645,30 @@ load _helpers
       --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.metadata.annotations."consul.hashicorp.com/config-checksum"' | tee /dev/stderr)
-  [ "${actual}" = 023154f44972402c58062dbb8ab09095563dd99c23b9dab9d51d705486e767b7 ]
+  [ "${actual}" = 4013aa6b913f25930bfd80ca898cb001f6b362a0f397781c9e11e862f229d29d ]
 }
+
+@test "server/StatefulSet: adds extra-from-vals by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-statefulset.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("{}")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "server/StatefulSet: extraConfig values get set correctly" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-statefulset.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'server.extraConfig="{\"hello\": \"world\"}"' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("{\"hello\": \"world\"}")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
 
 #--------------------------------------------------------------------
 # tolerations

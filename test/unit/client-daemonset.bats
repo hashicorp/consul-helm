@@ -549,7 +549,7 @@ load _helpers
       -s templates/client-daemonset.yaml  \
       . | tee /dev/stderr |
       yq -r '.spec.template.metadata.annotations."consul.hashicorp.com/config-checksum"' | tee /dev/stderr)
-  [ "${actual}" = 779a0e24c2ed561c727730698a75b1c552f562c100f0c3315ff2cb925f5e296b ]
+  [ "${actual}" = 37fe7525bb029a68e16dcd05cfd0f4febf4e0e609f0734073694813596727e91 ]
 }
 
 @test "client/DaemonSet: adds config-checksum annotation when extraConfig is provided" {
@@ -559,7 +559,7 @@ load _helpers
       --set 'client.extraConfig="{\"hello\": \"world\"}"' \
       . | tee /dev/stderr |
       yq -r '.spec.template.metadata.annotations."consul.hashicorp.com/config-checksum"' | tee /dev/stderr)
-  [ "${actual}" = ba1ceb79d2d18e136d3cc40a9dfddcf2a252aa19ca1703bee3219ca28f1ee187 ]
+  [ "${actual}" = 37fe7525bb029a68e16dcd05cfd0f4febf4e0e609f0734073694813596727e91 ]
 }
 
 @test "client/DaemonSet: adds config-checksum annotation when client config is updated" {
@@ -569,8 +569,30 @@ load _helpers
       --set 'connectInject.enabled=true' \
       . | tee /dev/stderr |
       yq -r '.spec.template.metadata.annotations."consul.hashicorp.com/config-checksum"' | tee /dev/stderr)
-  [ "${actual}" = 8496f6bcdec460eac8a5c890e7899f5757111e13e54808af533aaf205ef18bd0 ]
+  [ "${actual}" = e9ab414837a3c551f398da62e80fad73a2f1e3c0d0ca82e1067bb4ff68ba6aa9 ]
 }
+
+@test "client/DaemonSet: adds extra-from-vals by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("{}")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "client/DaemonSet: extraConfig values get set correctly" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/client-daemonset.yaml  \
+      --set 'global.acls.manageSystemACLs=true' \
+      --set 'client.extraConfig="{\"hello\": \"world\"}"' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("{\"hello\": \"world\"}")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
 
 #--------------------------------------------------------------------
 # tolerations
