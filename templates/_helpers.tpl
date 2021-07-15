@@ -31,7 +31,6 @@ the trimSuffix removes the trailing newline that occurs when there are no overri
               [ -n "${HOSTNAME}" ] && sed -Ei "s|HOSTNAME|${HOSTNAME?}|g" /consul/extra-config/extra-from-values.json
 {{- end -}}
 
-
 {{/*
 Create chart name and version as used by the chart label.
 */}}

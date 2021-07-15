@@ -576,7 +576,6 @@ load _helpers
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-daemonset.yaml  \
-      --set 'global.acls.manageSystemACLs=true' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("{}")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
@@ -586,7 +585,6 @@ load _helpers
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/client-daemonset.yaml  \
-      --set 'global.acls.manageSystemACLs=true' \
       --set 'client.extraConfig="{\"hello\": \"world\"}"' \
       . | tee /dev/stderr |
       yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("{\"hello\": \"world\"}")' | tee /dev/stderr)
