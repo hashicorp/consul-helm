@@ -197,6 +197,13 @@ spec:
                 -hcl='ports { http = -1 }' \
                 {{- end }}
                 {{- end }}
+                {{- if .Values.server.partitions }}
+                {{- $partitions := "" }}
+                {{- range $partition := .Values.server.partitions }}
+                {{- $partitions = printf "%s{name = \\\"%s\\\", bind = \\\"0.0.0.0\\\", advertise = \\\"%s\\\", port = %v}," $partitions $partition.name "${ADVERTISE_IP}" $partition.port -}}
+                {{- end }}
+                -hcl="segments = [{{ $partitions }}]" \
+                {{- end }}
                 -client=0.0.0.0 \
                 -config-dir=/consul/config \
                 {{- /* Always include the extraVolumes at the end so that users can
@@ -268,6 +275,18 @@ spec:
             {{- if .Values.global.tls.enabled }}
             - name: https
               containerPort: 8501
+            {{- end }}
+            {{- if .Values.server.partitions }}
+            {{- range $partition := .Values.server.partitions }}
+            - containerPort: {{ $partition.port }}
+              hostPort: {{ $partition.port }}
+              protocol: "TCP"
+              name: {{ $partition.name }}-tcp
+            - containerPort: {{ $partition.port }}
+              hostPort: {{ $partition.port }}
+              protocol: "UDP"
+              name: {{ $partition.name }}-udp
+            {{- end }}
             {{- end }}
             - name: serflan-tcp
               containerPort: {{ .Values.server.ports.serflan.port }}

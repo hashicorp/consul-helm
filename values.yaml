@@ -343,6 +343,21 @@ server:
   # `server.ports.serflan.port` must be set to something other than 8301.
   exposeGossipAndRPCPorts: false
 
+  # [Enterprise Only] Configures the partitions and the port for each partition.
+  # Accepts an array of map with field name and port where where the name is the
+  # name of the partition and port is the desired gossip port for that partition.
+  # Example:
+  #
+  # ```yaml
+  # partitions:
+  # - name: foo
+  #   port: 8503
+  # - name: bar
+  #   port: 8504
+  # ```
+  # @type: array<map>
+  partitions: []
+
   # Configures ports for the consul servers.
   ports:
     # Configures the LAN gossip port for the consul servers. If you choose to
@@ -720,6 +735,10 @@ client:
   # and the Consul servers are outside of the k8s cluster.
   # This also changes the clients' advertised IP to the `hostIP` rather than `podIP`.
   exposeGossipPorts: false
+
+  # [Enterprise Only] Name of the partition the clients are in.
+  # @type: string
+  partition: null
 
   serviceAccount:
     # This value defines additional annotations for the client service account. This should be formatted as a multi-line

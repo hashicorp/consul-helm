@@ -121,3 +121,59 @@ load _helpers
       yq -r '.metadata.annotations.key' | tee /dev/stderr)
   [ "${actual}" = "value" ]
 }
+
+#--------------------------------------------------------------------
+# partitions
+
+@test "server/Service: no partitions by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-service.yaml  \
+      . | tee /dev/stderr |
+      yq -r '.spec.ports | length' | tee /dev/stderr)
+  [ "${actual}" = "8" ]
+}
+
+@test "server/Service: adds tcp port for partition" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-service.yaml  \
+      --set 'server.partitions[0].name=test' \
+      --set 'server.partitions[0].port=8503' \
+      . | tee /dev/stderr |
+      yq -r '.spec.ports[] | select(.name == "test-tcp") | .port' | tee /dev/stderr)
+  [ "${actual}" = "8503" ]
+}
+
+@test "server/Service: adds udp port for partition" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-service.yaml  \
+      --set 'server.partitions[0].name=test' \
+      --set 'server.partitions[0].port=8503' \
+      . | tee /dev/stderr |
+      yq -r '.spec.ports[] | select(.name == "test-udp") | .port' | tee /dev/stderr)
+  [ "${actual}" = "8503" ]
+}
+
+@test "server/Service: adds tcp protocol for partition" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-service.yaml  \
+      --set 'server.partitions[0].name=test' \
+      --set 'server.partitions[0].port=8503' \
+      . | tee /dev/stderr |
+      yq -r '.spec.ports[] | select(.name == "test-tcp") | .protocol' | tee /dev/stderr)
+  [ "${actual}" = "TCP" ]
+}
+
+@test "server/Service: adds udp protocol for partition" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-service.yaml  \
+      --set 'server.partitions[0].name=test' \
+      --set 'server.partitions[0].port=8503' \
+      . | tee /dev/stderr |
+      yq -r '.spec.ports[] | select(.name == "test-udp") | .protocol' | tee /dev/stderr)
+  [ "${actual}" = "UDP" ]
+}

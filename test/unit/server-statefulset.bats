@@ -1257,3 +1257,61 @@ load _helpers
       yq -r -c '.spec.template.spec.containers[0].command | join(" ") | contains("-recursor=\"1.2.3.4\"")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# partitions
+
+@test "server/StatefulSet: creates network segment hcl when partition provided" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-statefulset.yaml  \
+      --set 'server.partitions[0].name=test' \
+      --set 'server.partitions[0].port=8503' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | join(" ") | contains("-hcl=\"segments = [{name = \\\"test\\\", bind = \\\"0.0.0.0\\\", advertise = \\\"${ADVERTISE_IP}\\\", port = 8503},]\"")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "server/StatefulSet: creates tcp container port when partition provided" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-statefulset.yaml  \
+      --set 'server.partitions[0].name=test' \
+      --set 'server.partitions[0].port=8503' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select(.name == "test-tcp") | .hostPort' | tee /dev/stderr)
+  [ "${actual}" = "8503" ]
+}
+
+@test "server/StatefulSet: creates upd container port when partition provided" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-statefulset.yaml  \
+      --set 'server.partitions[0].name=test' \
+      --set 'server.partitions[0].port=8503' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select(.name == "test-udp") | .hostPort' | tee /dev/stderr)
+  [ "${actual}" = "8503" ]
+}
+
+@test "server/StatefulSet: creates tcp container protocol when partition provided" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-statefulset.yaml  \
+      --set 'server.partitions[0].name=test' \
+      --set 'server.partitions[0].port=8503' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select(.name == "test-tcp") | .protocol' | tee /dev/stderr)
+  [ "${actual}" = '"TCP"' ]
+}
+
+@test "server/StatefulSet: creates upd container protocol when partition provided" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -s templates/server-statefulset.yaml  \
+      --set 'server.partitions[0].name=test' \
+      --set 'server.partitions[0].port=8503' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].ports[] | select(.name == "test-udp") | .protocol' | tee /dev/stderr)
+  [ "${actual}" = '"UDP"' ]
+}
