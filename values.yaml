@@ -484,7 +484,7 @@ server:
   # This can also be set using Helm's `--set` flag using the following syntax:
   #
   # ```shell
-  # --set 'server.extraConfig='{"log_level": "DEBUG"}"'
+  # --set 'server.extraConfig="{\"log_level\": \"DEBUG\"}"'
   # ```
   extraConfig: |
     {}
@@ -794,7 +794,7 @@ client:
   # This can also be set using Helm's `--set` flag using the following syntax:
   #
   # ```shell
-  # --set 'client.extraConfig='{"log_level": "DEBUG"}"'
+  # --set 'client.extraConfig="{\"log_level\": \"DEBUG\"}"'
   # ```
   extraConfig: |
     {}

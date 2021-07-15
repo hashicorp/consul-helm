@@ -574,10 +574,17 @@ load _helpers
 
 @test "client/DaemonSet: adds extra-from-vals by default" {
   cd `chart_dir`
-  local actual=$(helm template \
+  local command=$(helm template \
       -s templates/client-daemonset.yaml  \
       . | tee /dev/stderr |
-      yq '.spec.template.spec.containers[] | select(.name=="consul") | .command | join(" ") | contains("{}")' | tee /dev/stderr)
+      yq '.spec.template.spec.containers[0].command | join(" ")' | tee /dev/stderr)
+
+  local actual
+  actual=$(echo $command | jq -r '. | contains("{}")' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  local actual
+  actual=$(echo $command | jq -r '. | contains("-config-file=/consul/extra-config/extra-from-values.json")' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
