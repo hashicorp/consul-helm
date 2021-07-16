@@ -67,8 +67,6 @@ spec:
         - "/bin/sh"
         - "-ec"
         - |
-            {{ template "consul.extraconfig" }}
-
             consul members | tee members.txt
             if [ $(grep -c consul-server members.txt) != $(grep consul-server members.txt | grep -c alive) ]
             then
