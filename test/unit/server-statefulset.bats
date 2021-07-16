@@ -1283,7 +1283,7 @@ load _helpers
   [ "${actual}" = "8503" ]
 }
 
-@test "server/StatefulSet: creates upd container port when partition provided" {
+@test "server/StatefulSet: creates udp container port when partition provided" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/server-statefulset.yaml  \
@@ -1305,7 +1305,7 @@ load _helpers
   [ "${actual}" = '"TCP"' ]
 }
 
-@test "server/StatefulSet: creates upd container protocol when partition provided" {
+@test "server/StatefulSet: creates udp container protocol when partition provided" {
   cd `chart_dir`
   local actual=$(helm template \
       -s templates/server-statefulset.yaml  \

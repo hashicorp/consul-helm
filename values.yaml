@@ -344,7 +344,7 @@ server:
   exposeGossipAndRPCPorts: false
 
   # [Enterprise Only] Configures the partitions and the port for each partition.
-  # Accepts an array of map with field name and port where where the name is the
+  # Accepts an array of map with field name and port where the name is the
   # name of the partition and port is the desired gossip port for that partition.
   # Example:
   #
