@@ -242,7 +242,7 @@ spec:
                 {{- range $value := .Values.global.recursors }}
                 -recursor={{ quote $value }} \
                 {{- end }}
-                -config-file=/consul/extra-config/extra-from-values.json
+                -config-file=/consul/extra-config/extra-from-values.json \
                 -server
           volumeMounts:
             - name: data-{{ .Release.Namespace }}
