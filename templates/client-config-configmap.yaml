@@ -12,7 +12,7 @@ metadata:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
 data:
-  extra-from-values.tmp: |-
+  extra-from-values.json: |-
 {{ tpl .Values.client.extraConfig . | trimAll "\"" | indent 4 }}
   central-config.json: |-
     {

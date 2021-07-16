@@ -44,7 +44,7 @@ load _helpers
       -s templates/client-config-configmap.yaml  \
       --set 'client.extraConfig="{\"hello\": \"world\"}"' \
       . | tee /dev/stderr |
-      yq '.data["extra-from-values.tmp"] | match("world") | length > 1' | tee /dev/stderr)
+      yq '.data["extra-from-values.json"] | match("world") | length > 1' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
