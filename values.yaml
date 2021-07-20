@@ -64,6 +64,19 @@ global:
   # @default: hashicorp/consul-k8s:<latest version>
   imageK8S: "hashicorp/consul-k8s:0.26.0"
 
+  # The security context for any consul-k8s pods. This should be a YAML map corresponding to a
+  # Kubernetes [SecurityContext](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/) object.
+  # By default, consul-k8s image has non-numeric user (consul-k8s) and so k8s cannot veryify user is non-root.
+  # This overrides that with the equivalent numerical values.
+  # Note: if running on OpenShift, this setting is ignored because the user and group are set automatically
+  # by the OpenShift platform.
+  # @type: map
+  # @recurse: false
+  securityContextK8S:
+    runAsNonRoot: true
+    runAsGroup: 1000
+    runAsUser: 100
+
   # The name of the datacenter that the agents should
   # register as. This can't be changed once the Consul cluster is up and running
   # since Consul doesn't support an automatic way to change this value currently:
@@ -271,7 +284,7 @@ global:
     # @type: boolean
     enableGatewayMetrics: true
 
-  # For connect-injected pods, the consul sidecar is responsible for metrics merging. For ingress/mesh/terminating 
+  # For connect-injected pods, the consul sidecar is responsible for metrics merging. For ingress/mesh/terminating
   # gateways, it additionally ensures the Consul services are always registered with their local Consul client.
   # @recurse: false
   # @type: map
@@ -296,19 +309,6 @@ global:
     # If true, the Helm chart will create necessary configuration for running
     # its components on OpenShift.
     enabled: false
-
-  # The security context for any consul-k8s pods. This should be a YAML map corresponding to a
-  # Kubernetes [SecurityContext](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/) object.
-  # By default, consul-k8s image has non-numeric user (consul-k8s) and so k8s cannot veryify user is non-root.
-  # This overrides that with the equivalent numerical values.
-  # Note: if running on OpenShift, this setting is ignored because the user and group are set automatically
-  # by the OpenShift platform.
-  # @type: map
-  # @recurse: false
-  securityContext:
-    runAsNonRoot: true
-    runAsGroup: 1000
-    runAsUser: 100
 
 # Server, when enabled, configures a server cluster to run. This should
 # be disabled if you plan on connecting to a Consul cluster external to

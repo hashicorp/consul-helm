@@ -41,9 +41,9 @@ spec:
             consul-k8s acl-init \
               -secret-name="{{ template "consul.fullname" . }}-controller-acl-token" \
               -k8s-namespace={{ .Release.Namespace }}
-        {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+        {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContextK8S) }}
         securityContext:
-          {{- toYaml .Values.global.securityContext | nindent 10 }}
+          {{- toYaml .Values.global.securityContextK8S | nindent 10 }}
         {{- end }}
         resources:
           requests:
@@ -118,9 +118,9 @@ spec:
         - containerPort: 9443
           name: webhook-server
           protocol: TCP
-        {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+        {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContextK8S) }}
         securityContext:
-          {{- toYaml .Values.global.securityContext | nindent 10 }}
+          {{- toYaml .Values.global.securityContextK8S | nindent 10 }}
         {{- end }}
         {{- with .Values.controller.resources }}
         resources:

@@ -100,9 +100,9 @@ spec:
             mountPath: /consul-bin
           {{- if .Values.meshGateway.initCopyConsulContainer }}
           {{- if .Values.meshGateway.initCopyConsulContainer.resources }}
-          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContextK8S) }}
           securityContext:
-            {{- toYaml .Values.global.securityContext | nindent 12 }}
+            {{- toYaml .Values.global.securityContextK8S | nindent 12 }}
           {{- end }}
           resources: {{ toYaml .Values.meshGateway.initCopyConsulContainer.resources | nindent 12 }}
           {{- end }}
@@ -229,9 +229,9 @@ spec:
               mountPath: /consul/tls/ca
               readOnly: true
             {{- end }}
-          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContextK8S) }}
           securityContext:
-            {{- toYaml .Values.global.securityContext | nindent 12 }}
+            {{- toYaml .Values.global.securityContextK8S | nindent 12 }}
           {{- end }}
           resources:
             requests:
@@ -251,9 +251,9 @@ spec:
             {{- toYaml .Values.meshGateway.resources | nindent 12 }}
             {{- end }}
           {{- end }}
-          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContextK8S) }}
           securityContext:
-            {{- toYaml .Values.global.securityContext | nindent 12 }}
+            {{- toYaml .Values.global.securityContextK8S | nindent 12 }}
           {{- end }}
           volumeMounts:
           - name: consul-bin

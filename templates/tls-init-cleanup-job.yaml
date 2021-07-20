@@ -52,9 +52,9 @@ spec:
               curl -s -X DELETE --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
                 https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/${NAMESPACE}/secrets/{{ template "consul.fullname" . }}-server-cert \
                 -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )"
-          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContextK8S) }}
           securityContext:
-            {{- toYaml .Values.global.securityContext | nindent 12 }}
+            {{- toYaml .Values.global.securityContextK8S | nindent 12 }}
           {{- end }}
           resources:
             requests:

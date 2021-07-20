@@ -54,9 +54,9 @@ spec:
             - -log-json={{ .Values.global.logJSON }}
             - -k8s-namespace={{ .Release.Namespace }}
             - {{ template "consul.fullname" . }}-server-acl-init
-          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContextK8S) }}
           securityContext:
-            {{- toYaml .Values.global.securityContext | nindent 12 }}
+            {{- toYaml .Values.global.securityContextK8S | nindent 12 }}
           {{- end }}
           resources:
             requests:

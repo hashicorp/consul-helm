@@ -75,9 +75,9 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
           {{- if (or .Values.global.tls.enabled (and .Values.global.acls.replicationToken.secretName .Values.global.acls.replicationToken.secretKey) (and .Values.global.acls.bootstrapToken.secretName .Values.global.acls.bootstrapToken.secretKey)) }}
-          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContextK8S) }}
           securityContext:
-            {{- toYaml .Values.global.securityContext | nindent 12 }}
+            {{- toYaml .Values.global.securityContextK8S | nindent 12 }}
           {{- end }}
           volumeMounts:
             {{- if .Values.global.tls.enabled }}

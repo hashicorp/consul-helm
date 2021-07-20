@@ -193,9 +193,9 @@ spec:
                 -consul-sidecar-cpu-request={{ $consulSidecarResources.requests.cpu }} \
                 {{- end }}
                 {{- end }}
-          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+          {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContextK8S) }}
           securityContext:
-            {{- toYaml .Values.global.securityContext | nindent 12 }}
+            {{- toYaml .Values.global.securityContextK8S | nindent 12 }}
           {{- end }}
           volumeMounts:
           - name: certs
@@ -250,9 +250,9 @@ spec:
             consul-k8s acl-init \
               -secret-name="{{ template "consul.fullname" . }}-connect-inject-acl-token" \
               -k8s-namespace={{ .Release.Namespace }}
-        {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContext) }}
+        {{- if (and (not .Values.global.openshift.enabled) .Values.global.securityContextK8S) }}
         securityContext:
-          {{- toYaml .Values.global.securityContext | nindent 10 }}
+          {{- toYaml .Values.global.securityContextK8S | nindent 10 }}
         {{- end }}
         resources:
           requests:
