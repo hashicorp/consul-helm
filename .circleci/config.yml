@@ -647,6 +647,10 @@ jobs:
               az group delete -n $group --yes
             done
 
+      - slack/status:
+          fail_only: true
+          failure_message: "AKS cleanup failed"
+
   cleanup-gcp-resources:
     docker:
       - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.10.0
@@ -660,6 +664,10 @@ jobs:
               echo "Deleting $cluster GKE cluster"
               gcloud container clusters delete $cluster --zone us-central1-a --project ${CLOUDSDK_CORE_PROJECT} --quiet
             done
+
+      - slack/status:
+          fail_only: true
+          failure_message: "GKE cleanup failed"
 
   cleanup-eks-resources:
     docker:
@@ -677,6 +685,10 @@ jobs:
 
             cd hack/aws-acceptance-test-cleanup
             go run ./... -auto-approve
+
+      - slack/status:
+          fail_only: true
+          failure_message: "EKS cleanup failed"
 
 workflows:
   version: 2
