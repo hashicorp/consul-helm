@@ -4,7 +4,11 @@
 
 We are planning on consolidating our Consul Helm and Consul K8s repos soon!
 
+### Background
+
 For users, the separate repositories lead to difficulty on new releases and confusion surrounding versioning. Most of the time new releases that include changes to consul-k8s also change consul-helm. But separate repositories mean separate GitHub PR's and added confusion in opening new Github Issues. In addition, we maintain separate versions of the consul-k8s binary and the Consul Helm chart, which in most cases are more tightly coupled together with dependencies. This versioning strategy has also led to confusion as to which Helm charts are compatible with which versions of consul-k8s.
+
+### Proposal
 
 The single repository name will be consul-k8s. It will contain the Helm charts, control-plane code, and other components of Consul on Kubernetes. The original consul-k8s binary will be renamed to consul-k8s-control-plane, and an upcoming user-facing CLI binary will be called consul-k8s.
 
