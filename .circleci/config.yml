@@ -694,24 +694,7 @@ workflows:
   version: 2
   test:
     jobs:
-      - go-fmt-and-vet-acceptance
-      - go-fmt-and-vet-helm-gen
-      - unit-acceptance-framework:
-          requires:
-            - go-fmt-and-vet-acceptance
-      - unit-helm-gen:
-          requires:
-            - go-fmt-and-vet-helm-gen
-      - test-helm-gen
-      - unit-helm
-      - acceptance:
-          requires:
-            - unit-helm
-            - unit-acceptance-framework
-      - acceptance-tproxy:
-          requires:
-            - unit-helm
-            - unit-acceptance-framework
+      - cleanup-eks-resources
   nightly-acceptance-tests:
     triggers:
       - schedule:
