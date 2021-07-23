@@ -357,7 +357,7 @@ server:
   #     -additional-dnsname="*.{{fullname}}-server.{{namespace}}" \
   #     -additional-dnsname="*.{{fullname}}-server.{{namespace}}.svc" \
   #     -additional-dnsname="*.server.{{datacenter}}.{{domain}}" \
-  #     -additional-dnsname="server.local.consul"
+  #     -additional-dnsname="server.{{datacenter}}.{{domain}}"
   # ```
   #
   # If you have generated the
