@@ -346,8 +346,8 @@ server:
     enableLicenseAutoload: true
 
   # A Kubernetes secret containing a certificate & key for the server agents to use
-  # for TLS communication within the Consul cluster. Cert needs to be carefully
-  # formed to work as if tls-init created it (reproducing what consul-k8s runs):
+  # for TLS communication within the Consul cluster. Cert needs to be provided with
+  # additional DNS name SANs so that it will work within the Kubernetes cluster:
   #
   # ```bash
   # consul tls cert create -server -days=730 -domain=consul -ca=consul-agent-ca.pem \
