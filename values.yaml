@@ -357,8 +357,6 @@ server:
   #     -additional-dnsname="*.{{fullname}}-server.{{namespace}}" \
   #     -additional-dnsname="*.{{fullname}}-server.{{namespace}}.svc" \
   #     -additional-dnsname="*.server.{{datacenter}}.{{domain}}" \
-  #     -additional-dnsname="localhost" \
-  #     -additional-dnsname="127.0.0.1" \
   #     -additional-dnsname="server.local.consul"
   # ```
   #
