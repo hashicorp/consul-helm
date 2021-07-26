@@ -176,7 +176,9 @@ spec:
             - |
               CONSUL_FULLNAME="{{template "consul.fullname" . }}"
 
-              exec /bin/consul agent \
+              {{ template "consul.extraconfig" }}
+
+              exec /usr/local/bin/docker-entrypoint.sh consul agent \
                 -advertise="${ADVERTISE_IP}" \
                 -bind=0.0.0.0 \
                 -bootstrap-expect={{ if .Values.server.bootstrapExpect }}{{ .Values.server.bootstrapExpect }}{{ else }}{{ .Values.server.replicas }}{{ end }} \
