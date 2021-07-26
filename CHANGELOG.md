@@ -1,7 +1,7 @@
 ## Unreleased
 
 BREAKING CHANGES:
-* Minimum Kubernetes versions supported is 1.17+ and now matches what is stated in the `Readme.md` file.  [[GH-1053](https://github.com/hashicorp/consul-helm/pull/1053)]
+* Minimum Kubernetes versions supported is 1.17+ and now matches what is stated in the `README.md` file.  [[GH-1053](https://github.com/hashicorp/consul-helm/pull/1053)]
 
 IMPROVEMENTS:
 * Substitute `HOST_IP/POD_IP/HOSTNAME` variables in `server.extraConfig` and `client.extraConfig` so they are passed in to server/client config already evaluated at runtime. [[GH-1042](https://github.com/hashicorp/consul-helm/pull/1042)]
