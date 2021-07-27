@@ -178,8 +178,6 @@ spec:
             - |
               CONSUL_FULLNAME="{{template "consul.fullname" . }}"
 
-              {{ template "consul.extraconfig" }}
-
               exec /usr/local/bin/docker-entrypoint.sh consul agent \
                 -advertise="${ADVERTISE_IP}" \
                 -bind=0.0.0.0 \
