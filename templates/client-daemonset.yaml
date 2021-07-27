@@ -164,6 +164,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            - name: CONSUL_DISABLE_PERM_MGMT
+              value: "true"
             {{- if (and .Values.global.gossipEncryption.secretName .Values.global.gossipEncryption.secretKey) }}
             - name: GOSSIP_KEY
               valueFrom:
