@@ -651,8 +651,9 @@ workflows:
   version: 2
   test:
     jobs:
-      - acceptance
-      - acceptance-tproxy
+      #- acceptance
+      #- acceptance-tproxy
+      - acceptance-openshift
   nightly-acceptance-tests:
     triggers:
       - schedule:
