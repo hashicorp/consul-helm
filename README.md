@@ -15,7 +15,7 @@ The single repository name will be consul-k8s. It will contain the Helm charts, 
 Some additional details regarding the Consul Helm chart migration:
 
 1. All open and closed issues will be migrated from `consul-helm` to `consul-k8s`.
-2. PRs from consul-helm will not be migrated consul-k8s. Users will need to do that themselves, since it would be too complex to perform the migration with CI automation. The new repo will have a charts folder where the Helm chart will reside and PRs can be made against the contents in that folder in the same structure as before.
+2. PRs from consul-helm will not be migrated `consul-k8s`. Users will need to do that themselves, since it would be too complex to perform the migration with CI automation. The new repo will have a charts folder where the Helm chart will reside and PRs can be made against the contents in that folder in the same structure as before.
 3. We will be archiving the `consul-helm` repo, as no more changes will be made to the repository.
 4. A new Docker image that hosts the renamed consul-k8s binary will now exist in the following Docker Hub repo: `hashicorp/consul-k8s-control-plane`.
 5. Most importantly, there will be no change to any users that are installing Consul Kubernetes via the Helm chart, since the Helm chart will still be released to same location (i.e. https://helm.releases.hashicorp.com).
