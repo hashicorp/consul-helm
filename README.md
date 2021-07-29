@@ -2,11 +2,11 @@
 
 ## ⚠️	 ANNOUNCEMENT: Consul Helm Chart moving to `hashicorp/consul-k8s` ⚠️	
 
-We are planning on consolidating our Consul Helm and Consul K8s repos soon! TLDR: The HashiCorp Helm chart will be moving to [`hashicorp/consul-k8s`](https://github.com/hashicorp/consul-k8s). We target completing the migration before the end of August 2021.
+We are planning on consolidating our Consul Helm and Consul K8s repos soon! *TLDR:* The HashiCorp Helm chart will be moving to [`hashicorp/consul-k8s`](https://github.com/hashicorp/consul-k8s). We target completing the migration before the end of August 2021.
 
 ### Background
 
-For users, the separate repositories lead to difficulty on new releases and confusion surrounding versioning. Most of the time new releases that include changes to consul-k8s also change consul-helm. But separate repositories mean separate GitHub PR's and added confusion in opening new Github Issues. In addition, we maintain separate versions of the consul-k8s binary and the Consul Helm chart, which in most cases are more tightly coupled together with dependencies. This versioning strategy has also led to confusion as to which Helm charts are compatible with which versions of consul-k8s.
+For users, the separate repositories lead to difficulty on new releases and confusion surrounding versioning. Most of the time new releases that include changes to `consul-k8s` also change `consul-helm`. But separate repositories mean separate GitHub PR's and added confusion in opening new Github Issues. In addition, we maintain separate versions of the `consul-k8s` binary and the Consul Helm chart, which in most cases are more tightly coupled together with dependencies. This versioning strategy has also led to confusion as to which Helm charts are compatible with which versions of `consul-k8s`.
 
 ### Proposal
 
