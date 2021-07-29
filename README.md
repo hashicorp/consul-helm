@@ -20,7 +20,7 @@ Some additional details regarding the Consul Helm chart migration:
 4. A new Docker image that hosts the renamed consul-k8s binary will now exist in the following Docker Hub repo: `hashicorp/consul-k8s-control-plane`.
 5. Most importantly, there will be no change to any users that are installing Consul Kubernetes via the Helm chart, since the Helm chart will still be released to same location (i.e. https://helm.releases.hashicorp.com).
 
-After the integration, all of our Consul on Kubernetes components will be versioned together. For each new release of Consul Kubernets, a new tag of the repository will be created. We will use that tag as the version for the control-plane docker image, the upcoming CLI binary, and the Consul Helm charts.
+After the integration, all of our Consul on Kubernetes components will be versioned together. For each new release of Consul Kubernetes, a new tag of the repository will be created. We will use that tag as the version for the control-plane docker image, the upcoming CLI binary, and the Consul Helm charts.
 
 ---
 
