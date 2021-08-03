@@ -55,7 +55,7 @@ commands:
         type: string
       consul-k8s-image:
         type: string
-        default: "ghcr.io/lkysow/consul-k8s-dev:ubi-jul26"
+        default: "ghcr.io/lkysow/consul-k8s-dev:aug3-ubi"
     steps:
       - when:
           condition: << parameters.failfast >>
@@ -692,8 +692,6 @@ workflows:
   version: 2
   test:
     jobs:
-      #- acceptance
-      #- acceptance-tproxy
       - acceptance-openshift
   nightly-acceptance-tests:
     triggers:
