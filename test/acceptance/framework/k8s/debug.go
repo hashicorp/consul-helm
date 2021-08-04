@@ -80,30 +80,33 @@ func WritePodsDebugInfoIfFailed(t *testing.T, kubectlOptions *k8s.KubectlOptions
 		statefulSets, err := client.AppsV1().StatefulSets(kubectlOptions.Namespace).List(context.Background(), metav1.ListOptions{LabelSelector: labelSelector})
 		if err != nil {
 			logger.Log(t, "unable to get statefulsets", "err", err)
-		}
-		for _, statefulSet := range statefulSets.Items {
-			// Describe stateful set and write it to a file.
-			writeResourceInfoToFile(t, statefulSet.Name, "statefulset", testDebugDirectory, kubectlOptions)
+		} else {
+			for _, statefulSet := range statefulSets.Items {
+				// Describe stateful set and write it to a file.
+				writeResourceInfoToFile(t, statefulSet.Name, "statefulset", testDebugDirectory, kubectlOptions)
+			}
 		}
 
 		// Describe any daemonsets.
 		daemonsets, err := client.AppsV1().DaemonSets(kubectlOptions.Namespace).List(context.Background(), metav1.ListOptions{LabelSelector: labelSelector})
 		if err != nil {
 			logger.Log(t, "unable to get daemonsets", "err", err)
-		}
-		for _, daemonSet := range daemonsets.Items {
-			// Describe daemon set and write it to a file.
-			writeResourceInfoToFile(t, daemonSet.Name, "daemonset", testDebugDirectory, kubectlOptions)
+		} else {
+			for _, daemonSet := range daemonsets.Items {
+				// Describe daemon set and write it to a file.
+				writeResourceInfoToFile(t, daemonSet.Name, "daemonset", testDebugDirectory, kubectlOptions)
+			}
 		}
 
 		// Describe any deployments.
 		deployments, err := client.AppsV1().Deployments(kubectlOptions.Namespace).List(context.Background(), metav1.ListOptions{LabelSelector: labelSelector})
 		if err != nil {
 			logger.Log(t, "unable to get deployments", "err", err)
-		}
-		for _, deployment := range deployments.Items {
-			// Describe deployment and write it to a file.
-			writeResourceInfoToFile(t, deployment.Name, "deployment", testDebugDirectory, kubectlOptions)
+		} else {
+			for _, deployment := range deployments.Items {
+				// Describe deployment and write it to a file.
+				writeResourceInfoToFile(t, deployment.Name, "deployment", testDebugDirectory, kubectlOptions)
+			}
 		}
 	}
 }
