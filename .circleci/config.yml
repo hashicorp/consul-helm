@@ -442,7 +442,7 @@ jobs:
   acceptance-openshift:
     environment:
       TEST_RESULTS: /tmp/test-results
-    parallelism: 3
+    parallelism: 1
     docker:
       # This image is built from test/docker/Test.dockerfile
       - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.10.0
@@ -486,10 +486,7 @@ jobs:
           working_directory: test/terraform/openshift
           command: |
             terraform destroy -auto-approve
-          when: always
-      - slack/status:
-          fail_only: true
-          failure_message: "OpenShift acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
+          when: on_success
 
   acceptance-kind-1-21:
     environment:
@@ -693,6 +690,7 @@ workflows:
   test:
     jobs:
       - acceptance-openshift
+      - acceptance-tproxy
   nightly-acceptance-tests:
     triggers:
       - schedule:
