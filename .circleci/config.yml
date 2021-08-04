@@ -246,7 +246,7 @@ jobs:
       - run: mkdir -p $TEST_RESULTS
       - run-acceptance-tests:
           failfast: true
-          additional-flags: -use-kind -kubecontext="kind-dc1" -secondary-kubecontext="kind-dc2" -enable-transparent-proxy
+          additional-flags: -use-kind -kubecontext="kind-dc1" -secondary-kubecontext="kind-dc2" -enable-transparent-proxy -run 'TestMeshGateway'
       - store_test_results:
           path: /tmp/test-results
       - store_artifacts:
@@ -475,7 +475,7 @@ jobs:
       - run: mkdir -p $TEST_RESULTS
 
       - run-acceptance-tests:
-          additional-flags: -kubeconfig="$primary_kubeconfig" -secondary-kubeconfig="$secondary_kubeconfig" -enable-openshift -enable-transparent-proxy
+          additional-flags: -kubeconfig="$primary_kubeconfig" -secondary-kubeconfig="$secondary_kubeconfig" -enable-openshift -enable-transparent-proxy -run 'TestMeshGateway'
 
       - store_test_results:
           path: /tmp/test-results
