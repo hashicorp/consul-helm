@@ -62,7 +62,7 @@ global:
   # Docker image that is used for functionality such the catalog sync.
   # This can be overridden per component.
   # @default: hashicorp/consul-k8s:<latest version>
-  imageK8S: ghcr.io/lkysow/consul-k8s-dev:ubi-jul26
+  imageK8S: ghcr.io/lkysow/consul-k8s-dev:aug3-ubi
 
   # The name of the datacenter that the agents should
   # register as. This can't be changed once the Consul cluster is up and running
