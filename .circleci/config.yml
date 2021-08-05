@@ -55,7 +55,7 @@ commands:
         type: string
       consul-k8s-image:
         type: string
-        default: "docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest"
+        default: "docker.mirror.hashicorp.services/hashicorpdev/consul-k8s@sha256:040515f2e196c48d5ad0b58b70433998fb1d3bc6cbe4a0be1f855f546abb920e"
     steps:
       - when:
           condition: << parameters.failfast >>
