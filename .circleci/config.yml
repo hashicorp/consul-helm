@@ -690,59 +690,68 @@ jobs:
           fail_only: true
           failure_message: "EKS cleanup failed"
 
+  disable-ci:
+    docker:
+      - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.9.0
+    steps:
+      - run:
+          name: CI is disabled
+          command: echo "CI is disabled for this repository"
+
 workflows:
   version: 2
   test:
     jobs:
-      - go-fmt-and-vet-acceptance
-      - go-fmt-and-vet-helm-gen
-      - unit-acceptance-framework:
-          requires:
-            - go-fmt-and-vet-acceptance
-      - unit-helm-gen:
-          requires:
-            - go-fmt-and-vet-helm-gen
-      - test-helm-gen
-      - unit-helm
-      - acceptance:
-          requires:
-            - unit-helm
-            - unit-acceptance-framework
-      - acceptance-tproxy:
-          requires:
-            - unit-helm
-            - unit-acceptance-framework
-  nightly-acceptance-tests:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - cleanup-gcp-resources
-      - cleanup-azure-resources
-      - cleanup-eks-resources
-#      - acceptance-openshift: <-- Disabled until we can make them less flakey.
+      - disable-ci
+#      - go-fmt-and-vet-acceptance
+#      - go-fmt-and-vet-helm-gen
+#      - unit-acceptance-framework:
 #          requires:
-#          - cleanup-azure-resources
-      - acceptance-gke-1-17:
-          requires:
-            - cleanup-gcp-resources
-      - acceptance-eks-1-18:
-          requires:
-            - cleanup-eks-resources
-      - acceptance-aks-1-19:
-          requires:
-            - cleanup-azure-resources
-      - acceptance-kind-1-21
-  update-helm-charts-index:
-    jobs:
-      - update-helm-charts-index:
-          context: helm-charts-trigger-consul
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+#            - go-fmt-and-vet-acceptance
+#      - unit-helm-gen:
+#          requires:
+#            - go-fmt-and-vet-helm-gen
+#      - test-helm-gen
+#      - unit-helm
+#      - acceptance:
+#          requires:
+#            - unit-helm
+#            - unit-acceptance-framework
+#      - acceptance-tproxy:
+#          requires:
+#            - unit-helm
+#            - unit-acceptance-framework
+#  nightly-acceptance-tests:
+#    triggers:
+#      - schedule:
+#          cron: "0 0 * * *"
+#          filters:
+#            branches:
+#              only:
+#                - master
+#    jobs:
+#      - cleanup-gcp-resources
+#      - cleanup-azure-resources
+#      - cleanup-eks-resources
+##      - acceptance-openshift: <-- Disabled until we can make them less flakey.
+##          requires:
+##          - cleanup-azure-resources
+#      - acceptance-gke-1-17:
+#          requires:
+#            - cleanup-gcp-resources
+#      - acceptance-eks-1-18:
+#          requires:
+#            - cleanup-eks-resources
+#      - acceptance-aks-1-19:
+#          requires:
+#            - cleanup-azure-resources
+#      - acceptance-kind-1-21
+#  update-helm-charts-index:
+#    jobs:
+#      - update-helm-charts-index:
+#          context: helm-charts-trigger-consul
+#          filters:
+#            tags:
+#              only: /^v.*/
+#            branches:
+#              ignore: /.*/
