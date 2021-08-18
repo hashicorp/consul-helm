@@ -379,8 +379,8 @@ jobs:
     environment:
       - TEST_RESULTS: /tmp/test-results
       # Primary and secondary Azure OpenShift clusters (created manually) that are used to run acceptance tests.
-      - OC_PRIMARY_NAME: consul-helm-test-2757871175
-      - OC_SECONDARY_NAME: consul-helm-test-3737660519
+      - OC_PRIMARY_NAME: aro-cluster
+      - OC_SECONDARY_NAME: aro-cluster2
     docker:
       # This image is build from test/docker/Test.dockerfile
       - image: docker.mirror.hashicorp.services/hashicorpdev/consul-helm-test:0.9.0
@@ -393,14 +393,23 @@ jobs:
           command: |
             az login --service-principal -u "$ARM_CLIENT_ID" -p "$ARM_CLIENT_SECRET" --tenant "$ARM_TENANT_ID" > /dev/null
 
-            for cluster_name in "$OC_PRIMARY_NAME" "$OC_SECONDARY_NAME"; do
-              apiServer=$(az aro show -g "$cluster_name" -n "$cluster_name" --query apiserverProfile.url -o tsv)
-              kubeUser=$(az aro list-credentials -g "$cluster_name" -n "$cluster_name" | jq -r .kubeadminUsername)
-              kubePassword=$(az aro list-credentials -g "$cluster_name" -n "$cluster_name" | jq -r .kubeadminPassword)
+            export cluster_name=aro-cluster
+            export resource_group=aro-rg
 
-              KUBECONFIG="$HOME/.kube/$cluster_name" oc login "$apiServer" -u "$kubeUser" -p "$kubePassword"
-              KUBECONFIG="$HOME/.kube/$cluster_name" oc project consul
-            done
+            apiServer=$(az aro show -g "$resource_group" -n "$cluster_name" --query apiserverProfile.url -o tsv)
+            kubeUser=$(az aro list-credentials -g "$resource_group" -n "$cluster_name" | jq -r .kubeadminUsername)
+            kubePassword=$(az aro list-credentials -g "$resource_group" -n "$cluster_name" | jq -r .kubeadminPassword)
+            KUBECONFIG="$HOME/.kube/$cluster_name" oc login "$apiServer" -u "$kubeUser" -p "$kubePassword"
+            KUBECONFIG="$HOME/.kube/$cluster_name" oc project consul
+
+            export cluster_name=aro-cluster2
+            export resource_group=aro-rg2
+
+            apiServer=$(az aro show -g "$resource_group" -n "$cluster_name" --query apiserverProfile.url -o tsv)
+            kubeUser=$(az aro list-credentials -g "$resource_group" -n "$cluster_name" | jq -r .kubeadminUsername)
+            kubePassword=$(az aro list-credentials -g "$resource_group" -n "$cluster_name" | jq -r .kubeadminPassword)
+            KUBECONFIG="$HOME/.kube/$cluster_name" oc login "$apiServer" -u "$kubeUser" -p "$kubePassword"
+            KUBECONFIG="$HOME/.kube/$cluster_name" oc project consul
 
       # Restore go module cache if there is one
       - restore_cache:
@@ -421,15 +430,14 @@ jobs:
               -kubeconfig="$HOME/.kube/$OC_PRIMARY_NAME" \
               -secondary-kubeconfig="$HOME/.kube/$OC_SECONDARY_NAME" \
               -debug-directory="$TEST_RESULTS/debug" \
-              -consul-k8s-image=docker.mirror.hashicorp.services/hashicorpdev/consul-k8s:latest
+              -consul-image=ghcr.io/lkysow/consul-ubi:1.9.6-ent-2 \
+              -consul-k8s-image=ghcr.io/lkysow/consul-k8s-dev:0.25.0-ubi \
+              -no-cleanup-on-failure
 
       - store_test_results:
           path: /tmp/test-results
       - store_artifacts:
           path: /tmp/test-results
-      - slack/status:
-          fail_only: true
-          failure_message: "OpenShift acceptance tests failed. Check the logs at: ${CIRCLE_BUILD_URL}"
 
   acceptance-kind-1-20:
     environment:
@@ -606,20 +614,7 @@ workflows:
   version: 2
   test:
     jobs:
-      - go-fmt-and-vet-acceptance
-      - go-fmt-and-vet-helm-gen
-      - unit-acceptance-framework:
-          requires:
-            - go-fmt-and-vet-acceptance
-      - unit-helm-gen:
-          requires:
-            - go-fmt-and-vet-helm-gen
-      - test-helm-gen
-      - unit-helm
-      - acceptance:
-          requires:
-            - unit-helm
-            - unit-acceptance-framework
+      - acceptance-openshift
   nightly-acceptance-tests:
     triggers:
       - schedule:
@@ -628,8 +623,6 @@ workflows:
             branches:
               only:
                 - master
-    jobs:
-    # - acceptance-openshift >> disabled because OpenShift 4.4 was too flaky. Can possibly re-enable when latest OpenShift version is released.
       - acceptance-gke-1-16
       - acceptance-eks-1-17
       - acceptance-aks-1-18
