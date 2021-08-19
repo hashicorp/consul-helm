@@ -432,7 +432,8 @@ jobs:
               -debug-directory="$TEST_RESULTS/debug" \
               -consul-image=ghcr.io/lkysow/consul-ubi:1.9.6-ent-2 \
               -consul-k8s-image=ghcr.io/lkysow/consul-k8s-dev:0.25.0-ubi \
-              -no-cleanup-on-failure
+              -no-cleanup-on-failure \
+              -enterprise-license-secret-name=consul-ent-license -enterprise-license-secret-key=key
 
       - store_test_results:
           path: /tmp/test-results
